@@ -2526,7 +2526,13 @@ function buildInvoiceList() {
   return invoices;
 }
 
-var _invoiceKandangFilter = '';
+var _invoiceKandangFilter = "";
+var _invoiceStatusFilter = "";
+
+function setInvoiceStatusFilter(val) {
+  _invoiceStatusFilter = val;
+  renderInvoiceTracker();
+}
 
 function setInvoiceKandangFilter(val) {
   _invoiceKandangFilter = val;
@@ -2553,9 +2559,12 @@ function renderInvoiceTracker() {
   });
   kandangList.sort(function(a,b){ return a.name.localeCompare(b.name); });
 
-  // Apply filter
+  // Apply filters
   if (_invoiceKandangFilter) {
     invoices = invoices.filter(function(inv){ return inv.kandangId === _invoiceKandangFilter; });
+  }
+  if (_invoiceStatusFilter) {
+    invoices = invoices.filter(function(inv){ return inv.payStatus === _invoiceStatusFilter; });
   }
 
   var nTotal = invoices.length;
@@ -2648,22 +2657,27 @@ function renderInvoiceTracker() {
 
   var kandangOptions = '<option value="">Semua Kandang</option>' +
     kandangList.map(function(k){
-      return '<option value="'+k.id+'"'+(k.id===_invoiceKandangFilter?' selected':'')+'>'+k.name+' \u2014 '+k.client+'</option>';
+      return '<option value="'+k.id+'"'+(k.id===_invoiceKandangFilter?' selected':'')+'>'+k.name+' — '+k.client+'</option>';
     }).join('');
 
-  var filterBar = '<div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap">' +
-    '<label style="font-size:12px;color:var(--text2);font-weight:500">Filter Kandang:</label>' +
-    '<select onchange="setInvoiceKandangFilter(this.value)" style="font-size:13px;padding:6px 10px;border:1px solid var(--border);border-radius:8px;background:var(--surface);color:var(--text);cursor:pointer;min-width:200px">' +
-    kandangOptions + '</select>' +
-    (_invoiceKandangFilter ? '<button onclick="setInvoiceKandangFilter(\'\')" style="font-size:11px;padding:5px 10px;border:1px solid var(--border);border-radius:6px;background:var(--surface2);cursor:pointer;color:var(--text2)">\u2715 Reset</button>' : '') +
-    '</div>';
+  var statusOptions =
+    '<option value=""'  +(!_invoiceStatusFilter?' selected':'')+'>Semua Status</option>' +
+    '<option value="belum"'+(_invoiceStatusFilter==='belum'?' selected':'')+'>Belum</option>' +
+    '<option value="overdue"'+(_invoiceStatusFilter==='overdue'?' selected':'')+'>Overdue</option>' +
+    '<option value="lunas"'+(_invoiceStatusFilter==='lunas'?' selected':'')+'>Lunas</option>';
+
+  var dropdownStyle = 'font-size:12px;padding:5px 8px;border:1px solid var(--border);border-radius:7px;background:var(--surface);color:var(--text);cursor:pointer;';
 
   cont.innerHTML =
     summaryBar +
     '<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px">' + clientCards + '</div>' +
-    '<div class="table-wrap"><div class="table-header"><div class="table-title">Semua Invoice</div>' +
-    '<div style="font-size:12px;color:var(--text2)">' + nTotal + ' invoice &middot; ' + nLunas + ' lunas &middot; ' + nOverdue + ' overdue &middot; ' + nBelum + ' belum</div></div>' +
-    filterBar +
+    '<div class="table-wrap"><div class="table-header">' +
+    '<div class="table-title">Semua Invoice</div>' +
+    '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">' +
+    '<select onchange="setInvoiceKandangFilter(this.value)" style="'+dropdownStyle+'min-width:160px"><option value="">Semua Kandang</option>' + kandangList.map(function(k){ return '<option value="'+k.id+'"'+(k.id===_invoiceKandangFilter?' selected':'')+'>'+k.name+'</option>'; }).join('') + '</select>' +
+    '<select onchange="setInvoiceStatusFilter(this.value)" style="'+dropdownStyle+'min-width:120px">' + statusOptions + '</select>' +
+    '<span style="font-size:11px;color:var(--text3)">' + nTotal + ' invoice &middot; ' + nLunas + ' lunas &middot; ' + nOverdue + ' overdue &middot; ' + nBelum + ' belum</span>' +
+    '</div></div>' +
     '<table><thead><tr><th>Client</th><th>Kandang</th><th>Periode</th><th>Cut-off</th><th>Deadline Bayar</th><th>Status</th><th>Invoice</th><th>Tgl Bayar Aktual</th><th style="text-align:right">Nilai</th></tr></thead>' +
     '<tbody>' + tableRows + '</tbody></table></div>';
 }
