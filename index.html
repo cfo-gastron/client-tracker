@@ -2526,6 +2526,13 @@ function buildInvoiceList() {
   return invoices;
 }
 
+var _invoiceKandangFilter = '';
+
+function setInvoiceKandangFilter(val) {
+  _invoiceKandangFilter = val;
+  renderInvoiceTracker();
+}
+
 function renderInvoiceTracker() {
   var cont = document.getElementById('content-invoice');
   var invoices = buildInvoiceList();
@@ -2533,6 +2540,23 @@ function renderInvoiceTracker() {
 
   var order = {overdue:0, belum:1, lunas:2};
   invoices.sort(function(a,b){ return (order[a.payStatus]||0)-(order[b.payStatus]||0) || a.deadline.localeCompare(b.deadline); });
+
+  // Build kandang options dari semua invoice
+  var kandangList = [];
+  var kandangSeen = {};
+  invoices.forEach(function(inv) {
+    var key = inv.kandangId;
+    if (!kandangSeen[key]) {
+      kandangSeen[key] = true;
+      kandangList.push({ id: inv.kandangId, name: inv.kandang, client: inv.client });
+    }
+  });
+  kandangList.sort(function(a,b){ return a.name.localeCompare(b.name); });
+
+  // Apply filter
+  if (_invoiceKandangFilter) {
+    invoices = invoices.filter(function(inv){ return inv.kandangId === _invoiceKandangFilter; });
+  }
 
   var nTotal = invoices.length;
   var nLunas = invoices.filter(function(i){return i.payStatus==='lunas';}).length;
@@ -2622,11 +2646,24 @@ function renderInvoiceTracker() {
     '</tr>';
   }).join('');
 
+  var kandangOptions = '<option value="">Semua Kandang</option>' +
+    kandangList.map(function(k){
+      return '<option value="'+k.id+'"'+(k.id===_invoiceKandangFilter?' selected':'')+'>'+k.name+' \u2014 '+k.client+'</option>';
+    }).join('');
+
+  var filterBar = '<div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap">' +
+    '<label style="font-size:12px;color:var(--text2);font-weight:500">Filter Kandang:</label>' +
+    '<select onchange="setInvoiceKandangFilter(this.value)" style="font-size:13px;padding:6px 10px;border:1px solid var(--border);border-radius:8px;background:var(--surface);color:var(--text);cursor:pointer;min-width:200px">' +
+    kandangOptions + '</select>' +
+    (_invoiceKandangFilter ? '<button onclick="setInvoiceKandangFilter(\'\')" style="font-size:11px;padding:5px 10px;border:1px solid var(--border);border-radius:6px;background:var(--surface2);cursor:pointer;color:var(--text2)">\u2715 Reset</button>' : '') +
+    '</div>';
+
   cont.innerHTML =
     summaryBar +
     '<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px">' + clientCards + '</div>' +
     '<div class="table-wrap"><div class="table-header"><div class="table-title">Semua Invoice</div>' +
     '<div style="font-size:12px;color:var(--text2)">' + nTotal + ' invoice &middot; ' + nLunas + ' lunas &middot; ' + nOverdue + ' overdue &middot; ' + nBelum + ' belum</div></div>' +
+    filterBar +
     '<table><thead><tr><th>Client</th><th>Kandang</th><th>Periode</th><th>Cut-off</th><th>Deadline Bayar</th><th>Status</th><th>Invoice</th><th>Tgl Bayar Aktual</th><th style="text-align:right">Nilai</th></tr></thead>' +
     '<tbody>' + tableRows + '</tbody></table></div>';
 }
