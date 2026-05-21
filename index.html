@@ -2621,8 +2621,10 @@ function renderInvoiceTracker() {
       '<td class="mono"><strong>' + fmtDate(inv.deadline) + '</strong></td>' +
       '<td>' + statusTag[inv.payStatus] + '</td>' +
       '<td>' +
-        (inv.invoiceLink ? '<a href="'+inv.invoiceLink+'" target="_blank" class="btn btn-secondary btn-sm" style="text-decoration:none;font-size:11px">&#128203; Invoice</a> ' : '<span style="font-size:11px;color:var(--text3)">—</span> ') +
-        '<button class="btn btn-secondary btn-sm" style="font-size:11px" data-kid="'+inv.kandangId+'" data-pid="'+inv.periodeId+'" onclick="openInvoiceModal(this.dataset.kid,this.dataset.pid)">&#9998;</button>' +
+        '<div style="display:flex;gap:4px;align-items:center">' +
+        (inv.invoiceLink ? '<a href="'+inv.invoiceLink+'" target="_blank" class="btn btn-secondary btn-sm" style="text-decoration:none;font-size:11px">&#128203; Invoice</a>' : '<span style="font-size:11px;color:var(--text3)">—</span>') +
+        ' <button class="btn btn-secondary btn-sm btn-icon" style="font-size:11px" data-kid="'+inv.kandangId+'" data-pid="'+inv.periodeId+'" onclick="openInvoiceModal(this.dataset.kid,this.dataset.pid)">&#9998;</button>' +
+        '</div>' +
       '</td>' +
       '<td>' + tglBayarCell + '</td>' +
       '<td class="mono" style="text-align:right">' + fmt(inv.revenue) + '</td>' +
@@ -2828,8 +2830,10 @@ function renderInvoiceBulanan() {
         '<td class="mono">' + fmtDate(inv.cutoffDate) + '</td>' +
         '<td class="mono"><strong>' + fmtDate(inv.deadline) + '</strong></td>' +
         '<td>' + statusTag[inv.payStatus] + '</td>' +
-        '<td>' + (inv.invoiceLink?'<a href="'+inv.invoiceLink+'" target="_blank" class="btn btn-secondary btn-sm" style="text-decoration:none;font-size:11px">&#128203;</a> ':'') +
-          '<button class="btn btn-secondary btn-sm btn-icon" data-kid="'+inv.kandangId+'" data-pid="'+inv.periodeId+'" onclick="openInvoiceModal(this.dataset.kid,this.dataset.pid)" style="font-size:11px">&#9998;</button></td>' +
+        '<td><div style="display:flex;gap:4px;align-items:center">' +
+          (inv.invoiceLink?'<a href="'+inv.invoiceLink+'" target="_blank" class="btn btn-secondary btn-sm" style="text-decoration:none;font-size:11px">&#128203;</a>':'<span style="font-size:11px;color:var(--text3)">—</span>') +
+          ' <button class="btn btn-secondary btn-sm btn-icon" data-kid="'+inv.kandangId+'" data-pid="'+inv.periodeId+'" onclick="openInvoiceModal(this.dataset.kid,this.dataset.pid)" style="font-size:11px">&#9998;</button>' +
+          '</div></td>' +
         '<td>' + tglBayarCell + '</td>' +
         '<td class="mono" style="text-align:right">' + fmt(inv.revenue) + '</td>' +
       '</tr>';
