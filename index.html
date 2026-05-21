@@ -2120,7 +2120,7 @@ function renderGantt() {
       var tid = 'b_' + ri + '_' + bi;
       tooltipData[tid] = bar;
 
-      bars += '<rect id="'+tid+'" x="'+bx+'" y="'+by+'" width="'+bw+'" height="'+bh+'" rx="5" fill="'+color+'" stroke="'+strokeColor+'" stroke-width="1.5" style="cursor:pointer" onclick="showGanttDetail(''+tid+'')" onmouseenter="ganttHover(this,''+tid+'')" onmouseleave="ganttHoverOut()"/>';
+      bars += '<rect id="'+tid+'" x="'+bx+'" y="'+by+'" width="'+bw+'" height="'+bh+'" rx="5" fill="'+color+'" stroke="'+strokeColor+'" stroke-width="1.5" style="cursor:pointer" onclick="showGanttDetail(&quot;'+tid+'&quot;)" onmouseenter="ganttHover(this,&quot;'+tid+'&quot;)" onmouseleave="ganttHoverOut()"/>';
       if (bw > 28) {
         bars += '<text x="'+(bx+6)+'" y="'+(by+bh/2+4)+'" font-size="10" fill="'+strokeColor+'" font-family="DM Mono,monospace" style="pointer-events:none">'+escapeXML(bar.label)+'</text>';
       }
