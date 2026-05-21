@@ -685,7 +685,7 @@ function navigate(page, kandangId) {
   else if (page === 'prediksi') {
     if (typeof _prediksiTab === 'undefined') _prediksiTab = 'list';
     if (_prediksiTab === 'kalender') renderPrediksiKalender();
-    else renderPrediksi();
+    else renderGantt();
   }
   else if (page === 'trips') renderTripManager();
   else if (page === 'invoice') renderInvoiceTracker();
@@ -1939,6 +1939,277 @@ function saveEditOpex() {
 }
 function deleteOpexByData(btn) { deleteOpex(btn.dataset.kid,btn.dataset.pid,btn.dataset.eid); }
 // ============= PREDIKSI =============
+
+// ============= GANTT CHART PREDIKSI =============
+var _ganttOffset = 0; // offset in days from today
+
+function renderGantt() {
+  var cont = document.getElementById('content-prediksi');
+
+  // Build gantt rows dari semua kandang
+  var rows = [];
+  var minDate = null, maxDate = null;
+  var today = new Date(); today.setHours(0,0,0,0);
+  var todayStr = today.toISOString().slice(0,10);
+
+  state.clients.forEach(function(cl) {
+    (cl.kandangs||[]).forEach(function(k) {
+      var periodes = k.periodes || [];
+      var cp = periodes.filter(function(x){ return x.isCutoff && x.startDate && x.cutoffDate; });
+      var bars = [];
+
+      // Periode selesai (cutoff)
+      periodes.forEach(function(p) {
+        if (!p.startDate) return;
+        var endD = p.isCutoff ? p.cutoffDate : (function(){
+          if (cp.length >= 1) {
+            var durs = cp.map(function(x){ return daysBetween(x.startDate, x.cutoffDate); });
+            var avgDur = Math.round(durs.reduce(function(a,b){return a+b;},0)/durs.length);
+            return addDays(p.startDate, avgDur);
+          }
+          return addDays(p.startDate, 30);
+        })();
+        var isPred = !p.isCutoff;
+        var pl = p.isCutoff ? calcPeriodePL(p, k) : null;
+        bars.push({
+          startDate: p.startDate,
+          endDate: endD,
+          label: p.label || 'P',
+          isPred: isPred,
+          isActive: !p.isCutoff,
+          periode: p,
+          pl: pl,
+          client: cl.name,
+          kandang: k.name
+        });
+        if (!minDate || p.startDate < minDate) minDate = p.startDate;
+        if (!maxDate || endD > maxDate) maxDate = endD;
+      });
+
+      // Prediksi periode berikutnya
+      if (cp.length >= 2) {
+        var durs = cp.map(function(x){ return daysBetween(x.startDate, x.cutoffDate); });
+        var avgDur = Math.round(durs.reduce(function(a,b){return a+b;},0)/durs.length);
+        var srt = cp.slice().sort(function(a,b){ return new Date(a.startDate)-new Date(b.startDate); });
+        var gaps2 = [];
+        for (var gi=1;gi<srt.length;gi++) gaps2.push(daysBetween(srt[gi-1].cutoffDate, srt[gi].startDate));
+        var avgGap = Math.round(gaps2.reduce(function(a,b){return a+b;},0)/gaps2.length);
+        var avgRev = Math.round(cp.map(function(x){ return calcPeriodePL(x,k).revenue; }).reduce(function(a,b){return a+b;},0)/cp.length);
+        var lastP = srt[srt.length-1];
+        // Only show next pred if not already active
+        var hasActive = periodes.some(function(p){ return !p.isCutoff && p.startDate; });
+        if (!hasActive) {
+          var pStart = addDays(lastP.cutoffDate, avgGap);
+          var pEnd = addDays(pStart, avgDur);
+          bars.push({
+            startDate: pStart,
+            endDate: pEnd,
+            label: 'Pred',
+            isPred: true,
+            isActive: false,
+            isFuturePred: true,
+            pl: null,
+            avgRev: avgRev,
+            client: cl.name,
+            kandang: k.name
+          });
+          if (!maxDate || pEnd > maxDate) maxDate = pEnd;
+        }
+      }
+
+      if (bars.length) rows.push({ client: cl.name, kandang: k.name, kandangId: k.id, bars: bars });
+    });
+  });
+
+  if (!rows.length) { cont.innerHTML = '<div class="empty-state"><div class="icon">&#128302;</div><p>Belum ada data</p></div>'; return; }
+
+  // Default view: mulai dari 4 minggu sebelum hari ini
+  var viewStart = new Date(today);
+  viewStart.setDate(viewStart.getDate() - 28 + _ganttOffset);
+  var viewDays = 28 * 4; // 16 minggu total visible
+  var viewEnd = new Date(viewStart);
+  viewEnd.setDate(viewEnd.getDate() + viewDays);
+
+  var vsStr = viewStart.toISOString().slice(0,10);
+  var veStr = viewEnd.toISOString().slice(0,10);
+
+  var ROW_H = 44;
+  var LABEL_W = 160;
+  var DAY_W = 26; // px per day
+  var TOTAL_W = viewDays * DAY_W;
+  var HEADER_H = 56;
+
+  // Build week headers
+  var weekHeaders = '';
+  var monthHeaders = '';
+  var d = new Date(viewStart);
+  var lastMonth = -1;
+  var monthStartX = 0;
+  var monthName = '';
+  var MONTHS_ID = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+
+  // Month labels
+  var monthBlocks = [];
+  var cur = new Date(viewStart);
+  while (cur < viewEnd) {
+    var mStart = new Date(cur);
+    var mEnd = new Date(cur.getFullYear(), cur.getMonth()+1, 1);
+    if (mEnd > viewEnd) mEnd = new Date(viewEnd);
+    var mDays = Math.round((mEnd - mStart) / 86400000);
+    monthBlocks.push({ name: MONTHS_ID[cur.getMonth()] + ' ' + cur.getFullYear(), days: mDays, x: Math.round((mStart - viewStart)/86400000)*DAY_W });
+    cur = mEnd;
+  }
+
+  // Week tick lines + "Wk N" labels every 7 days
+  var tickLines = '';
+  var weekLabels = '';
+  for (var di = 0; di < viewDays; di++) {
+    var dd = new Date(viewStart);
+    dd.setDate(dd.getDate() + di);
+    var x = di * DAY_W;
+    if (di % 7 === 0) {
+      tickLines += '<line x1="'+(LABEL_W+x)+'" y1="'+HEADER_H+'" x2="'+(LABEL_W+x)+'" y2="'+(HEADER_H + rows.length * ROW_H)+'" stroke="var(--border)" stroke-width="1"/>';
+      var wkNum = Math.floor(di/7) + 1;
+      weekLabels += '<text x="'+(LABEL_W+x+3)+'" y="'+(HEADER_H-6)+'" font-size="9" fill="var(--text3)" font-family="DM Mono,monospace">W'+wkNum+'</text>';
+    }
+    // Today line
+    if (dd.toISOString().slice(0,10) === todayStr) {
+      tickLines += '<line x1="'+(LABEL_W+x)+'" y1="0" x2="'+(LABEL_W+x)+'" y2="'+(HEADER_H + rows.length * ROW_H)+'" stroke="var(--accent)" stroke-width="2" stroke-dasharray="4,3" opacity="0.7"/>';
+      tickLines += '<text x="'+(LABEL_W+x+3)+'" y="14" font-size="9" fill="var(--accent)" font-family="DM Mono,monospace" font-weight="bold">TODAY</text>';
+    }
+  }
+
+  // Row stripes
+  var stripes = '';
+  rows.forEach(function(row, ri) {
+    if (ri % 2 === 0) {
+      stripes += '<rect x="0" y="'+(HEADER_H + ri*ROW_H)+'" width="'+(LABEL_W+TOTAL_W)+'" height="'+ROW_H+'" fill="var(--surface2)" opacity="0.4"/>';
+    }
+  });
+
+  // Row labels
+  var rowLabels = '';
+  rows.forEach(function(row, ri) {
+    var y = HEADER_H + ri * ROW_H;
+    rowLabels += '<rect x="0" y="'+y+'" width="'+LABEL_W+'" height="'+ROW_H+'" fill="var(--surface)"/>';
+    rowLabels += '<text x="8" y="'+(y+16)+'" font-size="11" font-weight="600" fill="var(--text)" font-family="Syne,sans-serif">' + escapeXML(row.kandang) + '</text>';
+    rowLabels += '<text x="8" y="'+(y+30)+'" font-size="10" fill="var(--text3)" font-family="DM Sans,sans-serif">' + escapeXML(row.client) + '</text>';
+  });
+
+  // Bars
+  var bars = '';
+  var tooltipData = {};
+  rows.forEach(function(row, ri) {
+    var y = HEADER_H + ri * ROW_H;
+    row.bars.forEach(function(bar, bi) {
+      var bStart = bar.startDate > vsStr ? bar.startDate : vsStr;
+      var bEnd = bar.endDate < veStr ? bar.endDate : veStr;
+      if (bEnd <= vsStr || bStart >= veStr) return;
+      var x1 = Math.round(daysBetween(vsStr, bStart)) * DAY_W;
+      var x2 = Math.round(daysBetween(vsStr, bEnd)) * DAY_W;
+      var bw = Math.max(x2 - x1, 4);
+      var bx = LABEL_W + x1;
+      var by = y + 6;
+      var bh = ROW_H - 12;
+
+      var color, strokeColor;
+      if (bar.isFuturePred) { color = 'rgba(26,158,92,0.15)'; strokeColor = 'rgba(26,158,92,0.6)'; }
+      else if (bar.isActive) { color = 'rgba(42,125,225,0.18)'; strokeColor = 'rgba(42,125,225,0.7)'; }
+      else { color = 'rgba(42,125,225,0.08)'; strokeColor = 'rgba(42,125,225,0.3)'; }
+
+      var tid = 'b_' + ri + '_' + bi;
+      tooltipData[tid] = bar;
+
+      bars += '<rect id="'+tid+'" x="'+bx+'" y="'+by+'" width="'+bw+'" height="'+bh+'" rx="5" fill="'+color+'" stroke="'+strokeColor+'" stroke-width="1.5" style="cursor:pointer" onclick="showGanttDetail(''+tid+'')" onmouseenter="ganttHover(this,''+tid+'')" onmouseleave="ganttHoverOut()"/>';
+      if (bw > 28) {
+        bars += '<text x="'+(bx+6)+'" y="'+(by+bh/2+4)+'" font-size="10" fill="'+strokeColor+'" font-family="DM Mono,monospace" style="pointer-events:none">'+escapeXML(bar.label)+'</text>';
+      }
+    });
+  });
+
+  // Month header blocks
+  var monthHeaderHTML = monthBlocks.map(function(m) {
+    return '<div style="position:absolute;left:'+(LABEL_W+m.x)+'px;width:'+(m.days*DAY_W)+'px;height:24px;top:0;border-left:1px solid var(--border);padding:3px 6px;font-size:11px;font-weight:600;color:var(--text2);font-family:Syne,sans-serif;white-space:nowrap;overflow:hidden">'+m.name+'</div>';
+  }).join('');
+
+  var svgH = HEADER_H + rows.length * ROW_H;
+
+  var html =
+    '<div style="margin-bottom:12px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">' +
+    '<button class="btn btn-secondary btn-sm" onclick="_ganttOffset-=28;renderGantt()">&#8592; 4 minggu</button>' +
+    '<button class="btn btn-secondary btn-sm" onclick="_ganttOffset=0;renderGantt()">Hari ini</button>' +
+    '<button class="btn btn-secondary btn-sm" onclick="_ganttOffset+=28;renderGantt()">4 minggu &#8594;</button>' +
+    '<div style="flex:1"></div>' +
+    '<div style="display:flex;gap:12px;font-size:11px;color:var(--text2);align-items:center">' +
+    '<span style="display:inline-flex;align-items:center;gap:4px"><span style="width:12px;height:12px;border-radius:3px;background:rgba(42,125,225,0.18);border:1.5px solid rgba(42,125,225,0.7);display:inline-block"></span>Berjalan</span>' +
+    '<span style="display:inline-flex;align-items:center;gap:4px"><span style="width:12px;height:12px;border-radius:3px;background:rgba(42,125,225,0.08);border:1.5px solid rgba(42,125,225,0.3);display:inline-block"></span>Selesai</span>' +
+    '<span style="display:inline-flex;align-items:center;gap:4px"><span style="width:12px;height:12px;border-radius:3px;background:rgba(26,158,92,0.15);border:1.5px solid rgba(26,158,92,0.6);display:inline-block"></span>Prediksi</span>' +
+    '<span style="display:inline-flex;align-items:center;gap:4px"><span style="width:2px;height:14px;background:var(--accent);display:inline-block"></span>Hari ini</span>' +
+    '</div></div>' +
+    '<div style="position:relative;background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden">' +
+    '<div style="overflow-x:auto">' +
+    '<div style="position:relative;width:'+(LABEL_W+TOTAL_W)+'px;min-width:100%">' +
+    '<div style="position:relative;height:24px;background:var(--surface2);border-bottom:1px solid var(--border)">' +
+    '<div style="position:absolute;left:0;top:0;width:'+LABEL_W+'px;height:24px;background:var(--surface2);z-index:2;border-right:1px solid var(--border)"></div>' +
+    monthHeaderHTML + '</div>' +
+    '<svg width="'+(LABEL_W+TOTAL_W)+'" height="'+svgH+'" style="display:block;overflow:visible">' +
+    stripes + tickLines + weekLabels + rowLabels + bars +
+    '</svg></div></div></div>' +
+    '<div id="gantt-detail" style="display:none;margin-top:12px;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px"></div>';
+
+  cont.innerHTML = html;
+  window._ganttTooltipData = tooltipData;
+}
+
+function escapeXML(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function ganttHover(el, tid) {
+  el.setAttribute('opacity','0.85');
+}
+function ganttHoverOut() {
+  // reset handled by browser
+}
+
+function showGanttDetail(tid) {
+  var bar = (window._ganttTooltipData||{})[tid];
+  var panel = document.getElementById('gantt-detail');
+  if (!bar || !panel) return;
+  panel.style.display = 'block';
+
+  var html = '<div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px">';
+  html += '<div><div style="font-family:Syne,sans-serif;font-weight:700;font-size:15px;margin-bottom:4px">'+bar.client+' &mdash; '+bar.kandang+'</div>';
+
+  if (bar.isFuturePred) {
+    html += '<span class="tag tag-green">Prediksi Periode Berikutnya</span>';
+    html += '</div><div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;min-width:360px">';
+    html += '<div class="prediksi-item"><div class="pi-label">Pred. Mulai</div><div class="pi-value" style="color:var(--accent2)">'+fmtDate(bar.startDate)+'</div></div>';
+    html += '<div class="prediksi-item"><div class="pi-label">Pred. Selesai</div><div class="pi-value" style="color:var(--accent2)">'+fmtDate(bar.endDate)+'</div></div>';
+    html += '<div class="prediksi-item"><div class="pi-label">Pred. Revenue</div><div class="pi-value" style="color:var(--green)">'+fmt(bar.avgRev||0)+'</div></div>';
+  } else if (bar.isActive) {
+    var pl = bar.pl || {};
+    html += '<span class="tag tag-yellow">Periode Berjalan &mdash; '+bar.label+'</span>';
+    html += '</div><div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;min-width:480px">';
+    html += '<div class="prediksi-item"><div class="pi-label">Mulai</div><div class="pi-value" style="color:var(--accent2)">'+fmtDate(bar.startDate)+'</div></div>';
+    html += '<div class="prediksi-item"><div class="pi-label">Pred. Cut-off</div><div class="pi-value" style="color:var(--accent2)">'+fmtDate(bar.endDate)+'</div></div>';
+    html += '<div class="prediksi-item"><div class="pi-label">Revenue Saat Ini</div><div class="pi-value" style="color:var(--green)">'+fmt(pl.revenue||0)+'</div></div>';
+    html += '<div class="prediksi-item"><div class="pi-label">Volume</div><div class="pi-value">'+fmtNum(pl.totalVolume||0,0)+' Sm³</div></div>';
+  } else {
+    var pl = bar.pl || {};
+    var status = bar.periode && bar.periode.paidDate ? '<span class="tag tag-green">Lunas</span>' : '<span class="tag tag-gray">Belum Dibayar</span>';
+    html += status;
+    html += '</div><div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;min-width:480px">';
+    html += '<div class="prediksi-item"><div class="pi-label">Mulai</div><div class="pi-value">'+fmtDate(bar.startDate)+'</div></div>';
+    html += '<div class="prediksi-item"><div class="pi-label">Cut-off</div><div class="pi-value">'+fmtDate(bar.endDate)+'</div></div>';
+    html += '<div class="prediksi-item"><div class="pi-label">Revenue</div><div class="pi-value" style="color:var(--green)">'+fmt(pl.revenue||0)+'</div></div>';
+    html += '<div class="prediksi-item"><div class="pi-label">Net Margin</div><div class="pi-value" style="color:'+(pl.netMargin>0?'var(--green)':'var(--red)')+'">'+((pl.netMargin||0).toFixed(1))+'%</div></div>';
+  }
+  html += '</div></div>';
+  panel.innerHTML = html;
+}
+
+
 function renderPrediksi() {
   var cont = document.getElementById('content-prediksi');
   var cards = [];
@@ -3066,7 +3337,7 @@ function switchPrediksiTab(tab) {
     if (el) el.classList.toggle('active', t === tab);
   });
   if (tab === 'kalender') renderPrediksiKalender();
-  else renderPrediksi();
+  else { _ganttOffset = 0; renderGantt(); }
 }
 
 // ============= PREDIKSI KALENDER =============
