@@ -2174,7 +2174,7 @@ function renderGantt() {
     chipNavHTML += '<span style="font-size:11px;font-weight:600;color:var(--text3);padding:0 4px">'+yr+'</span>';
     yearGroups[yr].forEach(function(m) {
       var isActive = window._ganttMonthFilter === m.ym;
-      chipNavHTML += '<button class="chip'+(isActive?' active':'')+'" onclick="window._ganttMonthFilter=''+m.ym+'';renderGantt()">'+MONTHS_SHORT2[m.month]+'</button>';
+      chipNavHTML += '<button class="chip'+(isActive?' active':'')+'" data-ym="'+m.ym+'" onclick="window._ganttMonthFilter=this.getAttribute('data-ym');renderGantt()">'+MONTHS_SHORT2[m.month]+'</button>';
     });
   });
   chipNavHTML += '</div>';
