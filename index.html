@@ -2023,16 +2023,17 @@ function renderGantt() {
 
   if (!rows.length) { cont.innerHTML = '<div class="empty-state"><div class="icon">&#128302;</div><p>Belum ada data</p></div>'; return; }
 
-  // Default view: mulai dari 4 minggu sebelum hari ini, atau awal tahun jika filter bulan
-  var viewStart = new Date(today);
+  // viewStart: kalau filter bulan aktif, mulai dari bulan itu; kalau tidak, hari ini - 4 minggu
+  var viewStart, viewDays;
   if (window._ganttMonthFilter) {
     var ymParts = window._ganttMonthFilter.split('-');
     viewStart = new Date(parseInt(ymParts[0]), parseInt(ymParts[1])-1, 1);
-    _ganttOffset = 0;
+    viewDays = 28 * 3; // 12 minggu = 3 bulan
   } else {
+    viewStart = new Date(today);
     viewStart.setDate(viewStart.getDate() - 28 + _ganttOffset);
+    viewDays = 28 * 4; // 16 minggu default
   }
-  var viewDays = 28 * 4; // 16 minggu total visible
   var viewEnd = new Date(viewStart);
   viewEnd.setDate(viewEnd.getDate() + viewDays);
 
@@ -2168,10 +2169,10 @@ function renderGantt() {
     yearGroups[y].push({ ym: ym, month: availYearMonths[ym].month });
   });
 
-  var chipNavHTML = '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:12px">';
-  chipNavHTML += '<button class="chip'+(!window._ganttMonthFilter?' active':'')+'" onclick="window._ganttMonthFilter=null;_ganttOffset=0;renderGantt()">Semua</button>';
+  var chipNavHTML = '<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:12px">';
+  chipNavHTML += '<button class="chip gantt-chip-all'+(!window._ganttMonthFilter?' active':'')+'" data-ym="">Semua</button>';
   Object.keys(yearGroups).sort().forEach(function(yr) {
-    chipNavHTML += '<span style="font-size:11px;font-weight:600;color:var(--text3);padding:0 4px">'+yr+'</span>';
+    chipNavHTML += '<span style="font-size:11px;font-weight:600;color:var(--text3);padding:0 2px">'+yr+'</span>';
     yearGroups[yr].forEach(function(m) {
       var isActive = window._ganttMonthFilter === m.ym;
       chipNavHTML += '<button class="chip gantt-month-chip'+(isActive?' active':'')+'" data-ym="'+m.ym+'">'+MONTHS_SHORT2[m.month]+'</button>';
@@ -2209,15 +2210,14 @@ function renderGantt() {
   window._ganttTooltipData = tooltipData;
 
   // Event delegation for month chip clicks
-  var chipContainer = cont.querySelector('.gantt-month-chip');
-  if (chipContainer) {
-    cont.querySelectorAll('.gantt-month-chip').forEach(function(btn) {
-      btn.addEventListener('click', function() {
-        window._ganttMonthFilter = this.getAttribute('data-ym');
-        renderGantt();
-      });
+  cont.querySelectorAll('.gantt-month-chip, .gantt-chip-all').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      var ym = this.getAttribute('data-ym');
+      window._ganttMonthFilter = ym || null;
+      _ganttOffset = 0;
+      renderGantt();
     });
-  }
+  });
 
   // Event delegation for bar clicks
   var svg = document.getElementById('gantt-svg');
