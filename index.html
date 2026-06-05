@@ -2959,7 +2959,6 @@ function renderSummarySupply() {
           var jisdorForMonth = (state.master.jisdorByYear && state.master.jisdorByYear[entryYear] && state.master.jisdorByYear[entryYear][e.month]) || (state.master.jisdor && state.master.jisdor[e.month]) || 0;
           monthData[key].jisdorVal = jisdorForMonth;
           if (monthData[key].volume > 0) monthData[key].costPerSm3 = monthData[key].cogs / monthData[key].volume;
-          if (!p.isCutoff) monthData[key].hasOngoing = true;
           var kandangKey = cl.name + '||' + k.name + '||' + p.label;
           if (!monthData[key].clients[kandangKey]) monthData[key].clients[kandangKey] = { vol:0, client:cl.name, kandang:k.name, label:p.label, harga:harga };
           monthData[key].clients[kandangKey].vol += e.volume;
@@ -3037,11 +3036,11 @@ function renderSummarySupply() {
       var opexPct = kd.revenue > 0 ? kd.opex/kd.revenue*100 : 0;
       var margin = kd.revenue > 0 ? opIncome/kd.revenue*100 : 0;
       var kdStatus = kd.isCutoff
-        ? '<span style="background:#e8f5e9;color:#1a9e5c;font-size:9px;padding:1px 6px;border-radius:10px;font-weight:600;margin-left:4px">&#10003; Selesai</span>'
-        : '<span style="background:#fff3e0;color:#e07b00;font-size:9px;padding:1px 6px;border-radius:10px;font-weight:600;margin-left:4px">&#9679; Berjalan</span>';
+        ? '<span style="background:#e8f5e9;color:#1a9e5c;font-size:9px;padding:1px 6px;border-radius:10px;font-weight:600;margin-left:5px">&#10003; Selesai</span>'
+        : '<span style="background:#fff3e0;color:#e07b00;font-size:9px;padding:1px 6px;border-radius:10px;font-weight:600;margin-left:5px">&#9679; Berjalan</span>';
       return '<tr style="font-size:12px">' +
         '<td><strong>' + kd.client + '</strong></td>' +
-        '<td><span class="tag tag-blue" style="font-size:10px">' + kd.kandang + '</span> <span class="tag tag-gray" style="font-size:10px">' + kd.label + '</span>' + kdStatus + '</td>' +
+        '<td><span class="tag tag-blue" style="font-size:10px">' + kd.kandang + '</span> <span class="tag tag-gray" style="font-size:10px">' + kd.label + '</span></td>' +
         '<td class="mono" style="text-align:right">' + fmtNum(kd.vol,2) + '</td>' +
         '<td class="mono" style="text-align:right">' + fmt(kd.harga) + '</td>' +
         '<td class="mono" style="text-align:right">' + fmt(kd.revenue) + '</td>' +
@@ -3050,7 +3049,7 @@ function renderSummarySupply() {
         '<td class="mono" style="text-align:right;color:var(--red)">(' + fmt(kd.opex) + ')</td>' +
         '<td style="text-align:right"><span class="tag tag-gray" style="font-size:10px">' + opexPct.toFixed(1) + '%</span></td>' +
         '<td class="mono" style="text-align:right;font-weight:600;color:' + (opIncome>=0?'var(--green)':'var(--red)') + '">' + fmt(opIncome) + '</td>' +
-        '<td style="text-align:right"><span class="tag tag-' + (margin>=25?'green':margin>=15?'yellow':'red') + '" style="font-size:10px">' + margin.toFixed(1) + '%</span></td>' +
+        '<td style="text-align:right"><span class="tag tag-' + (margin>=25?'green':margin>=15?'yellow':'red') + '" style="font-size:10px">' + margin.toFixed(1) + '%</span>' + kdStatus + '</td>' +
       '</tr>';
     }).join('');
     var insightHTML =
@@ -3065,16 +3064,13 @@ function renderSummarySupply() {
       '<th style="text-align:right">Op. Income</th><th style="text-align:right">Margin</th>' +
       '</tr></thead><tbody>' + detailRows + '</tbody></table>' +
       '</div></td></tr>';
-    var statusPill = m.hasOngoing
-      ? '<span style="background:#fff3e0;color:#e07b00;font-size:10px;padding:2px 8px;border-radius:10px;font-weight:600;margin-left:6px">&#9679; Berjalan</span>'
-      : '<span style="background:#e8f5e9;color:#1a9e5c;font-size:10px;padding:2px 8px;border-radius:10px;font-weight:600;margin-left:6px">&#10003; Selesai</span>';
     return '<tr style="cursor:pointer" data-iid="' + insightId + '" onclick="toggleInsight(this.dataset.iid)" title="Klik untuk lihat breakdown kandang">' +
       '<td class="mono"><strong>' + MONTH_ID[m.mIdx] + ' ' + m.year + '</strong></td>' +
       '<td class="mono" style="text-align:right">' + fmtNum(m.volume,2) + '</td>' +
       '<td class="mono" style="text-align:right">' + fmt(m.cogs) + '</td>' +
       '<td class="mono" style="text-align:right">' + fmt(m.revenue) + '</td>' +
       '<td class="mono" style="text-align:right">' + fmt(m.opIncome) + '</td>' +
-      '<td style="text-align:right"><span class="tag tag-' + (m.margin>=25?'green':m.margin>=15?'yellow':'red') + '">' + m.margin.toFixed(1) + '%</span>' + statusPill + '</td>' +
+      '<td style="text-align:right"><span class="tag tag-' + (m.margin>=25?'green':m.margin>=15?'yellow':'red') + '">' + m.margin.toFixed(1) + '%</span></td>' +
     '</tr>' + insightHTML;
   }).join('');
 
