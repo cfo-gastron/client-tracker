@@ -877,7 +877,7 @@ function renderDashboard() {
     chartWrap.innerHTML =
       '<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px 20px">' +
         '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:10px">' +
-          '<div style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:15px">Tren Bulanan</div>' +
+          '<div style="font-family:Plus Jakarta Sans,sans-serif;font-weight:700;font-size:15px">Tren Bulanan</div>' +
           '<div style="display:flex;gap:16px;flex-wrap:wrap;font-size:11px;color:var(--text2)">' +
             '<span style="display:flex;align-items:center;gap:5px"><span style="width:28px;height:3px;background:#5DCAA5;border-radius:2px;display:inline-block"></span>Revenue</span>' +
             '<span style="display:flex;align-items:center;gap:5px"><span style="width:28px;height:3px;background:#378ADD;border-radius:2px;display:inline-block"></span>Op. Income</span>' +
@@ -885,10 +885,10 @@ function renderDashboard() {
           '</div>' +
         '</div>' +
         '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px">' +
-          '<div style="background:var(--surface2);border-radius:8px;padding:10px 12px"><div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:3px">Avg Vol/Bulan</div><div style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:14px">' + fmtNum(avgVol,0) + '</div><div style="font-size:10px;color:var(--text3)">Sm³</div></div>' +
-          '<div style="background:var(--surface2);border-radius:8px;padding:10px 12px"><div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:3px">Avg Revenue/Bulan</div><div style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:14px;color:var(--green)">' + (avgRev>=1e9?(avgRev/1e9).toFixed(1)+'B':avgRev>=1e6?(avgRev/1e6).toFixed(1)+'M':fmt(avgRev)) + '</div><div style="font-size:10px;color:var(--text3)">' + fmt(avgRev) + '</div></div>' +
-          '<div style="background:var(--surface2);border-radius:8px;padding:10px 12px"><div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:3px">Avg COGS/Bulan</div><div style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:14px;color:var(--red)">' + (avgCogs>=1e9?(avgCogs/1e9).toFixed(1)+'B':avgCogs>=1e6?(avgCogs/1e6).toFixed(1)+'M':fmt(avgCogs)) + '</div><div style="font-size:10px;color:var(--text3)">' + (avgRev?((avgCogs/avgRev)*100).toFixed(1)+'% dari rev':'—') + '</div></div>' +
-          '<div style="background:var(--surface2);border-radius:8px;padding:10px 12px"><div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:3px">Avg Margin/Bulan</div><div style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:14px;color:'+(avgMargin>=25?'var(--green)':avgMargin>=15?'var(--yellow)':'var(--red)')+'">'+avgMargin.toFixed(1)+'%</div><div style="font-size:10px;color:var(--text3)">Op. Income: '+fmt(avgOpIncome)+'/bln</div></div>' +
+          '<div style="background:var(--surface2);border-radius:8px;padding:10px 12px"><div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:3px">Avg Vol/Bulan</div><div style="font-family:Plus Jakarta Sans,sans-serif;font-weight:700;font-size:14px">' + fmtNum(avgVol,0) + '</div><div style="font-size:10px;color:var(--text3)">Sm³</div></div>' +
+          '<div style="background:var(--surface2);border-radius:8px;padding:10px 12px"><div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:3px">Avg Revenue/Bulan</div><div style="font-family:Plus Jakarta Sans,sans-serif;font-weight:700;font-size:14px;color:var(--green)">' + (avgRev>=1e9?(avgRev/1e9).toFixed(1)+'B':avgRev>=1e6?(avgRev/1e6).toFixed(1)+'M':fmt(avgRev)) + '</div><div style="font-size:10px;color:var(--text3)">' + fmt(avgRev) + '</div></div>' +
+          '<div style="background:var(--surface2);border-radius:8px;padding:10px 12px"><div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:3px">Avg COGS/Bulan</div><div style="font-family:Plus Jakarta Sans,sans-serif;font-weight:700;font-size:14px;color:var(--red)">' + (avgCogs>=1e9?(avgCogs/1e9).toFixed(1)+'B':avgCogs>=1e6?(avgCogs/1e6).toFixed(1)+'M':fmt(avgCogs)) + '</div><div style="font-size:10px;color:var(--text3)">' + (avgRev?((avgCogs/avgRev)*100).toFixed(1)+'% dari rev':'—') + '</div></div>' +
+          '<div style="background:var(--surface2);border-radius:8px;padding:10px 12px"><div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:3px">Avg Margin/Bulan</div><div style="font-family:Plus Jakarta Sans,sans-serif;font-weight:700;font-size:14px;color:'+(avgMargin>=25?'var(--green)':avgMargin>=15?'var(--yellow)':'var(--red)')+'">'+avgMargin.toFixed(1)+'%</div><div style="font-size:10px;color:var(--text3)">Op. Income: '+fmt(avgOpIncome)+'/bln</div></div>' +
         '</div>' +
         '<div style="position:relative;height:220px"><canvas id="dashboard-chart" role="img" aria-label="Line chart tren bulanan revenue, op income, dan margin">Tren bulanan revenue, op. income, dan margin</canvas></div>' +
       '</div>';
@@ -1251,7 +1251,7 @@ function renderKandangDetail(kandangId) {
         const pStart = addDays(lastCO, avgGap);
         const pEnd = addDays(pStart, avgDur);
         prediksiHTML = '<div class="prediksi-card">' +
-          '<div style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:14px;color:#1a1a2e">🔮 Prediksi Periode Berikutnya</div>' +
+          '<div style="font-family:Plus Jakarta Sans,sans-serif;font-weight:700;font-size:14px;color:#1a1a2e">🔮 Prediksi Periode Berikutnya</div>' +
           '<div class="prediksi-grid">' +
           '<div class="prediksi-item"><div class="pi-label">Prediksi Mulai</div><div class="pi-value" style="color:#2a7de1">' + fmtDate(pStart) + '</div><div class="pi-sub">Gap rata-rata: ' + avgGap + ' hari</div></div>' +
           '<div class="prediksi-item"><div class="pi-label">Prediksi Selesai</div><div class="pi-value" style="color:#2a7de1">' + fmtDate(pEnd) + '</div><div class="pi-sub">Durasi ~' + avgDur + ' hari</div></div>' +
@@ -1627,7 +1627,7 @@ function showPnlDetail(r) {
   var inner =
     '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px">' +
     '<div>' +
-    '<div style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:16px;margin-bottom:6px">'+r.client+' &mdash; '+r.kandang+'</div>' +
+    '<div style="font-family:Plus Jakarta Sans,sans-serif;font-weight:700;font-size:16px;margin-bottom:6px">'+r.client+' &mdash; '+r.kandang+'</div>' +
     '<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">' +
     statusTag +
     '<span style="font-size:12px;color:var(--text2)">'+p.label+' · '+fmtDate(p.startDate)+(p.cutoffDate?' → '+fmtDate(p.cutoffDate):'')+'</span>' +
@@ -2277,7 +2277,7 @@ function renderGantt() {
     var x = LABEL_W + qi * MONTH_W * 3;
     var w = MONTH_W * 3;
     quarterHeaders += '<rect x="'+x+'" y="0" width="'+w+'" height="'+HEADER_H1+'" fill="'+(qi%2===0?'rgba(42,125,225,0.08)':'rgba(42,125,225,0.04)')+'"/>';
-    quarterHeaders += '<text x="'+(x+w/2)+'" y="'+(HEADER_H1-8)+'" text-anchor="middle" font-size="11" font-weight="700" fill="var(--text2)" font-family="'Plus Jakarta Sans',sans-serif">'+q+'</text>';
+    quarterHeaders += '<text x="'+(x+w/2)+'" y="'+(HEADER_H1-8)+'" text-anchor="middle" font-size="11" font-weight="700" fill="var(--text2)" font-family="Plus Jakarta Sans,sans-serif">'+q+'</text>';
     // Quarter border
     quarterHeaders += '<line x1="'+x+'" y1="0" x2="'+x+'" y2="'+(HEADER_H + (rows.length||1)*ROW_H)+'" stroke="var(--border)" stroke-width="1.5"/>';
   });
@@ -2288,7 +2288,7 @@ function renderGantt() {
   MONTHS_ID.forEach(function(m, mi) {
     var x = LABEL_W + mi * MONTH_W;
     monthHeaders += '<rect x="'+x+'" y="'+HEADER_H1+'" width="'+MONTH_W+'" height="'+HEADER_H2+'" fill="'+(mi%2===0?'rgba(0,0,0,0.02)':'rgba(0,0,0,0)') +'"/>';
-    monthHeaders += '<text x="'+(x+MONTH_W/2)+'" y="'+(HEADER_H1+HEADER_H2-7)+'" text-anchor="middle" font-size="10" fill="var(--text3)" font-family="'Plus Jakarta Sans',sans-serif">'+m+'</text>';
+    monthHeaders += '<text x="'+(x+MONTH_W/2)+'" y="'+(HEADER_H1+HEADER_H2-7)+'" text-anchor="middle" font-size="10" fill="var(--text3)" font-family="Plus Jakarta Sans,sans-serif">'+m+'</text>';
     // Grid line per month
     gridLines += '<line x1="'+x+'" y1="'+HEADER_H+'" x2="'+x+'" y2="'+(HEADER_H + rows.length*ROW_H)+'" stroke="var(--border)" stroke-width="0.5" opacity="0.6"/>';
   });
@@ -2309,8 +2309,8 @@ function renderGantt() {
     var y = HEADER_H + ri * ROW_H;
     labels += '<rect x="0" y="'+y+'" width="'+LABEL_W+'" height="'+ROW_H+'" fill="var(--surface)"/>';
     labels += '<line x1="'+LABEL_W+'" y1="'+y+'" x2="'+LABEL_W+'" y2="'+(y+ROW_H)+'" stroke="var(--border)" stroke-width="1"/>';
-    labels += '<text x="10" y="'+(y+16)+'" font-size="11" font-weight="600" fill="var(--text)" font-family="'Plus Jakarta Sans',sans-serif">'+escapeXML(row.kandang)+'</text>';
-    labels += '<text x="10" y="'+(y+29)+'" font-size="10" fill="var(--text3)" font-family="'Plus Jakarta Sans',sans-serif">'+escapeXML(row.client)+'</text>';
+    labels += '<text x="10" y="'+(y+16)+'" font-size="11" font-weight="600" fill="var(--text)" font-family="Plus Jakarta Sans,sans-serif">'+escapeXML(row.kandang)+'</text>';
+    labels += '<text x="10" y="'+(y+29)+'" font-size="10" fill="var(--text3)" font-family="Plus Jakarta Sans,sans-serif">'+escapeXML(row.client)+'</text>';
   });
 
   // Bars
@@ -2357,7 +2357,7 @@ function renderGantt() {
   // Year nav
   var yearNav = '<div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap">' +
     '<button class="btn btn-secondary btn-sm" onclick="_ganttYear--;renderGantt()">&#8592; '+(_ganttYear-1)+'</button>' +
-    '<span style="font-size:16px;font-weight:700;font-family:'Plus Jakarta Sans',sans-serif;color:var(--text)">'+yr+'</span>' +
+    '<span style="font-size:16px;font-weight:700;font-family:Plus Jakarta Sans,sans-serif;color:var(--text)">'+yr+'</span>' +
     '<button class="btn btn-secondary btn-sm" onclick="_ganttYear++;renderGantt()">'+(yr+1)+' &#8594;</button>' +
     '<div style="flex:1"></div>' +
     '<div style="display:flex;gap:10px;font-size:11px;color:var(--text2);align-items:center">' +
@@ -2409,7 +2409,7 @@ function renderGantt() {
 
   var dashHTML =
     '<div style="margin-bottom:16px;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px">' +
-    '<div style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:13px;margin-bottom:12px;color:var(--text2)">BULAN INI &mdash; '+MONTHS_FULL2[nowMonth].toUpperCase()+' '+nowYear+'</div>' +
+    '<div style="font-family:Plus Jakarta Sans,sans-serif;font-weight:700;font-size:13px;margin-bottom:12px;color:var(--text2)">BULAN INI &mdash; '+MONTHS_FULL2[nowMonth].toUpperCase()+' '+nowYear+'</div>' +
     '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px">' +
     '<div class="stat-card blue"><div class="stat-label">Kandang Aktif</div><div class="stat-value mono" style="font-size:22px">'+thisMonthPeriodes.length+'</div><div class="stat-sub">periode berjalan</div></div>' +
     '<div class="stat-card green"><div class="stat-label">Invoice Masuk</div><div class="stat-value mono" style="font-size:22px">'+tmInvoice+'</div><div class="stat-sub">periode cutoff</div></div>' +
@@ -2490,7 +2490,7 @@ function renderGantt() {
 
   var predListSection =
     '<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;margin-top:16px">' +
-    '<div style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:13px;margin-bottom:12px;color:var(--text2)">PREDIKSI PER BULAN &mdash; '+yr+'</div>' +
+    '<div style="font-family:Plus Jakarta Sans,sans-serif;font-weight:700;font-size:13px;margin-bottom:12px;color:var(--text2)">PREDIKSI PER BULAN &mdash; '+yr+'</div>' +
     monthChips + predListHTML + '</div>';
 
   cont.innerHTML = dashHTML + yearNav +
@@ -2560,7 +2560,7 @@ function showGanttDetail(tid) {
   // Header
   inner += '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px">';
   inner += '<div>';
-  inner += '<div style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:16px;margin-bottom:6px">'+bar.client+' &mdash; '+bar.kandang+'</div>';
+  inner += '<div style="font-family:Plus Jakarta Sans,sans-serif;font-weight:700;font-size:16px;margin-bottom:6px">'+bar.client+' &mdash; '+bar.kandang+'</div>';
 
   if (bar.isFuturePred) inner += '<span class="tag tag-green">Prediksi Periode Berikutnya</span>';
   else if (bar.isActive) inner += '<span class="tag tag-yellow">Periode Berjalan &mdash; '+bar.label+'</span>';
@@ -2614,7 +2614,7 @@ function showGanttDetail(tid) {
 
 function statBox(label, value, color) {
   return '<div style="background:var(--surface2);border-radius:10px;padding:12px 14px">' +
-    '<div style="font-size:10px;text-transform:uppercase;letter-spacing:0.5px;color:var(--text3);margin-bottom:4px;font-family:'Plus Jakarta Sans',sans-serif">'+label+'</div>' +
+    '<div style="font-size:10px;text-transform:uppercase;letter-spacing:0.5px;color:var(--text3);margin-bottom:4px;font-family:Plus Jakarta Sans,sans-serif">'+label+'</div>' +
     '<div style="font-size:16px;font-weight:700;font-family:DM Mono,monospace;color:'+color+'">'+value+'</div>' +
     '</div>';
 }
@@ -2706,12 +2706,12 @@ function renderPrediksi() {
   cards.forEach(function(card) {
     var p = card.pred;
     if (!p) {
-      kandangCardsHTML += '<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;opacity:0.6"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px"><span style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:700">' + card.client + ' &mdash; ' + card.kandang + '</span><span class="tag tag-gray">Butuh 2 periode</span></div><div style="font-size:12px;color:var(--text3)">' + card.cp.length + ' periode selesai</div></div>';
+      kandangCardsHTML += '<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;opacity:0.6"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px"><span style="font-family:Plus Jakarta Sans,sans-serif;font-weight:700">' + card.client + ' &mdash; ' + card.kandang + '</span><span class="tag tag-gray">Butuh 2 periode</span></div><div style="font-size:12px;color:var(--text3)">' + card.cp.length + ' periode selesai</div></div>';
       return;
     }
     kandangCardsHTML += '<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px">' +
       '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">' +
-      '<div><span style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:14px">' + card.client + ' &mdash; ' + card.kandang + '</span><span style="font-size:11px;color:var(--text3);margin-left:8px">dari ' + p.count + ' periode</span></div>' +
+      '<div><span style="font-family:Plus Jakarta Sans,sans-serif;font-weight:700;font-size:14px">' + card.client + ' &mdash; ' + card.kandang + '</span><span style="font-size:11px;color:var(--text3);margin-left:8px">dari ' + p.count + ' periode</span></div>' +
       '<button class="btn btn-secondary btn-sm" data-kid="' + card.kandangId + '" onclick="navigate(&#39;kandang&#39;,this.dataset.kid)">Detail &rarr;</button>' +
       '</div>' +
       '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px">' +
@@ -2736,7 +2736,7 @@ function renderPrediksi() {
     '<div class="stat-card yellow"><div class="stat-label">Kandang Berjalan</div><div class="stat-value">' + hasActive + '</div><div class="stat-sub">periode aktif saat ini</div></div>' +
     '</div>' +
     '<div style="background:linear-gradient(135deg,#fff8e1,#fff3e0);border:1px solid #ffe082;border-radius:12px;padding:18px;margin-bottom:20px">' +
-    '<div style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:15px;margin-bottom:4px">&#9889; Simulator Jisdor</div>' +
+    '<div style="font-family:Plus Jakarta Sans,sans-serif;font-weight:700;font-size:15px;margin-bottom:4px">&#9889; Simulator Jisdor</div>' +
     '<div style="font-size:12px;color:var(--text2);margin-bottom:12px">Simulasi dampak perubahan Jisdor terhadap COGS dan margin semua kandang aktif</div>' +
     '<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">' +
     '<span style="font-size:13px;color:var(--text2)">Jisdor simulasi:</span>' +
@@ -2747,10 +2747,10 @@ function renderPrediksi() {
     '<div id="sim-results" style="margin-top:12px"></div>' +
     '</div>' +
     '<div style="display:grid;grid-template-columns:1fr 1.5fr;gap:20px">' +
-    '<div><div style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:15px;margin-bottom:14px">&#128197; Timeline Pendapatan</div>' +
+    '<div><div style="font-family:Plus Jakarta Sans,sans-serif;font-weight:700;font-size:15px;margin-bottom:14px">&#128197; Timeline Pendapatan</div>' +
     (timelineHTML || '<div style="color:var(--text3);font-size:13px;padding:20px 0;text-align:center">Belum ada data prediksi</div>') +
     '</div>' +
-    '<div><div style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:15px;margin-bottom:14px">&#128202; Prediksi per Kandang</div>' +
+    '<div><div style="font-family:Plus Jakarta Sans,sans-serif;font-weight:700;font-size:15px;margin-bottom:14px">&#128202; Prediksi per Kandang</div>' +
     '<div style="display:flex;flex-direction:column;gap:10px">' + kandangCardsHTML + '</div>' +
     '</div></div>';
   setTimeout(runJisdorSim, 50);
@@ -3666,7 +3666,7 @@ function renderInvoiceKalender() {
     '<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:16px">' +
     '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">' +
     '<button class="btn btn-secondary btn-sm" onclick="kalPrev()">&#8249;</button>' +
-    '<div style="text-align:center"><div style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:18px">' + MONTH_ID[mo] + ' ' + yr + '</div>' + summaryLine + '</div>' +
+    '<div style="text-align:center"><div style="font-family:Plus Jakarta Sans,sans-serif;font-weight:700;font-size:18px">' + MONTH_ID[mo] + ' ' + yr + '</div>' + summaryLine + '</div>' +
     '<button class="btn btn-secondary btn-sm" onclick="kalNext()">&#8250;</button>' +
     '</div>' +
     '<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:6px">' + cells + '</div>' +
@@ -3718,7 +3718,7 @@ function showInvKalPopup(evDataEncoded) {
 
   popup.innerHTML = '<div onclick="event.stopPropagation()" style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:0;width:420px;max-width:95vw;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.2)">' +
     '<div style="padding:18px 20px 14px;background:'+headerBg+';border-bottom:1px solid '+headerBorder+';border-radius:14px 14px 0 0;display:flex;justify-content:space-between;align-items:flex-start">' +
-    '<div><div style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:16px;margin-bottom:6px">'+inv.client+' — Kandang '+inv.kandang+'</div>' + statusBadge + '</div>' +
+    '<div><div style="font-family:Plus Jakarta Sans,sans-serif;font-weight:700;font-size:16px;margin-bottom:6px">'+inv.client+' — Kandang '+inv.kandang+'</div>' + statusBadge + '</div>' +
     '<button onclick="closeInvKalPopup()" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--text3);padding:0 4px;line-height:1">×</button>' +
     '</div>' +
     '<div style="padding:16px 20px">' + rows +
@@ -3951,7 +3951,7 @@ function renderPrediksiKalender() {
     '<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:0;overflow:hidden">' +
     '<div style="background:var(--surface2);padding:14px 20px;display:flex;align-items:center;justify-content:space-between">' +
     '<button class="btn btn-secondary btn-sm" onclick="predKalPrev()">&#8249;</button>' +
-    '<div style="text-align:center"><div style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:20px">' + MONTH_ID[mo] + ' ' + yr + '</div>' +
+    '<div style="text-align:center"><div style="font-family:Plus Jakarta Sans,sans-serif;font-weight:700;font-size:20px">' + MONTH_ID[mo] + ' ' + yr + '</div>' +
     (summaryLine?'<div style="font-size:12px;margin-top:2px">'+summaryLine+'</div>':'') +
     '</div>' +
     '<button class="btn btn-secondary btn-sm" onclick="predKalNext()">&#8250;</button>' +
@@ -4006,7 +4006,7 @@ function showPredKalPopup(evDataEncoded) {
 
   popup.innerHTML = '<div onclick="event.stopPropagation()" style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:0;width:420px;max-width:95vw;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.2)">' +
     '<div style="padding:18px 20px 14px;background:'+headerBg+';border-bottom:1px solid '+headerBorder+';border-radius:14px 14px 0 0;display:flex;justify-content:space-between;align-items:flex-start">' +
-    '<div><div style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:16px;margin-bottom:6px">'+ev.client+' — Kandang '+ev.kandang+'</div>' + statusBadge + '</div>' +
+    '<div><div style="font-family:Plus Jakarta Sans,sans-serif;font-weight:700;font-size:16px;margin-bottom:6px">'+ev.client+' — Kandang '+ev.kandang+'</div>' + statusBadge + '</div>' +
     '<button onclick="closePredKalPopup()" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--text3);padding:0 4px;line-height:1">×</button>' +
     '</div>' +
     '<div style="padding:16px 20px">' + rows + estNote + '</div>' +
@@ -4412,7 +4412,7 @@ if (typeof _firestoreReady !== 'undefined' && _firestoreReady) {
       </div>
     </div>
     <hr style="border:none;border-top:1px solid var(--border);margin:16px 0">
-    <div style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:600;font-size:14px;margin-bottom:12px">Status Pembayaran</div>
+    <div style="font-family:Plus Jakarta Sans,sans-serif;font-weight:600;font-size:14px;margin-bottom:12px">Status Pembayaran</div>
     <div class="form-row cols-2">
       <div class="form-group">
         <label>Tanggal Bayar Aktual</label>
