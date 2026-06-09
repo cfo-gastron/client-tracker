@@ -2,6 +2,13 @@
 <html lang="id">
 <head>
 <meta charset="UTF-8">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Gastron">
+  <meta name="theme-color" content="#1a1a1a">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+  <link rel="manifest" href="/manifest.json">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Gastron Project Dashboard</title>
 <link rel="icon" type="image/png" href="data:image/png;base64,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">
@@ -212,6 +219,109 @@ tr:hover td{background:var(--surface2);}
   .cal-day.cal-selected{background:var(--accent2) !important;color:#fff !important;font-weight:700;}
   .cal-day.cal-has-data.cal-selected{background:var(--accent2) !important;color:#fff !important;}
   .cal-day.cal-today:not(.cal-has-data):not(.cal-selected){border:1px solid var(--border);}
+
+/* ============================================
+   MOBILE / PWA - Card-based Native App UI
+   ============================================ */
+.bottom-nav { display: none; }
+
+@media (max-width: 768px) {
+  :root { --safe-top: env(safe-area-inset-top, 0px); --safe-bottom: env(safe-area-inset-bottom, 0px); }
+  .app { flex-direction: column; height: 100dvh; overflow: hidden; }
+  .sidebar { display: none !important; }
+  .main { flex: 1; overflow-y: auto; overflow-x: hidden; padding-bottom: calc(64px + var(--safe-bottom)); }
+  .topbar { padding: 12px 16px; padding-top: calc(12px + var(--safe-top)); min-height: 52px; position: sticky; top: 0; z-index: 50; }
+  .topbar-title { font-size: 17px !important; font-weight: 700; }
+  .topbar-left { gap: 8px; }
+  .topbar-toggle { display: none; }
+  .topbar-actions { gap: 6px; }
+  .topbar-actions .btn span:not(.icon) { display: none; }
+  .topbar-actions .btn { padding: 7px 10px; min-width: 34px; justify-content: center; }
+  .content { padding: 14px 14px 20px; }
+  .stats-grid { grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
+  .stat-card { padding: 14px; border-radius: 12px; }
+  .stat-value { font-size: 18px !important; }
+  .stat-label { font-size: 10px; letter-spacing: 1px; margin-bottom: 6px; }
+  .stat-sub { font-size: 10px; }
+  .kandang-meta { grid-template-columns: 1fr 1fr; gap: 10px; }
+  .meta-card { padding: 12px; border-radius: 10px; }
+  .meta-value { font-size: 14px !important; }
+  .table-wrap { border-radius: 12px; overflow-x: auto; -webkit-overflow-scrolling: touch; margin-bottom: 16px; }
+  table { min-width: 600px; }
+  th, td { padding: 10px 12px; white-space: nowrap; }
+  th { font-size: 10px; }
+  td { font-size: 12px; }
+  .table-header { padding: 12px 14px; }
+  .table-title { font-size: 13px; }
+  .btn { font-size: 13px; padding: 9px 14px; border-radius: 9px; touch-action: manipulation; }
+  .btn-sm { padding: 6px 10px; font-size: 12px; }
+  .modal-overlay { align-items: flex-end !important; padding: 0 !important; }
+  .modal { width: 100% !important; max-width: 100% !important; border-radius: 20px 20px 0 0 !important; max-height: 92dvh; overflow-y: auto; padding: 20px 18px; padding-bottom: calc(20px + var(--safe-bottom)); }
+  .modal::before { content: ''; display: block; width: 36px; height: 4px; background: var(--border); border-radius: 2px; margin: 0 auto 16px; }
+  .modal h3 { font-size: 16px; margin-bottom: 16px; }
+  .form-row.cols-2, .form-row.cols-3 { grid-template-columns: 1fr; }
+  .tabs { overflow-x: auto; white-space: nowrap; flex-wrap: nowrap; -webkit-overflow-scrolling: touch; }
+  .tab { flex-shrink: 0; padding: 8px 12px; font-size: 12px; }
+  .section-header { margin-bottom: 10px; flex-wrap: wrap; gap: 8px; }
+  .section-title { font-size: 14px; }
+  .pl-row { grid-template-columns: 140px 1fr 70px; padding: 9px 12px; font-size: 12px; }
+  .prediksi-grid { grid-template-columns: 1fr 1fr; gap: 8px; }
+  .prediksi-card { padding: 14px; }
+  .prediksi-item { padding: 10px; }
+  .prediksi-item .pi-value { font-size: 13px; }
+  .capex-mini-dashboard { grid-template-columns: 1fr 1fr; gap: 8px; }
+  .capex-mini-card { padding: 10px 12px; }
+  .capex-mini-value { font-size: 13px; }
+  .info-box { font-size: 11px; padding: 10px 12px; }
+  .divider { margin: 16px 0; }
+  .empty-state { padding: 40px 16px; }
+  .empty-state .icon { font-size: 36px; }
+
+  .bottom-nav {
+    display: flex; position: fixed; bottom: 0; left: 0; right: 0;
+    height: calc(64px + var(--safe-bottom)); padding-bottom: var(--safe-bottom);
+    background: var(--surface); border-top: 1px solid var(--border);
+    z-index: 100; backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+  }
+  .bottom-nav-item {
+    flex: 1; display: flex; flex-direction: column; align-items: center;
+    justify-content: center; gap: 3px; cursor: pointer; color: var(--text3);
+    font-size: 10px; font-weight: 500; padding: 8px 4px; transition: color 0.15s;
+    -webkit-tap-highlight-color: transparent; touch-action: manipulation; position: relative;
+  }
+  .bottom-nav-item.active { color: var(--accent); }
+  .bottom-nav-item .nav-icon { font-size: 20px; line-height: 1; }
+  .bottom-nav-item .nav-label { font-size: 10px; }
+  .bottom-nav-item .nav-badge {
+    position: absolute; top: 6px; right: calc(50% - 18px);
+    background: var(--accent); color: #fff; font-size: 9px; font-weight: 700;
+    min-width: 16px; height: 16px; border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    padding: 0 4px; font-family: 'DM Mono', monospace;
+  }
+  .mobile-more-drawer {
+    position: fixed; bottom: calc(64px + var(--safe-bottom)); left: 0; right: 0;
+    background: var(--surface); border-top: 1px solid var(--border);
+    border-radius: 20px 20px 0 0; padding: 16px 12px;
+    z-index: 99; transform: translateY(100%);
+    transition: transform 0.25s cubic-bezier(0.4,0,0.2,1);
+    box-shadow: 0 -4px 24px rgba(0,0,0,0.1);
+  }
+  .mobile-more-drawer.open { transform: translateY(0); }
+  .mobile-more-drawer-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.3); z-index: 98; }
+  .mobile-more-drawer-overlay.open { display: block; }
+  .drawer-handle { width: 36px; height: 4px; background: var(--border); border-radius: 2px; margin: 0 auto 14px; }
+  .drawer-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; }
+  .drawer-item {
+    display: flex; flex-direction: column; align-items: center; gap: 6px;
+    padding: 14px 8px; border-radius: 12px; background: var(--surface2);
+    cursor: pointer; font-size: 12px; color: var(--text2); font-weight: 500;
+    -webkit-tap-highlight-color: transparent; touch-action: manipulation; transition: background 0.15s;
+  }
+  .drawer-item:active { background: var(--surface3); }
+  .drawer-item.active { background: rgba(200,25,30,0.08); color: var(--accent); }
+  .drawer-item .di-icon { font-size: 22px; }
+}
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 </head>
@@ -1046,6 +1156,28 @@ function toggleSidebar() {
   document.querySelectorAll('#sidebar-toggle-btn').forEach(function(btn) {
     btn.title = collapsed ? 'Expand sidebar' : 'Collapse sidebar';
   });
+}
+
+
+var _mobileDrawerPages = ['prediksi','trips','master'];
+var _bottomNavMap = { 'dashboard':'bnav-dashboard','clients':'bnav-clients','summary':'bnav-summary','invoice':'bnav-invoice','prediksi':'bnav-more','trips':'bnav-more','master':'bnav-more' };
+function navigateMobile(page) {
+  navigate(page);
+  document.querySelectorAll('.bottom-nav-item').forEach(function(el){ el.classList.remove('active'); });
+  var el = document.getElementById(_bottomNavMap[page]);
+  if (el) el.classList.add('active');
+  document.querySelectorAll('.drawer-item').forEach(function(el){ el.classList.remove('active'); });
+  if (_mobileDrawerPages.indexOf(page)>=0) { var d=document.getElementById('drawer-'+page); if(d) d.classList.add('active'); }
+}
+function toggleMoreDrawer() {
+  var drawer=document.getElementById('more-drawer'), overlay=document.getElementById('more-drawer-overlay');
+  var isOpen=drawer.classList.contains('open');
+  drawer.classList.toggle('open',!isOpen); overlay.classList.toggle('open',!isOpen);
+}
+function updateBottomNavBadge(count) {
+  var badge=document.getElementById('bnav-badge');
+  if(!badge) return;
+  badge.textContent=count; badge.style.display=count>0?'flex':'none';
 }
 
 // ============= CAPEX =============
@@ -4506,5 +4638,40 @@ if (typeof _firestoreReady !== 'undefined' && _firestoreReady) {
     </div>
   </div>
 </div>
+
+  <nav class="bottom-nav" id="bottom-nav">
+    <div class="bottom-nav-item active" id="bnav-dashboard" onclick="navigateMobile('dashboard')">
+      <span class="nav-icon">⬡</span><span class="nav-label">Dashboard</span>
+      <span class="nav-badge" id="bnav-badge" style="display:none"></span>
+    </div>
+    <div class="bottom-nav-item" id="bnav-clients" onclick="navigateMobile('clients')">
+      <span class="nav-icon">◈</span><span class="nav-label">Clients</span>
+    </div>
+    <div class="bottom-nav-item" id="bnav-summary" onclick="navigateMobile('summary')">
+      <span class="nav-icon">◉</span><span class="nav-label">P&L</span>
+    </div>
+    <div class="bottom-nav-item" id="bnav-invoice" onclick="navigateMobile('invoice')">
+      <span class="nav-icon">📋</span><span class="nav-label">Invoice</span>
+    </div>
+    <div class="bottom-nav-item" id="bnav-more" onclick="toggleMoreDrawer()">
+      <span class="nav-icon">•••</span><span class="nav-label">Lainnya</span>
+    </div>
+  </nav>
+  <div class="mobile-more-drawer-overlay" id="more-drawer-overlay" onclick="toggleMoreDrawer()"></div>
+  <div class="mobile-more-drawer" id="more-drawer">
+    <div class="drawer-handle"></div>
+    <div class="drawer-grid">
+      <div class="drawer-item" id="drawer-prediksi" onclick="navigateMobile('prediksi');toggleMoreDrawer()">
+        <span class="di-icon">🔮</span><span>Prediksi</span>
+      </div>
+      <div class="drawer-item" id="drawer-trips" onclick="navigateMobile('trips');toggleMoreDrawer()">
+        <span class="di-icon">🚚</span><span>Trip</span>
+      </div>
+      <div class="drawer-item" id="drawer-master" onclick="navigateMobile('master');toggleMoreDrawer()">
+        <span class="di-icon">◎</span><span>Master Data</span>
+      </div>
+    </div>
+  </div>
+
 </body>
 </html>
