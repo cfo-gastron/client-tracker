@@ -256,13 +256,7 @@ tr:hover td{background:var(--surface2);}
   .btn { font-size: 13px; padding: 9px 14px; border-radius: 9px; touch-action: manipulation; }
   .btn-sm { padding: 6px 10px; font-size: 12px; }
   .modal-overlay { align-items: flex-end !important; padding: 0 !important; }
-  .modal {
-    width: 100% !important; max-width: 100% !important;
-    border-radius: 20px 20px 0 0 !important;
-    max-height: 92dvh; overflow-y: auto;
-    padding: 20px 18px;
-    padding-bottom: calc(20px + var(--safe-bottom));
-  }
+  .modal { width: 100% !important; max-width: 100% !important; border-radius: 20px 20px 0 0 !important; max-height: 92dvh; overflow-y: auto; padding: 20px 18px; padding-bottom: calc(20px + var(--safe-bottom)); }
   .modal::before { content:''; display:block; width:36px; height:4px; background:var(--border); border-radius:2px; margin:0 auto 16px; }
   .modal h3 { font-size: 16px; margin-bottom: 16px; }
   .form-row.cols-2, .form-row.cols-3 { grid-template-columns: 1fr !important; }
@@ -278,55 +272,19 @@ tr:hover td{background:var(--surface2);}
   .info-box { font-size: 11px; padding: 10px 12px; }
   .divider { margin: 16px 0; }
   .empty-state { padding: 40px 16px; }
-
-  /* Bottom Nav */
-  .bottom-nav {
-    display: flex !important; position: fixed; bottom: 0; left: 0; right: 0;
-    height: calc(60px + var(--safe-bottom)); padding-bottom: var(--safe-bottom);
-    background: var(--surface); border-top: 1px solid var(--border);
-    z-index: 200; backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
-  }
-  .bottom-nav-item {
-    flex: 1; display: flex; flex-direction: column; align-items: center;
-    justify-content: center; gap: 3px; cursor: pointer; color: var(--text3);
-    font-weight: 500; padding: 8px 4px; transition: color 0.15s;
-    -webkit-tap-highlight-color: transparent; touch-action: manipulation; position: relative;
-  }
+  .bottom-nav { display: flex !important; position: fixed; bottom: 0; left: 0; right: 0; height: calc(60px + var(--safe-bottom)); padding-bottom: var(--safe-bottom); background: var(--surface); border-top: 1px solid var(--border); z-index: 200; backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); }
+  .bottom-nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; cursor: pointer; color: var(--text3); font-weight: 500; padding: 8px 4px; transition: color 0.15s; -webkit-tap-highlight-color: transparent; touch-action: manipulation; position: relative; }
   .bottom-nav-item.active { color: var(--accent); }
   .bottom-nav-item .nav-icon svg { width: 22px; height: 22px; }
   .bottom-nav-item .nav-label { font-size: 10px; }
-  .bottom-nav-item .nav-badge {
-    position: absolute; top: 5px; right: calc(50% - 20px);
-    background: var(--accent); color: #fff; font-size: 9px; font-weight: 700;
-    min-width: 16px; height: 16px; border-radius: 8px;
-    display: flex; align-items: center; justify-content: center; padding: 0 4px;
-  }
-
-  /* More Drawer */
-  .mobile-more-drawer {
-    display: block !important; position: fixed;
-    bottom: calc(60px + var(--safe-bottom)); left: 0; right: 0;
-    background: var(--surface); border-top: 1px solid var(--border);
-    border-radius: 20px 20px 0 0; padding: 12px 14px 16px;
-    z-index: 199; transform: translateY(100%);
-    transition: transform 0.25s cubic-bezier(0.4,0,0.2,1);
-    box-shadow: 0 -4px 24px rgba(0,0,0,0.15);
-  }
+  .bottom-nav-item .nav-badge { position: absolute; top: 5px; right: calc(50% - 20px); background: var(--accent); color: #fff; font-size: 9px; font-weight: 700; min-width: 16px; height: 16px; border-radius: 8px; display: flex; align-items: center; justify-content: center; padding: 0 4px; }
+  .mobile-more-drawer { display: block !important; position: fixed; bottom: calc(60px + var(--safe-bottom)); left: 0; right: 0; background: var(--surface); border-top: 1px solid var(--border); border-radius: 20px 20px 0 0; padding: 12px 14px 16px; z-index: 199; transform: translateY(100%); transition: transform 0.25s cubic-bezier(0.4,0,0.2,1); box-shadow: 0 -4px 24px rgba(0,0,0,0.15); }
   .mobile-more-drawer.open { transform: translateY(0); }
-  .mobile-more-drawer-overlay {
-    display: block !important; position: fixed; inset: 0;
-    background: rgba(0,0,0,0.35); z-index: 198; opacity: 0; pointer-events: none;
-    transition: opacity 0.25s;
-  }
+  .mobile-more-drawer-overlay { display: block !important; position: fixed; inset: 0; background: rgba(0,0,0,0.35); z-index: 198; opacity: 0; pointer-events: none; transition: opacity 0.25s; }
   .mobile-more-drawer-overlay.open { opacity: 1; pointer-events: auto; }
   .drawer-handle { width: 36px; height: 4px; background: var(--border); border-radius: 2px; margin: 0 auto 14px; }
   .drawer-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; }
-  .drawer-item {
-    display: flex; flex-direction: column; align-items: center; gap: 6px;
-    padding: 14px 8px; border-radius: 12px; background: var(--surface2);
-    cursor: pointer; font-size: 12px; color: var(--text2); font-weight: 500;
-    -webkit-tap-highlight-color: transparent; touch-action: manipulation; transition: background 0.15s;
-  }
+  .drawer-item { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 14px 8px; border-radius: 12px; background: var(--surface2); cursor: pointer; font-size: 12px; color: var(--text2); font-weight: 500; -webkit-tap-highlight-color: transparent; touch-action: manipulation; transition: background 0.15s; }
   .drawer-item:active { opacity: 0.7; }
   .drawer-item.active { background: rgba(192,57,43,0.1); color: var(--accent); }
   .drawer-item .di-icon svg { width: 24px; height: 24px; }
@@ -465,7 +423,7 @@ tr:hover td{background:var(--surface2);}
 
     <!-- MASTER DATA -->
     <div class="page" id="page-master">
-      <div class="topbar"><div class="topbar-left"><button class="topbar-toggle" id="sidebar-toggle-btn" onclick="toggleSidebar()" title="Toggle sidebar"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="1.5" y="2.5" width="15" height="13" rx="2" stroke="currentColor" stroke-width="1.5"/><line x1="6" y1="2.5" x2="6" y2="15.5" stroke="currentColor" stroke-width="1.5"/></svg></button><div class="topbar-title">Master Data</div></div></div>
+      <div class="topbar"><div class="topbar-left"><button class="topbar-toggle" id="sidebar-toggle-btn" onclick="toggleSidebar()" title="Toggle sidebar"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="1.5" y="2.5" width="15" height="13" rx="2" stroke="currentColor" stroke-width="1.5"/><line x1="6" y1="2.5" x2="6" y2="15.5" stroke="currentColor" stroke-width="1.5"/></svg></button><div class="topbar-title">Master Data</div></div><div class="topbar-actions"><button class="btn btn-secondary btn-sm" onclick="exportDataJSON()" title="Download semua data sebagai JSON untuk sharing/backup"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:5px"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Export Data</button></div></div>
       <div class="content" id="content-master"></div>
     </div>
   </div>
@@ -1168,37 +1126,98 @@ function toggleSidebar() {
 }
 
 
-// ===== MOBILE NAVIGATION =====
+// ===== EXPORT DATA =====
+function exportDataJSON() {
+  try {
+    var exportObj = {
+      _meta: {
+        exportedAt: new Date().toISOString(),
+        exportedBy: 'Gastron Project Dashboard',
+        version: '1.0',
+        note: 'Paste isi file ini ke Claude untuk diskusi data Gastron'
+      },
+      clients: (state.clients || []).map(function(cl) {
+        return {
+          id: cl.id,
+          name: cl.name,
+          location: cl.location,
+          kandangs: (cl.kandangs || []).map(function(k) {
+            return {
+              id: k.id,
+              name: k.name,
+              periodes: (k.periodes || []).map(function(p) {
+                var pl = calcPeriodePL(p, k);
+                return {
+                  id: p.id,
+                  label: p.label,
+                  startDate: p.startDate,
+                  cutoffDate: p.cutoffDate,
+                  isCutoff: p.isCutoff,
+                  hargaJual: p.hargaJual,
+                  budget: p.budget,
+                  buffer: p.buffer,
+                  invoiceNumber: p.invoiceNumber,
+                  invoiceDate: p.invoiceDate,
+                  paidDate: p.paidDate,
+                  // Summary P&L
+                  _summary: {
+                    totalVolume: pl.totalVolume,
+                    revenue: pl.revenue,
+                    cogs: pl.cogs,
+                    opex: pl.opex,
+                    opIncome: pl.opIncome,
+                    netMargin: pl.netMargin,
+                    cogsPct: pl.cogsPct
+                  },
+                  cogsEntries: p.cogsEntries || [],
+                  opexEntries: p.opexEntries || [],
+                  opsEntries: p.opsEntries || []
+                };
+              })
+            };
+          })
+        };
+      }),
+      master: state.master || {},
+      trips: state.trips || []
+    };
+
+    var jsonStr = JSON.stringify(exportObj, null, 2);
+    var blob = new Blob([jsonStr], { type: 'application/json' });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    var now = new Date();
+    var dateStr = now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0') + '-' + String(now.getDate()).padStart(2,'0');
+    a.href = url;
+    a.download = 'gastron-data-' + dateStr + '.json';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  } catch(e) {
+    alert('Export gagal: ' + e.message);
+  }
+}
+
+
 var _mobileDrawerPages = ['prediksi','trips','master'];
-var _bottomNavMap = {
-  'dashboard':'bnav-dashboard','clients':'bnav-clients',
-  'summary':'bnav-summary','invoice':'bnav-invoice',
-  'prediksi':'bnav-more','trips':'bnav-more','master':'bnav-more'
-};
+var _bottomNavMap = { 'dashboard':'bnav-dashboard','clients':'bnav-clients','summary':'bnav-summary','invoice':'bnav-invoice','prediksi':'bnav-more','trips':'bnav-more','master':'bnav-more' };
 function navigateMobile(page) {
   navigate(page);
   document.querySelectorAll('.bottom-nav-item').forEach(function(el){ el.classList.remove('active'); });
-  var el = document.getElementById(_bottomNavMap[page]);
-  if (el) el.classList.add('active');
+  var el = document.getElementById(_bottomNavMap[page]); if (el) el.classList.add('active');
   document.querySelectorAll('.drawer-item').forEach(function(el){ el.classList.remove('active'); });
-  if (_mobileDrawerPages.indexOf(page) >= 0) {
-    var d = document.getElementById('drawer-' + page);
-    if (d) d.classList.add('active');
-  }
+  if (_mobileDrawerPages.indexOf(page)>=0){ var d=document.getElementById('drawer-'+page); if(d) d.classList.add('active'); }
 }
 function toggleMoreDrawer() {
-  var drawer = document.getElementById('more-drawer');
-  var overlay = document.getElementById('more-drawer-overlay');
-  if (!drawer) return;
-  var isOpen = drawer.classList.contains('open');
-  drawer.classList.toggle('open', !isOpen);
-  overlay.classList.toggle('open', !isOpen);
+  var drawer=document.getElementById('more-drawer'), overlay=document.getElementById('more-drawer-overlay');
+  if(!drawer) return;
+  var isOpen=drawer.classList.contains('open');
+  drawer.classList.toggle('open',!isOpen); overlay.classList.toggle('open',!isOpen);
 }
 function updateBottomNavBadge(count) {
-  var badge = document.getElementById('bnav-badge');
-  if (!badge) return;
-  badge.textContent = count;
-  badge.style.display = count > 0 ? 'flex' : 'none';
+  var badge=document.getElementById('bnav-badge'); if(!badge) return;
+  badge.textContent=count; badge.style.display=count>0?'flex':'none';
 }
 
 // ============= CAPEX =============
@@ -4659,7 +4678,6 @@ if (typeof _firestoreReady !== 'undefined' && _firestoreReady) {
     </div>
   </div>
 </div>
-  <!-- ===== BOTTOM NAV (mobile only) ===== -->
   <nav class="bottom-nav" id="bottom-nav">
     <div class="bottom-nav-item active" id="bnav-dashboard" onclick="navigateMobile('dashboard')">
       <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></span>
@@ -4675,7 +4693,7 @@ if (typeof _firestoreReady !== 'undefined' && _firestoreReady) {
       <span class="nav-label">P&amp;L</span>
     </div>
     <div class="bottom-nav-item" id="bnav-invoice" onclick="navigateMobile('invoice')">
-      <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg></span>
+      <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></span>
       <span class="nav-label">Invoice</span>
     </div>
     <div class="bottom-nav-item" id="bnav-more" onclick="toggleMoreDrawer()">
@@ -4683,11 +4701,7 @@ if (typeof _firestoreReady !== 'undefined' && _firestoreReady) {
       <span class="nav-label">Lainnya</span>
     </div>
   </nav>
-
-  <!-- More Drawer Overlay -->
   <div class="mobile-more-drawer-overlay" id="more-drawer-overlay" onclick="toggleMoreDrawer()"></div>
-
-  <!-- More Drawer -->
   <div class="mobile-more-drawer" id="more-drawer">
     <div class="drawer-handle"></div>
     <div class="drawer-grid">
