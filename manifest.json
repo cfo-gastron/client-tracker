@@ -1,7 +1,6 @@
 {
   "name": "Gastron Project Dashboard",
   "short_name": "Gastron",
-  "description": "Gastron CNG Client Financial Tracker",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#f5f5f7",
