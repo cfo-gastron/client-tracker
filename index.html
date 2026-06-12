@@ -1225,7 +1225,7 @@ renderClients = function() {
           '<div class="m-icon-btn-sm" data-kid="'+k.id+'" data-name="'+k.name+'" onclick="openEditKandang(this)">&#9998;</div>'+
           '<div class="m-icon-btn-sm danger" data-kid="'+k.id+'" data-cid="'+cl.id+'" data-name="'+k.name+'" onclick="confirmDeleteKandang(this)">&times;</div>'+
         '</div></div>'+
-        '<div class="m-capex-toggle" onclick="toggleMobileCapex(''+cxId+'')">'+
+        '<div class="m-capex-toggle" onclick="toggleMobileCapex(\''+cxId+'\')">' +
           '<span class="m-capex-toggle-label">CAPEX</span>'+
           '<span class="m-capex-toggle-chevron" id="chevron-'+cxId+'">&#9662;</span>'+
         '</div>'+
@@ -1234,7 +1234,7 @@ renderClients = function() {
     var clIni=cl.name?cl.name.charAt(0).toUpperCase():'?';
     var cId='m-cl-'+cl.id;
     mHtml+='<div class="m-client-card" id="'+cId+'">'+
-      '<div class="m-client-header" onclick="toggleMobileClientCard(''+cId+'')">'+
+      '<div class="m-client-header" onclick="toggleMobileClientCard(\''+cId+'\')">'+
         '<div class="m-client-avatar">'+clIni+'</div>'+
         '<div class="m-client-info"><div class="m-client-name">'+cl.name+'</div>'+
         '<div class="m-client-loc">'+(cl.location||'Lokasi belum diisi')+' &middot; '+(cl.kandangs||[]).length+' kandang</div></div>'+
