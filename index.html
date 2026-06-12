@@ -229,7 +229,7 @@ tr:hover td{background:var(--surface2);}
 .main{flex:1;overflow-y:auto;overflow-x:hidden;padding-bottom:calc(58px + var(--safe-bottom));}
 .topbar{padding:12px 16px;padding-top:calc(12px + var(--safe-top));min-height:52px;position:sticky;top:0;z-index:50;}
 .topbar-title{font-size:17px!important;font-weight:700;}
-.topbar-left{gap:8px;}.topbar-toggle{display:none;}.topbar-actions{gap:6px;}
+.topbar-left{gap:8px;}.topbar-toggle{display:none!important;}.topbar-actions{gap:6px;}
 .topbar-actions .btn{padding:8px 12px;font-size:12px;min-height:36px;position:relative;}
 .topbar-actions .btn::after{content:'';position:absolute;inset:-4px;}
 .btn{min-height:44px;padding:10px 16px;font-size:14px;border-radius:10px;}
@@ -257,8 +257,8 @@ tr:hover td{background:var(--surface2);}
 .periode-toggle > div:last-child{width:100%;justify-content:flex-end;flex-wrap:wrap;gap:6px;}
 #gantt-wrap,#gantt-year-nav{display:none!important;}
 /* Client cards */
-#content-clients .table-wrap table{display:none;}
-#content-clients .table-wrap .table-header{display:none;}
+#content-clients .table-wrap table{display:none!important;}
+#content-clients .table-wrap .table-header{display:none!important;}
 .m-client-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;margin-bottom:12px;overflow:hidden;}
 .m-client-header{display:flex;align-items:center;padding:14px 16px;gap:10px;cursor:pointer;-webkit-tap-highlight-color:transparent;}
 .m-client-avatar{width:40px;height:40px;border-radius:10px;background:rgba(200,25,30,0.08);color:var(--accent);font-weight:800;font-size:16px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
@@ -775,6 +775,10 @@ function save() {
   if (typeof _saveToFirestore === 'function') _saveToFirestore(str);
 }
 
+// ============= GLOBALS =============
+var MONTH_ID = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+var MONTH_ID_FULL = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+
 // ============= HELPERS =============
 const MONTH_NAMES = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
 const MONTH_FULL = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
@@ -1267,7 +1271,6 @@ function toggleMobileCapex(id){var s=document.getElementById(id),ch=document.get
 
 function buildSupplyMobileCards(sorted) {
   if (!isMobile()) return '';
-  var MONTH_ID2 = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
   var cards = sorted.map(function(m) {
     var margin = m.revenue > 0 ? m.opIncome/m.revenue*100 : 0;
     var mc = tagColor(margin);
@@ -1279,7 +1282,7 @@ function buildSupplyMobileCards(sorted) {
     return '<div class="m-card" id="mc-supply-'+iid+'">'
       +'<div class="m-card-header" onclick="toggleMobileCard(\'mc-supply-'+iid+'\');if(isMobile())toggleInsight(\''+iid+'\')">'
         +'<div class="m-status-dot '+dc+'"></div>'
-        +'<div class="m-card-title">'+(MONTH_ID[m.mIdx]||MONTH_ID2[m.mIdx]||m.mIdx)+' '+m.year
+        +'<div class="m-card-title">'+(MONTH_ID[m.mIdx]||m.mIdx)+' '+m.year
           +'<div class="m-card-sub">'+fmtNum(m.volume,2)+' Sm&#179; &middot; '+sb+'</div>'
         +'</div>'
         +'<div class="m-card-right">'
@@ -1317,14 +1320,13 @@ function buildSupplyMobileCards(sorted) {
 
 function buildInvoiceSummaryMobileCards(sorted) {
   if (!isMobile()) return '';
-  var MONTH_ID2 = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
   var cards = sorted.map(function(m) {
     var margin = m.revenue > 0 ? m.opIncome/m.revenue*100 : 0;
     var mc = tagColor(margin);
     var iid = 'inv-'+m.year+'-'+m.mIdx;
     return '<div class="m-card" id="mc-'+iid+'">'
       +'<div class="m-card-header" onclick="toggleMobileCard(\'mc-'+iid+'\');if(isMobile())toggleInsight(\''+iid+'\')">'
-        +'<div class="m-card-title">'+(MONTH_ID[m.mIdx]||MONTH_ID2[m.mIdx]||m.mIdx)+' '+m.year
+        +'<div class="m-card-title">'+(MONTH_ID[m.mIdx]||m.mIdx)+' '+m.year
           +'<div class="m-card-sub">'+m.count+' invoice</div>'
         +'</div>'
         +'<div class="m-card-right"><div class="m-card-value green">'+fmt(m.opIncome)+'</div>'
