@@ -1198,14 +1198,16 @@ function toggleSidebar() {
 }
 
 
-// ===== MOBILE CLIENT CARDS PATCH =====
+// ===== MOBILE JS =====
+function isMobile(){return window.innerWidth<=768;}
+function tagColor(m){return m>=25?'green':m>=15?'yellow':'red';}
+
 var _origRenderClients = renderClients;
 renderClients = function() {
   _origRenderClients();
-  if (!window.innerWidth || window.innerWidth > 768) return;
+  if (!isMobile()) return;
   var cont = document.getElementById('content-clients');
   if (!cont) return;
-  // Build mobile cards
   var mHtml = '';
   (state.clients||[]).forEach(function(cl) {
     var totV=0,totR=0,totI=0,mKrows='';
@@ -1215,64 +1217,284 @@ renderClients = function() {
       totV+=tv;totR+=tr;totI+=ti;
       var ini=k.name?k.name.charAt(0).toUpperCase():'?';
       var cxId='capex-m-'+k.id;
-      mKrows+='<div class="m-kandang-row">'+
-        '<div class="m-kandang-badge">'+ini+'</div>'+
-        '<div class="m-kandang-info"><div class="m-kandang-name">'+k.name+'</div>'+
-        '<div class="m-kandang-meta">'+(k.periodes||[]).length+' periode &middot; '+fmtNum(tv,0)+' Sm&#179;</div></div>'+
-        '<div class="m-kandang-revenue">'+fmt(tr)+'</div>'+
-        '<div class="m-kandang-actions">'+
-          '<div class="m-icon-btn-sm" data-kid="'+k.id+'" onclick="navigate(&#39;kandang&#39;,this.dataset.kid)">&rarr;</div>'+
-          '<div class="m-icon-btn-sm" data-kid="'+k.id+'" data-name="'+k.name+'" onclick="openEditKandang(this)">&#9998;</div>'+
-          '<div class="m-icon-btn-sm danger" data-kid="'+k.id+'" data-cid="'+cl.id+'" data-name="'+k.name+'" onclick="confirmDeleteKandang(this)">&times;</div>'+
-        '</div></div>'+
-        '<div class="m-capex-toggle" onclick="toggleMobileCapex(\''+cxId+'\')">' +
-          '<span class="m-capex-toggle-label">CAPEX</span>'+
-          '<span class="m-capex-toggle-chevron" id="chevron-'+cxId+'">&#9662;</span>'+
-        '</div>'+
-        '<div class="m-capex-section" id="'+cxId+'">'+renderCapexSection(k)+'</div>';
+      mKrows+='<div class="m-kandang-row">'
+        +'<div class="m-kandang-badge">'+ini+'</div>'
+        +'<div class="m-kandang-info"><div class="m-kandang-name">'+k.name+'</div>'
+        +'<div class="m-kandang-meta">'+(k.periodes||[]).length+' periode &middot; '+fmtNum(tv,0)+' Sm&#179;</div></div>'
+        +'<div class="m-kandang-revenue">'+fmt(tr)+'</div>'
+        +'<div class="m-kandang-actions">'
+          +'<div class="m-icon-btn-sm" data-kid="'+k.id+'" onclick="navigate(\'kandang\',this.dataset.kid)">&rarr;</div>'
+          +'<div class="m-icon-btn-sm" data-kid="'+k.id+'" data-name="'+k.name+'" onclick="openEditKandang(this)">&#9998;</div>'
+          +'<div class="m-icon-btn-sm danger" data-kid="'+k.id+'" data-cid="'+cl.id+'" data-name="'+k.name+'" onclick="confirmDeleteKandang(this)">&times;</div>'
+        +'</div></div>'
+        +'<div class="m-capex-toggle" onclick="toggleMobileCapex(\''+cxId+'\')">'
+          +'<span class="m-capex-toggle-label">CAPEX</span>'
+          +'<span class="m-capex-toggle-chevron" id="chevron-'+cxId+'">&#9662;</span>'
+        +'</div>'
+        +'<div class="m-capex-section" id="'+cxId+'">'+renderCapexSection(k)+'</div>';
     });
     var clIni=cl.name?cl.name.charAt(0).toUpperCase():'?';
     var cId='m-cl-'+cl.id;
-    mHtml+='<div class="m-client-card" id="'+cId+'">'+
-      '<div class="m-client-header" onclick="toggleMobileClientCard(\''+cId+'\')">'+
-        '<div class="m-client-avatar">'+clIni+'</div>'+
-        '<div class="m-client-info"><div class="m-client-name">'+cl.name+'</div>'+
-        '<div class="m-client-loc">'+(cl.location||'Lokasi belum diisi')+' &middot; '+(cl.kandangs||[]).length+' kandang</div></div>'+
-        '<div class="m-client-icon-actions">'+
-          '<div class="m-icon-btn primary" data-cid="'+cl.id+'" onclick="event.stopPropagation();viewClientSummary(this.dataset.cid)">&#128202;</div>'+
-          '<div class="m-icon-btn" data-cid="'+cl.id+'" data-name="'+cl.name+'" data-loc="'+(cl.location||'')+'" onclick="event.stopPropagation();openEditClient(this)">&#9998;</div>'+
-          '<div class="m-icon-btn danger" data-cid="'+cl.id+'" onclick="event.stopPropagation();deleteClientById(this.dataset.cid)">&times;</div>'+
-        '</div>'+
-        '<span class="m-client-chevron">&#9662;</span>'+
-      '</div>'+
-      '<div class="m-client-stats">'+
-        '<div class="m-stat-item"><div class="m-stat-label">Volume</div><div class="m-stat-val">'+fmtNum(totV,0)+' Sm&#179;</div></div>'+
-        '<div class="m-stat-item"><div class="m-stat-label">Revenue</div><div class="m-stat-val">'+fmt(totR)+'</div></div>'+
-        '<div class="m-stat-item"><div class="m-stat-label">Op. Income</div><div class="m-stat-val green">'+fmt(totI)+'</div></div>'+
-      '</div>'+
-      '<div class="m-kandang-list">'+mKrows+'</div>'+
-      '<div class="m-add-kandang"><button class="m-add-kandang-btn" data-cid="'+cl.id+'" onclick="openAddKandangModal(this.dataset.cid)">+ Tambah Kandang</button></div>'+
-    '</div>';
+    mHtml+='<div class="m-client-card" id="'+cId+'">'
+      +'<div class="m-client-header" onclick="toggleMobileClientCard(\''+cId+'\')">'
+        +'<div class="m-client-avatar">'+clIni+'</div>'
+        +'<div class="m-client-info"><div class="m-client-name">'+cl.name+'</div>'
+        +'<div class="m-client-loc">'+(cl.location||'Lokasi belum diisi')+' &middot; '+(cl.kandangs||[]).length+' kandang</div></div>'
+        +'<div class="m-client-icon-actions">'
+          +'<div class="m-icon-btn primary" data-cid="'+cl.id+'" onclick="event.stopPropagation();viewClientSummary(this.dataset.cid)">&#128202;</div>'
+          +'<div class="m-icon-btn" data-cid="'+cl.id+'" data-name="'+cl.name+'" data-loc="'+(cl.location||'')+'" onclick="event.stopPropagation();openEditClient(this)">&#9998;</div>'
+          +'<div class="m-icon-btn danger" data-cid="'+cl.id+'" onclick="event.stopPropagation();deleteClientById(this.dataset.cid)">&times;</div>'
+        +'</div>'
+        +'<span class="m-client-chevron">&#9662;</span>'
+      +'</div>'
+      +'<div class="m-client-stats">'
+        +'<div class="m-stat-item"><div class="m-stat-label">Volume</div><div class="m-stat-val">'+fmtNum(totV,0)+' Sm&#179;</div></div>'
+        +'<div class="m-stat-item"><div class="m-stat-label">Revenue</div><div class="m-stat-val">'+fmt(totR)+'</div></div>'
+        +'<div class="m-stat-item"><div class="m-stat-label">Op. Income</div><div class="m-stat-val green">'+fmt(totI)+'</div></div>'
+      +'</div>'
+      +'<div class="m-kandang-list">'+mKrows+'</div>'
+      +'<div class="m-add-kandang"><button class="m-add-kandang-btn" data-cid="'+cl.id+'" onclick="openAddKandangModal(this.dataset.cid)">+ Tambah Kandang</button></div>'
+    +'</div>';
   });
-  // Append after existing content
   var wrapper = document.createElement('div');
   wrapper.id = 'm-clients-wrapper';
   wrapper.innerHTML = mHtml;
   cont.appendChild(wrapper);
 };
+
 function toggleMobileClientCard(id){var c=document.getElementById(id);if(c)c.classList.toggle('open');}
 function toggleMobileCapex(id){var s=document.getElementById(id),ch=document.getElementById('chevron-'+id);if(!s)return;s.classList.toggle('open');if(ch)ch.style.transform=s.classList.contains('open')?'rotate(180deg)':'';}
 
-function isMobile(){return window.innerWidth<=768;}
-function tagColor(m){return m>=25?'green':m>=15?'yellow':'red';}
-function buildSupplyMobileCards(sorted){if(!isMobile())return '';var cards=sorted.map(function(m){var margin=m.revenue>0?m.opIncome/m.revenue*100:0;var mc=tagColor(margin);var dc=m.hasOngoing?'ongoing':'done';var sb=m.hasOngoing?'<span style="background:#fff3e0;color:#e07b00;font-size:9px;padding:2px 7px;border-radius:10px;font-weight:600">&#9679; Berjalan</span>':'<span style="background:#e8f5e9;color:#1a9e5c;font-size:9px;padding:2px 7px;border-radius:10px;font-weight:600">&#10003; Selesai</span>';var iid=m.year+'-'+m.mIdx;return '<div class="m-card" id="mc-supply-'+iid+'"><div class="m-card-header" onclick="toggleMobileCard('mc-supply-'+iid+'');if(isMobile())toggleInsight(''+iid+'')"><div class="m-status-dot '+dc+'"></div><div class="m-card-title">'+(MONTH_ID[m.mIdx]||m.mIdx)+' '+m.year+'<div class="m-card-sub">'+fmtNum(m.volume,2)+' Sm&#179; &middot; '+sb+'</div></div><div class="m-card-right"><div class="m-card-value green">'+fmt(m.opIncome)+'</div><span class="tag tag-'+mc+'" style="font-size:11px">'+margin.toFixed(1)+'%</span></div><span class="m-chevron">&#9662;</span></div><div class="m-card-body"><div class="m-kpi"><div class="m-kpi-label">Volume</div><div class="m-kpi-value">'+fmtNum(m.volume,2)+' Sm&#179;</div></div><div class="m-kpi"><div class="m-kpi-label">Revenue</div><div class="m-kpi-value">'+fmt(m.revenue)+'</div></div><div class="m-kpi"><div class="m-kpi-label">COGS</div><div class="m-kpi-value red">'+fmt(m.cogs)+'</div></div><div class="m-kpi"><div class="m-kpi-label">Op. Income</div><div class="m-kpi-value green">'+fmt(m.opIncome)+'</div></div></div></div>';});var tV=0,tC=0,tR=0,tI=0;sorted.forEach(function(m){tV+=m.volume;tC+=m.cogs;tR+=m.revenue;tI+=m.opIncome;});var tM=tR?tI/tR*100:0;cards.push('<div class="m-card total-card"><div class="m-card-header"><div class="m-card-title" style="font-weight:800">TOTAL</div><div class="m-card-right"><div class="m-card-value green">'+fmt(tI)+'</div><span class="tag tag-'+tagColor(tM)+'" style="font-size:11px">'+tM.toFixed(1)+'%</span></div></div><div class="m-card-body"><div class="m-kpi"><div class="m-kpi-label">Volume</div><div class="m-kpi-value">'+fmtNum(tV,2)+' Sm&#179;</div></div><div class="m-kpi"><div class="m-kpi-label">Revenue</div><div class="m-kpi-value">'+fmt(tR)+'</div></div><div class="m-kpi"><div class="m-kpi-label">COGS</div><div class="m-kpi-value red">'+fmt(tC)+'</div></div><div class="m-kpi"><div class="m-kpi-label">Op. Income</div><div class="m-kpi-value green">'+fmt(tI)+'</div></div></div></div>');return '<div class="mobile-card-list">'+cards.join('')+'</div>';}
-function buildInvoiceSummaryMobileCards(sorted){if(!isMobile())return '';var cards=sorted.map(function(m){var margin=m.revenue>0?m.opIncome/m.revenue*100:0;var mc=tagColor(margin);var iid='inv-'+m.year+'-'+m.mIdx;return '<div class="m-card" id="mc-'+iid+'"><div class="m-card-header" onclick="toggleMobileCard('mc-'+iid+'');if(isMobile())toggleInsight(''+iid+'')"><div class="m-card-title">'+(MONTH_ID[m.mIdx]||m.mIdx)+' '+m.year+'<div class="m-card-sub">'+m.count+' invoice</div></div><div class="m-card-right"><div class="m-card-value green">'+fmt(m.opIncome)+'</div><span class="tag tag-'+mc+'" style="font-size:11px">'+margin.toFixed(1)+'%</span></div><span class="m-chevron">&#9662;</span></div><div class="m-card-body"><div class="m-kpi"><div class="m-kpi-label">Revenue</div><div class="m-kpi-value">'+fmt(m.revenue)+'</div></div><div class="m-kpi"><div class="m-kpi-label">COGS</div><div class="m-kpi-value red">'+fmt(m.cogs)+'</div></div><div class="m-kpi"><div class="m-kpi-label">Op. Income</div><div class="m-kpi-value green">'+fmt(m.opIncome)+'</div></div><div class="m-kpi"><div class="m-kpi-label">Margin</div><div class="m-kpi-value '+mc+'">'+margin.toFixed(1)+'%</div></div></div></div>';});var tR=0,tC=0,tI=0,tN=0;sorted.forEach(function(m){tR+=m.revenue;tC+=m.cogs;tI+=m.opIncome;tN+=m.count;});var tM=tR?tI/tR*100:0;cards.push('<div class="m-card total-card"><div class="m-card-header"><div class="m-card-title" style="font-weight:800">TOTAL &middot; '+tN+' invoice</div><div class="m-card-right"><div class="m-card-value green">'+fmt(tI)+'</div><span class="tag tag-'+tagColor(tM)+'" style="font-size:11px">'+tM.toFixed(1)+'%</span></div></div><div class="m-card-body"><div class="m-kpi"><div class="m-kpi-label">Revenue</div><div class="m-kpi-value">'+fmt(tR)+'</div></div><div class="m-kpi"><div class="m-kpi-label">COGS</div><div class="m-kpi-value red">'+fmt(tC)+'</div></div></div></div>');return '<div class="mobile-card-list">'+cards.join('')+'</div>';}
-function buildInvoiceTrackerMobileCards(invoices){if(!isMobile())return '';var sL={lunas:'Lunas',overdue:'Overdue',belum:'Belum Bayar'};var sD={lunas:'done',overdue:'overdue',belum:'belum'};var cards=invoices.map(function(inv,i){var cid='mc-inv-'+i;return '<div class="m-card" id="'+cid+'"><div class="m-card-header" onclick="toggleMobileCard(''+cid+'')"><div class="m-status-dot '+sD[inv.payStatus]+'"></div><div class="m-card-title">'+inv.client+'<div class="m-card-sub"><span class="tag tag-blue" style="font-size:10px;padding:1px 6px">'+inv.kandang+'</span> '+inv.label+'</div></div><div class="m-card-right"><div class="m-card-value">'+fmt(inv.revenue)+'</div><span class="tag tag-'+(inv.payStatus==='lunas'?'green':inv.payStatus==='overdue'?'red':'blue')+'" style="font-size:10px">'+sL[inv.payStatus]+'</span></div><span class="m-chevron">&#9662;</span></div><div class="m-card-body"><div class="m-kpi"><div class="m-kpi-label">Cut-off</div><div class="m-kpi-value">'+fmtDate(inv.cutoffDate)+'</div></div><div class="m-kpi"><div class="m-kpi-label">Deadline</div><div class="m-kpi-value'+(inv.payStatus==='overdue'?' red':'')+'">'+fmtDate(inv.deadline)+'</div></div><div class="m-kpi"><div class="m-kpi-label">Nilai</div><div class="m-kpi-value">'+fmt(inv.revenue)+'</div></div><div class="m-kpi"><div class="m-kpi-label">Bayar</div><div class="m-kpi-value">'+(inv.paidDate?fmtDate(inv.paidDate):'&mdash;')+'</div></div></div><div class="m-card-actions">'+(inv.invoiceLink?'<a href="'+inv.invoiceLink+'" target="_blank" class="btn btn-secondary btn-sm" style="text-decoration:none">&#128203; Invoice</a>':'')+'<button class="btn btn-secondary btn-sm" data-kid="'+inv.kandangId+'" data-pid="'+inv.periodeId+'" onclick="openInvoiceModal(this.dataset.kid,this.dataset.pid)">&#9998; Edit</button></div></div>';});return '<div class="mobile-card-list">'+(cards.length?cards.join(''):'<div style="padding:24px;text-align:center;color:var(--text3)">Tidak ada invoice</div>')+'</div>';}
-function buildTripMobileCards(trips){if(!isMobile())return '';var cards=trips.map(function(t){var al=getTripAllocated(t.id);var sisa=t.volume-al;var pct=t.volume>0?(al/t.volume*100):0;var sc=sisa<0?'red':sisa===0?'green':'yellow';var bc=pct>=100?'var(--green)':pct>=50?'var(--accent2)':'var(--yellow)';var cid='mc-trip-'+t.id;return '<div class="m-card" id="'+cid+'"><div class="m-card-header" onclick="toggleMobileCard(''+cid+'')"><div class="m-card-title">'+fmtDate(t.date)+'<div class="m-card-sub">'+fmtNum(t.volume,2)+' Sm&#179;</div></div><div class="m-card-right"><div class="m-card-value">'+fmt(t.biaya)+'</div><span class="m-kpi-value '+sc+'" style="font-size:11px">Sisa '+fmtNum(sisa,2)+'</span></div><span class="m-chevron">&#9662;</span></div><div class="m-card-body"><div class="m-kpi"><div class="m-kpi-label">Volume</div><div class="m-kpi-value">'+fmtNum(t.volume,2)+' Sm&#179;</div></div><div class="m-kpi"><div class="m-kpi-label">Biaya Trip</div><div class="m-kpi-value">'+fmt(t.biaya)+'</div></div><div class="m-kpi"><div class="m-kpi-label">Dialokasi</div><div class="m-kpi-value">'+fmtNum(al,2)+' ('+pct.toFixed(0)+'%)</div></div><div class="m-kpi"><div class="m-kpi-label">Sisa</div><div class="m-kpi-value '+sc+'">'+fmtNum(sisa,2)+' Sm&#179;</div></div><div class="m-kpi full"><div class="m-kpi-label">Progress</div><div class="m-progress"><div class="m-progress-bar" style="width:'+Math.min(100,pct).toFixed(0)+'%;background:'+bc+'"></div></div></div>'+(t.notes?'<div class="m-kpi full"><div class="m-kpi-label">Catatan</div><div class="m-kpi-value">'+t.notes+'</div></div>':'')+'</div><div class="m-card-actions"><button class="btn btn-danger btn-sm" data-tid="'+t.id+'" onclick="deleteTrip(this.dataset.tid)">Hapus Trip</button></div></div>';});return '<div class="mobile-card-list">'+cards.join('')+'</div>';}
-function buildCogsMobileCards(p,kandangId){if(!isMobile())return '';var entries=p.cogsEntries||[];if(!entries.length)return '';var cards=entries.map(function(e){var ey=p.startDate?parseInt(p.startDate.slice(0,4)):new Date().getFullYear();var mi=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'].indexOf(e.month);var sm=p.startDate?parseInt(p.startDate.slice(5,7))-1:0;if(mi<sm-6)ey++;var cost,label,meta;if(e.isManual){cost=e.manualCost||0;label=e.month+' '+e.day+(e.desc?' &middot; '+e.desc:'');meta='Manual &middot; '+(e.volume?fmtNum(e.volume,2)+' Sm&#179;':'no vol');}else{var cps=calcCostPerSm3(e.month,ey);cost=e.volume*cps;label=e.month+' '+e.day+' &middot; '+fmtNum(e.volume,2)+' Sm&#179;';meta='Rp'+fmtNum(cps,0)+'/Sm&#179;';}return '<div class="m-entry-card"><div class="m-entry-main"><div class="m-entry-title">'+label+'</div><div class="m-entry-meta">'+meta+'</div></div><div class="m-entry-amount"'+(e.isManual?' style="color:var(--accent2)"':'')+'>'+fmt(cost)+'</div><div class="m-entry-actions">'+(e.isManual?'':'<button class="m-icon-btn-sm" data-kid="'+kandangId+'" data-pid="'+p.id+'" data-eid="'+e.id+'" data-month="'+e.month+'" data-day="'+e.day+'" data-vol="'+e.volume+'" onclick="openEditCogs(this)">&#9998;</button>')+'<button class="m-icon-btn-sm danger" data-kid="'+kandangId+'" data-pid="'+p.id+'" data-eid="'+e.id+'" onclick="deleteCogsByData(this)">&times;</button></div></div>';});return '<div class="mobile-card-list" style="padding:8px 12px 4px">'+cards.join('')+'</div>';}
-function buildOpexMobileCards(p,kandangId){if(!isMobile())return '';var entries=p.opexEntries||[];if(!entries.length)return '';var cards=entries.map(function(e){return '<div class="m-entry-card"><div class="m-entry-main"><div class="m-entry-title"><span class="tag tag-blue" style="font-size:10px;margin-right:5px">'+e.category+'</span>'+e.month+' '+e.day+'</div><div class="m-entry-meta">'+(e.divisi?e.divisi+' &middot; ':'')+( e.desc||'')+' </div></div><div class="m-entry-amount">'+fmt(e.pengajuan)+'</div><div class="m-entry-actions"><button class="m-icon-btn-sm" data-kid="'+kandangId+'" data-pid="'+p.id+'" data-eid="'+e.id+'" data-spbg="'+(e.spbg||0)+'" data-pgs="'+(e.pgs||0)+'" data-pengajuan="'+(e.pengajuan||0)+'" data-desc="'+(e.desc||'')+'" onclick="openEditOpex(this)">&#9998;</button><button class="m-icon-btn-sm danger" data-kid="'+kandangId+'" data-pid="'+p.id+'" data-eid="'+e.id+'" onclick="deleteOpexByData(this)">&times;</button></div></div>';});return '<div class="mobile-card-list" style="padding:8px 12px 4px">'+cards.join('')+'</div>';}
-function buildOpsMobileCards(p,kandangId){if(!isMobile())return '';var entries=p.opsEntries||[];if(!entries.length)return '';var cards=entries.map(function(e){return '<div class="m-entry-card"><div class="m-entry-main"><div class="m-entry-title"><span class="tag tag-yellow" style="font-size:10px;margin-right:5px">'+e.category+'</span>'+fmtDate(e.date)+'</div><div class="m-entry-meta">'+(e.desc||'-')+'</div></div><div class="m-entry-amount" style="color:var(--red)">'+fmt(e.nominal)+'</div><div class="m-entry-actions"><button class="m-icon-btn-sm danger" onclick="deleteOps(''+kandangId+'',''+p.id+'',''+e.id+'')">&times;</button></div></div>';});return '<div class="mobile-card-list" style="padding:8px 12px 4px">'+cards.join('')+'</div>';}
+function buildSupplyMobileCards(sorted) {
+  if (!isMobile()) return '';
+  var MONTH_ID2 = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+  var cards = sorted.map(function(m) {
+    var margin = m.revenue > 0 ? m.opIncome/m.revenue*100 : 0;
+    var mc = tagColor(margin);
+    var dc = m.hasOngoing ? 'ongoing' : 'done';
+    var iid = m.year + '-' + m.mIdx;
+    var sb = m.hasOngoing
+      ? '<span style="background:#fff3e0;color:#e07b00;font-size:9px;padding:2px 7px;border-radius:10px;font-weight:600">&#9679; Berjalan</span>'
+      : '<span style="background:#e8f5e9;color:#1a9e5c;font-size:9px;padding:2px 7px;border-radius:10px;font-weight:600">&#10003; Selesai</span>';
+    return '<div class="m-card" id="mc-supply-'+iid+'">'
+      +'<div class="m-card-header" onclick="toggleMobileCard(\'mc-supply-'+iid+'\');if(isMobile())toggleInsight(\''+iid+'\')">'
+        +'<div class="m-status-dot '+dc+'"></div>'
+        +'<div class="m-card-title">'+(MONTH_ID[m.mIdx]||MONTH_ID2[m.mIdx]||m.mIdx)+' '+m.year
+          +'<div class="m-card-sub">'+fmtNum(m.volume,2)+' Sm&#179; &middot; '+sb+'</div>'
+        +'</div>'
+        +'<div class="m-card-right">'
+          +'<div class="m-card-value green">'+fmt(m.opIncome)+'</div>'
+          +'<span class="tag tag-'+mc+'" style="font-size:11px">'+margin.toFixed(1)+'%</span>'
+        +'</div>'
+        +'<span class="m-chevron">&#9662;</span>'
+      +'</div>'
+      +'<div class="m-card-body">'
+        +'<div class="m-kpi"><div class="m-kpi-label">Volume</div><div class="m-kpi-value">'+fmtNum(m.volume,2)+' Sm&#179;</div></div>'
+        +'<div class="m-kpi"><div class="m-kpi-label">Revenue</div><div class="m-kpi-value">'+fmt(m.revenue)+'</div></div>'
+        +'<div class="m-kpi"><div class="m-kpi-label">COGS</div><div class="m-kpi-value red">'+fmt(m.cogs)+'</div></div>'
+        +'<div class="m-kpi"><div class="m-kpi-label">Op. Income</div><div class="m-kpi-value green">'+fmt(m.opIncome)+'</div></div>'
+      +'</div>'
+    +'</div>';
+  });
+  var tV=0,tC=0,tR=0,tI=0;
+  sorted.forEach(function(m){tV+=m.volume;tC+=m.cogs;tR+=m.revenue;tI+=m.opIncome;});
+  var tM = tR ? tI/tR*100 : 0;
+  cards.push('<div class="m-card total-card">'
+    +'<div class="m-card-header"><div class="m-card-title" style="font-weight:800">TOTAL</div>'
+      +'<div class="m-card-right"><div class="m-card-value green">'+fmt(tI)+'</div>'
+        +'<span class="tag tag-'+tagColor(tM)+'" style="font-size:11px">'+tM.toFixed(1)+'%</span>'
+      +'</div>'
+    +'</div>'
+    +'<div class="m-card-body">'
+      +'<div class="m-kpi"><div class="m-kpi-label">Volume</div><div class="m-kpi-value">'+fmtNum(tV,2)+' Sm&#179;</div></div>'
+      +'<div class="m-kpi"><div class="m-kpi-label">Revenue</div><div class="m-kpi-value">'+fmt(tR)+'</div></div>'
+      +'<div class="m-kpi"><div class="m-kpi-label">COGS</div><div class="m-kpi-value red">'+fmt(tC)+'</div></div>'
+      +'<div class="m-kpi"><div class="m-kpi-label">Op. Income</div><div class="m-kpi-value green">'+fmt(tI)+'</div></div>'
+    +'</div>'
+  +'</div>');
+  return '<div class="mobile-card-list">'+cards.join('')+'</div>';
+}
+
+function buildInvoiceSummaryMobileCards(sorted) {
+  if (!isMobile()) return '';
+  var MONTH_ID2 = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+  var cards = sorted.map(function(m) {
+    var margin = m.revenue > 0 ? m.opIncome/m.revenue*100 : 0;
+    var mc = tagColor(margin);
+    var iid = 'inv-'+m.year+'-'+m.mIdx;
+    return '<div class="m-card" id="mc-'+iid+'">'
+      +'<div class="m-card-header" onclick="toggleMobileCard(\'mc-'+iid+'\');if(isMobile())toggleInsight(\''+iid+'\')">'
+        +'<div class="m-card-title">'+(MONTH_ID[m.mIdx]||MONTH_ID2[m.mIdx]||m.mIdx)+' '+m.year
+          +'<div class="m-card-sub">'+m.count+' invoice</div>'
+        +'</div>'
+        +'<div class="m-card-right"><div class="m-card-value green">'+fmt(m.opIncome)+'</div>'
+          +'<span class="tag tag-'+mc+'" style="font-size:11px">'+margin.toFixed(1)+'%</span>'
+        +'</div>'
+        +'<span class="m-chevron">&#9662;</span>'
+      +'</div>'
+      +'<div class="m-card-body">'
+        +'<div class="m-kpi"><div class="m-kpi-label">Revenue</div><div class="m-kpi-value">'+fmt(m.revenue)+'</div></div>'
+        +'<div class="m-kpi"><div class="m-kpi-label">COGS</div><div class="m-kpi-value red">'+fmt(m.cogs)+'</div></div>'
+        +'<div class="m-kpi"><div class="m-kpi-label">Op. Income</div><div class="m-kpi-value green">'+fmt(m.opIncome)+'</div></div>'
+        +'<div class="m-kpi"><div class="m-kpi-label">Margin</div><div class="m-kpi-value '+mc+'">'+margin.toFixed(1)+'%</div></div>'
+      +'</div>'
+    +'</div>';
+  });
+  var tR=0,tC=0,tI=0,tN=0;
+  sorted.forEach(function(m){tR+=m.revenue;tC+=m.cogs;tI+=m.opIncome;tN+=m.count;});
+  var tM = tR ? tI/tR*100 : 0;
+  cards.push('<div class="m-card total-card">'
+    +'<div class="m-card-header"><div class="m-card-title" style="font-weight:800">TOTAL &middot; '+tN+' invoice</div>'
+      +'<div class="m-card-right"><div class="m-card-value green">'+fmt(tI)+'</div>'
+        +'<span class="tag tag-'+tagColor(tM)+'" style="font-size:11px">'+tM.toFixed(1)+'%</span>'
+      +'</div>'
+    +'</div>'
+    +'<div class="m-card-body">'
+      +'<div class="m-kpi"><div class="m-kpi-label">Revenue</div><div class="m-kpi-value">'+fmt(tR)+'</div></div>'
+      +'<div class="m-kpi"><div class="m-kpi-label">COGS</div><div class="m-kpi-value red">'+fmt(tC)+'</div></div>'
+    +'</div>'
+  +'</div>');
+  return '<div class="mobile-card-list">'+cards.join('')+'</div>';
+}
+
+function buildInvoiceTrackerMobileCards(invoices) {
+  if (!isMobile()) return '';
+  var sL = {lunas:'Lunas', overdue:'Overdue', belum:'Belum Bayar'};
+  var sD = {lunas:'done', overdue:'overdue', belum:'belum'};
+  var cards = invoices.map(function(inv, i) {
+    var cid = 'mc-inv-'+i;
+    return '<div class="m-card" id="'+cid+'">'
+      +'<div class="m-card-header" onclick="toggleMobileCard(\''+cid+'\')">'
+        +'<div class="m-status-dot '+sD[inv.payStatus]+'"></div>'
+        +'<div class="m-card-title">'+inv.client
+          +'<div class="m-card-sub"><span class="tag tag-blue" style="font-size:10px;padding:1px 6px">'+inv.kandang+'</span> '+inv.label+'</div>'
+        +'</div>'
+        +'<div class="m-card-right"><div class="m-card-value">'+fmt(inv.revenue)+'</div>'
+          +'<span class="tag tag-'+(inv.payStatus==='lunas'?'green':inv.payStatus==='overdue'?'red':'blue')+'" style="font-size:10px">'+sL[inv.payStatus]+'</span>'
+        +'</div>'
+        +'<span class="m-chevron">&#9662;</span>'
+      +'</div>'
+      +'<div class="m-card-body">'
+        +'<div class="m-kpi"><div class="m-kpi-label">Cut-off</div><div class="m-kpi-value">'+fmtDate(inv.cutoffDate)+'</div></div>'
+        +'<div class="m-kpi"><div class="m-kpi-label">Deadline</div><div class="m-kpi-value'+(inv.payStatus==='overdue'?' red':'')+'">'+fmtDate(inv.deadline)+'</div></div>'
+        +'<div class="m-kpi"><div class="m-kpi-label">Nilai</div><div class="m-kpi-value">'+fmt(inv.revenue)+'</div></div>'
+        +'<div class="m-kpi"><div class="m-kpi-label">Bayar</div><div class="m-kpi-value">'+(inv.paidDate?fmtDate(inv.paidDate):'&mdash;')+'</div></div>'
+      +'</div>'
+      +'<div class="m-card-actions">'
+        +(inv.invoiceLink ? '<a href="'+inv.invoiceLink+'" target="_blank" class="btn btn-secondary btn-sm" style="text-decoration:none">&#128203; Invoice</a>' : '')
+        +'<button class="btn btn-secondary btn-sm" data-kid="'+inv.kandangId+'" data-pid="'+inv.periodeId+'" onclick="openInvoiceModal(this.dataset.kid,this.dataset.pid)">&#9998; Edit</button>'
+      +'</div>'
+    +'</div>';
+  });
+  return '<div class="mobile-card-list">'+(cards.length ? cards.join('') : '<div style="padding:24px;text-align:center;color:var(--text3)">Tidak ada invoice</div>')+'</div>';
+}
+
+function buildTripMobileCards(trips) {
+  if (!isMobile()) return '';
+  var cards = trips.map(function(t) {
+    var al = getTripAllocated(t.id);
+    var sisa = t.volume - al;
+    var pct = t.volume > 0 ? (al/t.volume*100) : 0;
+    var sc = sisa < 0 ? 'red' : sisa === 0 ? 'green' : 'yellow';
+    var bc = pct >= 100 ? 'var(--green)' : pct >= 50 ? 'var(--accent2)' : 'var(--yellow)';
+    var cid = 'mc-trip-'+t.id;
+    return '<div class="m-card" id="'+cid+'">'
+      +'<div class="m-card-header" onclick="toggleMobileCard(\''+cid+'\')">'
+        +'<div class="m-card-title">'+fmtDate(t.date)+'<div class="m-card-sub">'+fmtNum(t.volume,2)+' Sm&#179;</div></div>'
+        +'<div class="m-card-right"><div class="m-card-value">'+fmt(t.biaya)+'</div>'
+          +'<span class="m-kpi-value '+sc+'" style="font-size:11px">Sisa '+fmtNum(sisa,2)+'</span>'
+        +'</div>'
+        +'<span class="m-chevron">&#9662;</span>'
+      +'</div>'
+      +'<div class="m-card-body">'
+        +'<div class="m-kpi"><div class="m-kpi-label">Volume</div><div class="m-kpi-value">'+fmtNum(t.volume,2)+' Sm&#179;</div></div>'
+        +'<div class="m-kpi"><div class="m-kpi-label">Biaya Trip</div><div class="m-kpi-value">'+fmt(t.biaya)+'</div></div>'
+        +'<div class="m-kpi"><div class="m-kpi-label">Dialokasi</div><div class="m-kpi-value">'+fmtNum(al,2)+' ('+pct.toFixed(0)+'%)</div></div>'
+        +'<div class="m-kpi"><div class="m-kpi-label">Sisa</div><div class="m-kpi-value '+sc+'">'+fmtNum(sisa,2)+' Sm&#179;</div></div>'
+        +'<div class="m-kpi full"><div class="m-kpi-label">Progress</div>'
+          +'<div class="m-progress"><div class="m-progress-bar" style="width:'+Math.min(100,pct).toFixed(0)+'%;background:'+bc+'"></div></div>'
+        +'</div>'
+        +(t.notes ? '<div class="m-kpi full"><div class="m-kpi-label">Catatan</div><div class="m-kpi-value">'+t.notes+'</div></div>' : '')
+      +'</div>'
+      +'<div class="m-card-actions"><button class="btn btn-danger btn-sm" data-tid="'+t.id+'" onclick="deleteTrip(this.dataset.tid)">Hapus Trip</button></div>'
+    +'</div>';
+  });
+  return '<div class="mobile-card-list">'+cards.join('')+'</div>';
+}
+
+function buildCogsMobileCards(p, kandangId) {
+  if (!isMobile()) return '';
+  var entries = p.cogsEntries || [];
+  if (!entries.length) return '';
+  var cards = entries.map(function(e) {
+    var ey = p.startDate ? parseInt(p.startDate.slice(0,4)) : new Date().getFullYear();
+    var mi = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'].indexOf(e.month);
+    var sm = p.startDate ? parseInt(p.startDate.slice(5,7))-1 : 0;
+    if (mi < sm-6) ey++;
+    var cost, label, meta;
+    if (e.isManual) {
+      cost = e.manualCost || 0;
+      label = e.month + ' ' + e.day + (e.desc ? ' &middot; ' + e.desc : '');
+      meta = 'Manual &middot; ' + (e.volume ? fmtNum(e.volume,2)+' Sm&#179;' : 'no vol');
+    } else {
+      var cps = calcCostPerSm3(e.month, ey);
+      cost = e.volume * cps;
+      label = e.month + ' ' + e.day + ' &middot; ' + fmtNum(e.volume,2) + ' Sm&#179;';
+      meta = 'Rp' + fmtNum(cps,0) + '/Sm&#179;';
+    }
+    return '<div class="m-entry-card">'
+      +'<div class="m-entry-main"><div class="m-entry-title">'+label+'</div><div class="m-entry-meta">'+meta+'</div></div>'
+      +'<div class="m-entry-amount"'+(e.isManual?' style="color:var(--accent2)"':'')+'>'+fmt(cost)+'</div>'
+      +'<div class="m-entry-actions">'
+        +(e.isManual ? '' : '<button class="m-icon-btn-sm" data-kid="'+kandangId+'" data-pid="'+p.id+'" data-eid="'+e.id+'" data-month="'+e.month+'" data-day="'+e.day+'" data-vol="'+e.volume+'" onclick="openEditCogs(this)">&#9998;</button>')
+        +'<button class="m-icon-btn-sm danger" data-kid="'+kandangId+'" data-pid="'+p.id+'" data-eid="'+e.id+'" onclick="deleteCogsByData(this)">&times;</button>'
+      +'</div>'
+    +'</div>';
+  });
+  return '<div class="mobile-card-list" style="padding:8px 12px 4px">'+cards.join('')+'</div>';
+}
+
+function buildOpexMobileCards(p, kandangId) {
+  if (!isMobile()) return '';
+  var entries = p.opexEntries || [];
+  if (!entries.length) return '';
+  var cards = entries.map(function(e) {
+    return '<div class="m-entry-card">'
+      +'<div class="m-entry-main">'
+        +'<div class="m-entry-title"><span class="tag tag-blue" style="font-size:10px;margin-right:5px">'+e.category+'</span>'+e.month+' '+e.day+'</div>'
+        +'<div class="m-entry-meta">'+(e.divisi?e.divisi+' &middot; ':'')+( e.desc||'')+' </div>'
+      +'</div>'
+      +'<div class="m-entry-amount">'+fmt(e.pengajuan)+'</div>'
+      +'<div class="m-entry-actions">'
+        +'<button class="m-icon-btn-sm" data-kid="'+kandangId+'" data-pid="'+p.id+'" data-eid="'+e.id+'" data-spbg="'+(e.spbg||0)+'" data-pgs="'+(e.pgs||0)+'" data-pengajuan="'+(e.pengajuan||0)+'" data-desc="'+(e.desc||'')+'" onclick="openEditOpex(this)">&#9998;</button>'
+        +'<button class="m-icon-btn-sm danger" data-kid="'+kandangId+'" data-pid="'+p.id+'" data-eid="'+e.id+'" onclick="deleteOpexByData(this)">&times;</button>'
+      +'</div>'
+    +'</div>';
+  });
+  return '<div class="mobile-card-list" style="padding:8px 12px 4px">'+cards.join('')+'</div>';
+}
+
+function buildOpsMobileCards(p, kandangId) {
+  if (!isMobile()) return '';
+  var entries = p.opsEntries || [];
+  if (!entries.length) return '';
+  var cards = entries.map(function(e) {
+    return '<div class="m-entry-card">'
+      +'<div class="m-entry-main">'
+        +'<div class="m-entry-title"><span class="tag tag-yellow" style="font-size:10px;margin-right:5px">'+e.category+'</span>'+fmtDate(e.date)+'</div>'
+        +'<div class="m-entry-meta">'+(e.desc||'-')+'</div>'
+      +'</div>'
+      +'<div class="m-entry-amount" style="color:var(--red)">'+fmt(e.nominal)+'</div>'
+      +'<div class="m-entry-actions">'
+        +'<button class="m-icon-btn-sm danger" onclick="deleteOps(\''+kandangId+'\',\''+p.id+'\',\''+e.id+'\')">&times;</button>'
+      +'</div>'
+    +'</div>';
+  });
+  return '<div class="mobile-card-list" style="padding:8px 12px 4px">'+cards.join('')+'</div>';
+}
+
 function toggleMobileCard(id){var c=document.getElementById(id);if(c)c.classList.toggle('open');}
+
 var _mobileDrawerPages=['prediksi','trips','master'];
 var _bottomNavMap={'dashboard':'bnav-dashboard','clients':'bnav-clients','summary':'bnav-summary','invoice':'bnav-invoice','prediksi':'bnav-more','trips':'bnav-more','master':'bnav-more'};
 function navigateMobile(page){navigate(page);document.querySelectorAll('.bottom-nav-item').forEach(function(el){el.classList.remove('active');});var el=document.getElementById(_bottomNavMap[page]);if(el)el.classList.add('active');document.querySelectorAll('.drawer-item').forEach(function(el){el.classList.remove('active');});if(_mobileDrawerPages.indexOf(page)>=0){var d=document.getElementById('drawer-'+page);if(d)d.classList.add('active');}}
@@ -1280,7 +1502,6 @@ function toggleMoreDrawer(){var dr=document.getElementById('more-drawer'),ov=doc
 function updateBottomNavBadge(count){var b=document.getElementById('bnav-badge');if(!b)return;b.textContent=count;b.style.display=count>0?'flex':'none';}
 function exportDataJSON(){try{var eo={_meta:{exportedAt:new Date().toISOString(),note:'Paste ke Claude'},clients:(state.clients||[]).map(function(cl){return{id:cl.id,name:cl.name,location:cl.location,kandangs:(cl.kandangs||[]).map(function(k){return{id:k.id,name:k.name,periodes:(k.periodes||[]).map(function(p){var pl=calcPeriodePL(p,k);return{id:p.id,label:p.label,startDate:p.startDate,cutoffDate:p.cutoffDate,isCutoff:p.isCutoff,hargaJual:p.hargaJual,_summary:{totalVolume:pl.totalVolume,revenue:pl.revenue,cogs:pl.cogs,opex:pl.opex,opIncome:pl.opIncome,netMargin:pl.netMargin},cogsEntries:p.cogsEntries||[],opexEntries:p.opexEntries||[],opsEntries:p.opsEntries||[]};})};})};}),master:state.master||{},trips:state.trips||[]};var b=new Blob([JSON.stringify(eo,null,2)],{type:'application/json'});var u=URL.createObjectURL(b);var a=document.createElement('a');var d=new Date();a.href=u;a.download='gastron-data-'+d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')+'.json';document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(u);}catch(e){alert('Export gagal: '+e.message);}}
 
-document.addEventListener('DOMContentLoaded',function(){var _ob=document.getElementById('badge-clients');if(_ob){var obs=new MutationObserver(function(ml){ml.forEach(function(m){if(m.type==='childList'||m.type==='characterData'){updateBottomNavBadge(parseInt(_ob.textContent)||0);}});});obs.observe(_ob,{childList:true,characterData:true,subtree:true});}});
 // ============= CAPEX =============
 var _capexCtx = {};
 function getKandangCapex(kandang) { return kandang.capexEntries || []; }
