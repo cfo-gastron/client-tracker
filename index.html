@@ -358,6 +358,65 @@ tr:hover td{background:var(--surface2);}
 .drawer-item.active{background:rgba(192,57,43,0.1);color:var(--accent);}
 .drawer-item .di-icon svg{width:24px;height:24px;}
 }
+/* ===== RESPONSIVE UTILITY CLASSES ===== */
+.grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;}
+.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
+.grid-2{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;}
+.pnl-detail-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px;}
+/* Chart containers */
+.chart-container{position:relative;width:100%;}
+.chart-container-md{height:220px;}
+.chart-container-lg{height:280px;}
+/* Table responsive wrapper */
+.tbl-scroll{width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch;}
+.tbl-scroll table{min-width:640px;width:100%;}
+/* Inline stats grid inside JS-rendered HTML */
+.js-stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px;}
+.js-stat-box{background:var(--surface2);border-radius:8px;padding:10px 12px;}
+.js-stat-label{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:3px;}
+.js-stat-value{font-family:Plus Jakarta Sans,sans-serif;font-weight:700;font-size:14px;}
+.js-stat-sub{font-size:10px;color:var(--text3);margin-top:2px;}
+/* P&L row responsive */
+.pl-row{display:grid;grid-template-columns:200px 1fr 80px;padding:11px 20px;border-bottom:1px solid rgba(0,0,0,0.04);}
+/* Prediksi list card fix */
+.prediksi-list-item{background:var(--surface);border:1px solid var(--border);border-radius:12px;margin-bottom:10px;overflow:hidden;}
+
+@media(max-width:768px){
+.grid-4{grid-template-columns:1fr 1fr!important;gap:8px;}
+.grid-3{grid-template-columns:1fr 1fr!important;gap:8px;}
+.grid-2{grid-template-columns:1fr 1fr!important;}
+.pnl-detail-grid{grid-template-columns:1fr 1fr!important;gap:8px;}
+.js-stat-grid{grid-template-columns:1fr 1fr!important;gap:8px;}
+.chart-container-md{height:200px;}
+.chart-container-lg{height:220px;}
+/* Fix all inline grid-template-columns in JS-generated HTML */
+[style*="grid-template-columns:repeat(4"]{grid-template-columns:1fr 1fr!important;}
+[style*="grid-template-columns: repeat(4"]{grid-template-columns:1fr 1fr!important;}
+[style*="grid-template-columns:repeat(3"]{grid-template-columns:1fr 1fr!important;}
+[style*="grid-template-columns: repeat(3"]{grid-template-columns:1fr 1fr!important;}
+[style*="grid-template-columns:1fr 1.5fr"]{grid-template-columns:1fr!important;}
+[style*="grid-template-columns:1fr 1fr;gap:20px"]{grid-template-columns:1fr!important;}
+[style*="grid-template-columns:1fr 1fr;gap:20"]{grid-template-columns:1fr!important;}
+/* P&L row stack on mobile */
+.pl-row{grid-template-columns:1fr auto 70px;padding:10px 14px;font-size:12px;}
+/* Inline pnl modal box fix */
+#pnl-detail-modal [style*="grid-template-columns:repeat(4,1fr)"]{grid-template-columns:1fr 1fr!important;}
+/* COGS calendar grid stays 7 cols but smaller */
+[id="cogs-cal-grid"],[id*="opex-cal-grid"]{font-size:10px;}
+/* Chart wraps in JS HTML */
+[style*="position:relative;height:220px"]{height:200px!important;}
+[style*="position:relative;height:280px"]{height:220px!important;}
+/* Prediksi card grid fix */
+.prediksi-grid{grid-template-columns:1fr 1fr!important;}
+/* Tren bulanan inline stats */
+.capex-mini-dashboard{grid-template-columns:1fr!important;gap:8px!important;}
+/* COGS/OpEx 2-col layout stack */
+[style*="grid-template-columns:1fr 1fr;gap:20px;align-items:start"]{grid-template-columns:1fr!important;}
+/* Master data grid stack */
+.master-data-grid{grid-template-columns:1fr!important;}
+/* Jisdor grid stays 2 col but use 3 col on mobile to be compact */
+.master-data-grid .table-wrap [style*="grid-template-columns:1fr 1fr;gap:10px"]{grid-template-columns:repeat(3,1fr)!important;}
+}
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 </head>
@@ -611,9 +670,14 @@ tr:hover td{background:var(--surface2);}
           <div id="cogs-selected-date" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:13px;color:var(--text2)">Pilih tanggal di kalender</div>
         </div>
         <div class="form-group">
+          <label>Supplier Gas</label>
+          <select id="input-cogs-supplier" onchange="updateCogsFormula()" style="font-size:14px;font-weight:600"></select>
+        </div>
+        <div class="form-group">
           <label>Volume (Sm³)</label>
           <input type="number" id="input-cogs-volume" step="0.01" placeholder="0.00">
         </div>
+        <div id="cogs-formula-preview" style="background:var(--surface2);border-radius:8px;padding:10px 12px;font-size:12px;color:var(--text2);display:none"></div>
         <div id="cogs-existing-note" style="font-size:12px;color:var(--yellow);display:none">⚠ Tanggal ini sudah ada data. Akan menimpa.</div>
       </div>
     </div>
@@ -815,19 +879,43 @@ function uid() { return Date.now().toString(36) + Math.random().toString(36).sli
 function getMonthIdx(m) { return ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'].indexOf(m); }
 
 // ============= COGS CALC =============
-function calcCostPerSm3(month, year) {
+function getSupplierById(supplierId) {
+  var suppliers = state.master.suppliers || [];
+  if (supplierId) {
+    var s = suppliers.find(function(x){ return x.id === supplierId; });
+    if (s) return s;
+  }
+  // fallback: supplier pertama (MRJ)
+  return suppliers[0] || null;
+}
+
+function calcCostPerSm3(month, year, supplierId) {
   var m = state.master;
   var yr = year ? String(year) : String(new Date().getFullYear());
-  // Get jisdor value (year-based with flat fallback)
+  var supplier = getSupplierById(supplierId);
+
   var jisdorVal = 0;
-  if (m.jisdorByYear && m.jisdorByYear[yr] && m.jisdorByYear[yr][month]) {
-    jisdorVal = m.jisdorByYear[yr][month];
-  } else if (m.jisdor && m.jisdor[month]) {
-    jisdorVal = m.jisdor[month];
+  if (supplier && supplier.jisdorByYear && supplier.jisdorByYear[yr] && supplier.jisdorByYear[yr][month]) {
+    jisdorVal = supplier.jisdorByYear[yr][month];
+  } else if (supplier && supplier.jisdorByYear && supplier.jisdorByYear[yr] && supplier.jisdorByYear[yr][month] === 0) {
+    jisdorVal = 0;
+  } else {
+    // fallback ke master lama (backward compat)
+    if (m.jisdorByYear && m.jisdorByYear[yr] && m.jisdorByYear[yr][month]) {
+      jisdorVal = m.jisdorByYear[yr][month];
+    } else if (m.jisdor && m.jisdor[month]) {
+      jisdorVal = m.jisdor[month];
+    }
   }
-  // Get hargaGas & mmbtuNm3 (year-based with flat fallback)
-  var hargaGas = (m.paramByYear && m.paramByYear[yr] && m.paramByYear[yr].hargaGas) || m.hargaGas || 12.02;
-  var mmbtuNm3 = (m.paramByYear && m.paramByYear[yr] && m.paramByYear[yr].mmbtuNm3) || m.mmbtuNm3 || 25;
+
+  var hargaGas, mmbtuNm3;
+  if (supplier && supplier.paramByYear && supplier.paramByYear[yr]) {
+    hargaGas = supplier.paramByYear[yr].hargaGas || 12.02;
+    mmbtuNm3 = supplier.paramByYear[yr].mmbtuNm3 || 25;
+  } else {
+    hargaGas = (m.paramByYear && m.paramByYear[yr] && m.paramByYear[yr].hargaGas) || m.hargaGas || 12.02;
+    mmbtuNm3 = (m.paramByYear && m.paramByYear[yr] && m.paramByYear[yr].mmbtuNm3) || m.mmbtuNm3 || 25;
+  }
   return (hargaGas / mmbtuNm3) * jisdorVal;
 }
 
@@ -845,7 +933,7 @@ function calcPeriodePL(periode, kandang) {
       var mIdx = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'].indexOf(e.month);
       var startMIdx = periode.startDate ? parseInt(periode.startDate.slice(5,7))-1 : 0;
       if (mIdx < startMIdx - 6) entryYear++;
-      var cps = calcCostPerSm3(e.month, entryYear);
+      var cps = calcCostPerSm3(e.month, entryYear, e.supplierId);
       totalCogs += (e.volume || 0) * cps;
     }
   });
@@ -986,7 +1074,7 @@ function renderDashboard() {
           var mIdx = MONTH_KEYS.indexOf(e.month);
           var yr = baseYear; if (mIdx < startMIdx - 2) yr++;
           var key = yr + '-' + String(mIdx+1).padStart(2,'0');
-          var cps = calcCostPerSm3(e.month, yr);
+          var cps = calcCostPerSm3(e.month, yr, e.supplierId);
           if (!monthMap[key]) monthMap[key] = {key:key, yr:yr, mIdx:mIdx, vol:0, rev:0, cogs:0, opex:0};
           monthMap[key].vol += e.volume;
           monthMap[key].rev += e.volume * (p.hargaJual||0);
@@ -1038,7 +1126,7 @@ function renderDashboard() {
           '<div style="background:var(--surface2);border-radius:8px;padding:10px 12px"><div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:3px">Avg COGS/Bulan</div><div style="font-family:Plus Jakarta Sans,sans-serif;font-weight:700;font-size:14px;color:var(--red)">' + (avgCogs>=1e9?(avgCogs/1e9).toFixed(1)+'B':avgCogs>=1e6?(avgCogs/1e6).toFixed(1)+'M':fmt(avgCogs)) + '</div><div style="font-size:10px;color:var(--text3)">' + (avgRev?((avgCogs/avgRev)*100).toFixed(1)+'% dari rev':'—') + '</div></div>' +
           '<div style="background:var(--surface2);border-radius:8px;padding:10px 12px"><div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:3px">Avg Margin/Bulan</div><div style="font-family:Plus Jakarta Sans,sans-serif;font-weight:700;font-size:14px;color:'+(avgMargin>=25?'var(--green)':avgMargin>=15?'var(--yellow)':'var(--red)')+'">'+avgMargin.toFixed(1)+'%</div><div style="font-size:10px;color:var(--text3)">Op. Income: '+fmt(avgOpIncome)+'/bln</div></div>' +
         '</div>' +
-        '<div style="position:relative;height:220px"><canvas id="dashboard-chart" role="img" aria-label="Line chart tren bulanan revenue, op income, dan margin">Tren bulanan revenue, op. income, dan margin</canvas></div>' +
+        '<div class="chart-container chart-container-md"><canvas id="dashboard-chart" role="img" aria-label="Line chart tren bulanan revenue, op income, dan margin">Tren bulanan revenue, op. income, dan margin</canvas></div>' +
       '</div>';
 
     if (_dashChart) { _dashChart.destroy(); _dashChart = null; }
@@ -1439,7 +1527,7 @@ function buildCogsMobileCards(p, kandangId) {
       label = e.month + ' ' + e.day + (e.desc ? ' &middot; ' + e.desc : '');
       meta = 'Manual &middot; ' + (e.volume ? fmtNum(e.volume,2)+' Sm&#179;' : 'no vol');
     } else {
-      var cps = calcCostPerSm3(e.month, ey);
+      var cps = calcCostPerSm3(e.month, ey, e.supplierId);
       cost = e.volume * cps;
       label = e.month + ' ' + e.day + ' &middot; ' + fmtNum(e.volume,2) + ' Sm&#179;';
       meta = 'Rp' + fmtNum(cps,0) + '/Sm&#179;';
@@ -1731,7 +1819,7 @@ function renderKandangDetail(kandangId) {
             '<td class="mono" style="text-align:right;font-weight:600;color:var(--accent2)">' + fmt(e.manualCost) + '</td>' +
             '<td style="display:flex;gap:4px"><button class="btn btn-danger btn-sm btn-icon" data-kid="' + kandangId + '" data-pid="' + p.id + '" data-eid="' + e.id + '" onclick="deleteCogsByData(this)">&#215;</button></td></tr>';
         } else {
-          var cps = calcCostPerSm3(e.month, entryYearR);
+          var cps = calcCostPerSm3(e.month, entryYearR, e.supplierId);
           var jisdorVal = (state.master.jisdorByYear && state.master.jisdorByYear[entryYearR] && state.master.jisdorByYear[entryYearR][e.month]) || (state.master.jisdor && state.master.jisdor[e.month]) || 0;
           cogsRows += '<tr><td>' + e.month + '</td><td class="mono">' + e.day + '</td>' +
             '<td class="mono" style="text-align:right">' + fmtNum(e.volume,2) + '</td>' +
@@ -2127,30 +2215,84 @@ function escapeHtml(s) {
 }
 
 // ============= MASTER DATA =============
+function ensureSuppliers() {
+  var m = state.master;
+  if (!m.suppliers || !m.suppliers.length) {
+    // Migrasi: buat dari data lama → MRJ
+    var mrj = {
+      id: 'mrj',
+      name: 'MRJ Subang',
+      paramByYear: m.paramByYear || {},
+      jisdorByYear: m.jisdorByYear || {}
+    };
+    // Bersihkan key "undefined" dari jisdorByYear/paramByYear MRJ
+    ['paramByYear','jisdorByYear'].forEach(function(field) {
+      Object.keys(mrj[field]).forEach(function(k) {
+        if (!k || k === 'undefined' || !/^\d{4}$/.test(k)) delete mrj[field][k];
+      });
+    });
+    // Pastikan ada minimal tahun ini di MRJ
+    var curYr = String(new Date().getFullYear());
+    if (!mrj.jisdorByYear[curYr]) mrj.jisdorByYear[curYr] = {Jan:0,Feb:0,Mar:0,Apr:0,May:0,Jun:0,Jul:0,Aug:0,Sep:0,Oct:0,Nov:0,Dec:0};
+    if (!mrj.paramByYear[curYr]) mrj.paramByYear[curYr] = {hargaGas:m.hargaGas||12.02,mmbtuNm3:m.mmbtuNm3||25,biayaTrip:m.biayaTrip||1100000};
+    var cre = {
+      id: 'cre',
+      name: 'CRE',
+      paramByYear: {},
+      jisdorByYear: {}
+    };
+    cre.jisdorByYear[curYr] = {Jan:0,Feb:0,Mar:0,Apr:0,May:0,Jun:0,Jul:0,Aug:0,Sep:0,Oct:0,Nov:0,Dec:0};
+    cre.paramByYear[curYr] = {hargaGas:12.02,mmbtuNm3:25,biayaTrip:1100000};
+    m.suppliers = [mrj, cre];
+    save();
+  }
+}
+
 function renderMaster() {
   var m = state.master;
-  if (!m.jisdorByYear) m.jisdorByYear = {};
-  if (!m.paramByYear) m.paramByYear = {};
-  // Build combined year list
-  var allYears = {};
-  Object.keys(m.jisdorByYear).forEach(function(y){ allYears[y]=1; });
-  Object.keys(m.paramByYear).forEach(function(y){ allYears[y]=1; });
-  var years = Object.keys(allYears).sort();
-  if (!years.length) {
-    years = [String(new Date().getFullYear())];
-    m.jisdorByYear[years[0]] = { Jan:0,Feb:0,Mar:0,Apr:0,May:0,Jun:0,Jul:0,Aug:0,Sep:0,Oct:0,Nov:0,Dec:0 };
-    m.paramByYear[years[0]] = { hargaGas:m.hargaGas||12.02, mmbtuNm3:m.mmbtuNm3||25, biayaTrip:m.biayaTrip||1100000 };
+  ensureSuppliers();
+  var suppliers = m.suppliers;
+
+  // Active supplier tab
+  if (!window._masterSupplierId || !suppliers.find(function(s){return s.id===window._masterSupplierId;})) {
+    window._masterSupplierId = suppliers[0].id;
   }
-  if (typeof window._masterYear === 'undefined') window._masterYear = years[years.length-1];
+  var sup = suppliers.find(function(s){return s.id===window._masterSupplierId;});
+
+  // Year list for this supplier
+  var allYears = {};
+  Object.keys(sup.jisdorByYear||{}).forEach(function(y){ if(/^\d{4}$/.test(y)) allYears[y]=1; });
+  Object.keys(sup.paramByYear||{}).forEach(function(y){ if(/^\d{4}$/.test(y)) allYears[y]=1; });
+  var years = Object.keys(allYears).sort();
+  var curYr = String(new Date().getFullYear());
+  if (!years.length) {
+    years = [curYr];
+    sup.jisdorByYear[curYr] = {Jan:0,Feb:0,Mar:0,Apr:0,May:0,Jun:0,Jul:0,Aug:0,Sep:0,Oct:0,Nov:0,Dec:0};
+    sup.paramByYear[curYr] = {hargaGas:12.02,mmbtuNm3:25,biayaTrip:1100000};
+  }
+  if (!window._masterYear || years.indexOf(window._masterYear)===-1) {
+    window._masterYear = years[years.length-1];
+  }
   var yr = window._masterYear;
-  if (!m.jisdorByYear[yr]) m.jisdorByYear[yr] = { Jan:0,Feb:0,Mar:0,Apr:0,May:0,Jun:0,Jul:0,Aug:0,Sep:0,Oct:0,Nov:0,Dec:0 };
-  if (!m.paramByYear[yr]) m.paramByYear[yr] = { hargaGas:m.hargaGas||12.02, mmbtuNm3:m.mmbtuNm3||25, biayaTrip:m.biayaTrip||1100000 };
-  var jy = m.jisdorByYear[yr];
-  var py = m.paramByYear[yr];
+  if (!sup.jisdorByYear) sup.jisdorByYear = {};
+  if (!sup.paramByYear) sup.paramByYear = {};
+  if (!sup.jisdorByYear[yr]) sup.jisdorByYear[yr] = {Jan:0,Feb:0,Mar:0,Apr:0,May:0,Jun:0,Jul:0,Aug:0,Sep:0,Oct:0,Nov:0,Dec:0};
+  if (!sup.paramByYear[yr]) sup.paramByYear[yr] = {hargaGas:12.02,mmbtuNm3:25,biayaTrip:1100000};
+  var jy = sup.jisdorByYear[yr];
+  var py = sup.paramByYear[yr];
+
+  // Supplier tabs
+  var supplierTabs = suppliers.map(function(s){
+    var isActive = s.id === window._masterSupplierId;
+    return '<button class="btn btn-sm ' + (isActive?'btn-primary':'btn-secondary') + '" onclick="switchMasterSupplier(\'' + s.id + '\')">' + s.name + '</button>';
+  }).join('') + '<button class="btn btn-secondary btn-sm" onclick="addSupplier()">+ Supplier</button>';
 
   var yearTabs = years.map(function(y) {
     return '<button class="chip ' + (y===yr?'active':'') + '" data-y="' + y + '" onclick="switchMasterYear(this.dataset.y)">' + y + '</button>';
   }).join('') + '<button class="btn btn-secondary btn-sm" onclick="addMasterYear()">+ Tahun</button>';
+  // Override py/jy dengan supplier active
+  var py = sup.paramByYear[yr] || {hargaGas:12.02,mmbtuNm3:25,biayaTrip:1100000};
+  var jy = sup.jisdorByYear[yr] || {Jan:0,Feb:0,Mar:0,Apr:0,May:0,Jun:0,Jul:0,Aug:0,Sep:0,Oct:0,Nov:0,Dec:0};
 
   var jisdorCells = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'].map(function(mo) {
     return '<div class="form-group"><label>' + mo + '</label><input type="number" id="jisdor-' + mo + '" value="' + (jy[mo]||0) + '" data-mo="' + mo + '" onchange="updateJisdorYear(this.dataset.mo)"></div>';
@@ -2159,47 +2301,99 @@ function renderMaster() {
   var formula = '(' + (py.hargaGas||12.02) + '/' + (py.mmbtuNm3||25) + ') × Jisdor';
 
   document.getElementById('content-master').innerHTML =
+    '<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:14px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:12px 16px">' +
+    '<span style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-right:4px">Supplier:</span>' +
+    supplierTabs + '</div>' +
     '<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:16px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:12px 16px">' +
     '<span style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-right:4px">Tahun:</span>' +
     yearTabs + '</div>' +
-    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">' +
-    '<div class="table-wrap"><div class="table-header"><div class="table-title">Parameter Gas ' + yr + '</div></div>' +
+    '<div class="master-data-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:20px">' +
+    '<div class="table-wrap"><div class="table-header"><div class="table-title">Parameter Gas ' + sup.name + ' ' + yr + '</div><button class="btn btn-danger btn-sm" onclick="deleteSupplier(\'' + sup.id + '\')" style="margin-left:auto">Hapus</button></div>' +
     '<div style="padding:20px;display:flex;flex-direction:column;gap:16px">' +
     '<div class="form-group"><label>Harga Gas / MMBTU</label><input type="number" id="master-harga" value="' + (py.hargaGas||12.02) + '" step="0.01" onchange="updateMaster()"></div>' +
     '<div class="form-group"><label>MMBTU ke Nm³ (Konversi)</label><input type="number" id="master-mmbtu" value="' + (py.mmbtuNm3||25) + '" step="0.01" onchange="updateMaster()"></div>' +
-    '<div class="form-group"><label>Biaya Trip (Rp) — MRJ Subang</label><input type="number" id="master-biaya-trip" value="' + (py.biayaTrip||1100000) + '" onchange="updateMaster()"></div>' +
+    '<div class="form-group"><label>Biaya Trip (Rp)</label><input type="number" id="master-biaya-trip" value="' + (py.biayaTrip||1100000) + '" onchange="updateMaster()"></div>' +
     '<div style="background:var(--surface2);border-radius:8px;padding:12px;font-size:12px;color:var(--text2)">Formula COGS/Sm³: <span style="color:var(--accent);font-family:DM Mono,monospace">' + formula + '</span></div>' +
     '</div></div>' +
-    '<div class="table-wrap"><div class="table-header" style="flex-direction:column;align-items:flex-start;gap:4px"><div class="table-title">Jisdor ' + yr + '</div></div>' +
+    '<div class="table-wrap"><div class="table-header" style="flex-direction:column;align-items:flex-start;gap:4px"><div class="table-title">Jisdor ' + sup.name + ' ' + yr + '</div></div>' +
     '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:12px 20px">' + jisdorCells + '</div>' +
     '</div></div>';
 }
 
 function updateMaster() {
   var yr = window._masterYear || String(new Date().getFullYear());
-  if (!state.master.paramByYear) state.master.paramByYear = {};
-  if (!state.master.paramByYear[yr]) state.master.paramByYear[yr] = {};
-  state.master.paramByYear[yr].hargaGas = parseFloat(document.getElementById('master-harga').value) || 12.02;
-  state.master.paramByYear[yr].mmbtuNm3 = parseFloat(document.getElementById('master-mmbtu').value) || 25;
-  state.master.paramByYear[yr].biayaTrip = parseFloat(document.getElementById('master-biaya-trip').value) || 1100000;
-  // Keep flat values updated too (for backward compat)
-  state.master.hargaGas = state.master.paramByYear[yr].hargaGas;
-  state.master.mmbtuNm3 = state.master.paramByYear[yr].mmbtuNm3;
-  state.master.biayaTrip = state.master.paramByYear[yr].biayaTrip;
+  var sup = (state.master.suppliers||[]).find(function(s){return s.id===window._masterSupplierId;}) || (state.master.suppliers||[])[0];
+  if (!sup) return;
+  if (!sup.paramByYear) sup.paramByYear = {};
+  if (!sup.paramByYear[yr]) sup.paramByYear[yr] = {};
+  sup.paramByYear[yr].hargaGas = parseFloat(document.getElementById('master-harga').value) || 12.02;
+  sup.paramByYear[yr].mmbtuNm3 = parseFloat(document.getElementById('master-mmbtu').value) || 25;
+  sup.paramByYear[yr].biayaTrip = parseFloat(document.getElementById('master-biaya-trip').value) || 1100000;
+  // Keep flat values updated for backward compat (MRJ only)
+  if (sup.id === (state.master.suppliers[0]||{}).id) {
+    state.master.hargaGas = sup.paramByYear[yr].hargaGas;
+    state.master.mmbtuNm3 = sup.paramByYear[yr].mmbtuNm3;
+    state.master.biayaTrip = sup.paramByYear[yr].biayaTrip;
+  }
   save();
   renderMaster();
 }
 function updateJisdor(mo) { state.master.jisdor[mo] = parseInt(document.getElementById('jisdor-'+mo).value)||0; save(); }
 function updateJisdorYear(mo) {
-  var yr = window._masterJisdorYear;
-  if (!state.master.jisdorByYear) state.master.jisdorByYear = {};
-  if (!state.master.jisdorByYear[yr]) state.master.jisdorByYear[yr] = {};
-  state.master.jisdorByYear[yr][mo] = parseInt(document.getElementById('jisdor-'+mo).value)||0;
+  var yr = window._masterYear || window._masterJisdorYear;
+  var sup = (state.master.suppliers||[]).find(function(s){return s.id===window._masterSupplierId;}) || (state.master.suppliers||[])[0];
+  if (!sup) return;
+  if (!sup.jisdorByYear) sup.jisdorByYear = {};
+  if (!sup.jisdorByYear[yr]) sup.jisdorByYear[yr] = {Jan:0,Feb:0,Mar:0,Apr:0,May:0,Jun:0,Jul:0,Aug:0,Sep:0,Oct:0,Nov:0,Dec:0};
+  sup.jisdorByYear[yr][mo] = parseInt(document.getElementById('jisdor-'+mo).value)||0;
+  // Keep flat jisdor updated for backward compat (MRJ only)
+  if (sup.id === (state.master.suppliers[0]||{}).id) {
+    if (!state.master.jisdor) state.master.jisdor = {};
+    state.master.jisdor[mo] = sup.jisdorByYear[yr][mo];
+    if (!state.master.jisdorByYear) state.master.jisdorByYear = {};
+    if (!state.master.jisdorByYear[yr]) state.master.jisdorByYear[yr] = {};
+    state.master.jisdorByYear[yr][mo] = sup.jisdorByYear[yr][mo];
+  }
   save();
 }
 function switchMasterYear(yr) {
   window._masterYear = yr;
   window._masterJisdorYear = yr;
+  renderMaster();
+}
+function switchMasterSupplier(supplierId) {
+  window._masterSupplierId = supplierId;
+  window._masterYear = null; // reset year so it picks latest for this supplier
+  renderMaster();
+}
+function deleteSupplier(supplierId) {
+  var suppliers = state.master.suppliers || [];
+  if (suppliers.length <= 1) { alert('Harus ada minimal 1 supplier'); return; }
+  var sup = suppliers.find(function(s){return s.id===supplierId;});
+  if (!sup) return;
+  if (!confirm('Hapus supplier "' + sup.name + '"? Data Jisdor dan Parameter-nya akan hilang.')) return;
+  state.master.suppliers = suppliers.filter(function(s){return s.id!==supplierId;});
+  window._masterSupplierId = state.master.suppliers[0].id;
+  save();
+  renderMaster();
+}
+function addSupplier() {
+  var name = prompt('Nama supplier baru:', '');
+  if (!name) return;
+  name = name.trim();
+  if (!name) return;
+  var id = name.toLowerCase().replace(/[^a-z0-9]/g,'') || uid();
+  var curYr = String(new Date().getFullYear());
+  var newSup = {
+    id: id, name: name,
+    paramByYear: {},
+    jisdorByYear: {}
+  };
+  newSup.jisdorByYear[curYr] = {Jan:0,Feb:0,Mar:0,Apr:0,May:0,Jun:0,Jul:0,Aug:0,Sep:0,Oct:0,Nov:0,Dec:0};
+  newSup.paramByYear[curYr] = {hargaGas:12.02,mmbtuNm3:25,biayaTrip:1100000};
+  state.master.suppliers.push(newSup);
+  save();
+  window._masterSupplierId = id;
   renderMaster();
 }
 function switchJisdorYear(yr) {
@@ -2210,10 +2404,14 @@ function switchJisdorYear(yr) {
 function addMasterYear() {
   var yr = prompt('Tambah tahun baru:', String(new Date().getFullYear()+1));
   if (!yr) return;
-  if (!state.master.jisdorByYear) state.master.jisdorByYear = {};
-  if (!state.master.paramByYear) state.master.paramByYear = {};
-  if (!state.master.jisdorByYear[yr]) state.master.jisdorByYear[yr] = { Jan:0,Feb:0,Mar:0,Apr:0,May:0,Jun:0,Jul:0,Aug:0,Sep:0,Oct:0,Nov:0,Dec:0 };
-  if (!state.master.paramByYear[yr]) state.master.paramByYear[yr] = { hargaGas:state.master.hargaGas||12.02, mmbtuNm3:state.master.mmbtuNm3||25, biayaTrip:state.master.biayaTrip||1100000 };
+  yr = yr.trim();
+  if (!/^\d{4}$/.test(yr)) { alert('Format tahun tidak valid. Masukkan 4 digit, misal: 2027'); return; }
+  var sup = (state.master.suppliers||[]).find(function(s){return s.id===window._masterSupplierId;}) || (state.master.suppliers||[])[0];
+  if (!sup) return;
+  if (!sup.jisdorByYear) sup.jisdorByYear = {};
+  if (!sup.paramByYear) sup.paramByYear = {};
+  if (!sup.jisdorByYear[yr]) sup.jisdorByYear[yr] = {Jan:0,Feb:0,Mar:0,Apr:0,May:0,Jun:0,Jul:0,Aug:0,Sep:0,Oct:0,Nov:0,Dec:0};
+  if (!sup.paramByYear[yr]) sup.paramByYear[yr] = {hargaGas:sup.paramByYear[Object.keys(sup.paramByYear).pop()]&&sup.paramByYear[Object.keys(sup.paramByYear).pop()].hargaGas||12.02,mmbtuNm3:25,biayaTrip:1100000};
   save();
   window._masterYear = yr;
   renderMaster();
@@ -2316,6 +2514,11 @@ function openAddCogsModal(kandangId, periodeId) {
   document.getElementById('cogs-selected-date').textContent = 'Pilih tanggal di kalender';
   document.getElementById('cogs-selected-date').style.color = 'var(--text2)';
   document.getElementById('cogs-existing-note').style.display = 'none';
+  document.getElementById('cogs-formula-preview').style.display = 'none';
+  // Populate supplier dropdown
+  var sel = document.getElementById('input-cogs-supplier');
+  var suppliers = state.master.suppliers || [];
+  sel.innerHTML = suppliers.map(function(s){ return '<option value="' + s.id + '">' + s.name + '</option>'; }).join('');
   var found = findKandang(kandangId);
   var p = found && found.kandang.periodes.find(function(x){ return x.id === periodeId; });
   if (p && p.startDate) {
@@ -2328,6 +2531,24 @@ function openAddCogsModal(kandangId, periodeId) {
   }
   openModal('modal-add-cogs');
   setTimeout(renderCogsCalendar, 50);
+}
+
+function updateCogsFormula() {
+  var sel = document.getElementById('input-cogs-supplier');
+  var supplierId = sel ? sel.value : null;
+  var preview = document.getElementById('cogs-formula-preview');
+  if (!supplierId || !preview) return;
+  var supplier = getSupplierById(supplierId);
+  if (!supplier) return;
+  var yr = String(_cogsCalYear || new Date().getFullYear());
+  var monthKey = _cogsCalSelectedMonth || MONTH_SHORT[_cogsCalMonth] || 'Jan';
+  var jis = (supplier.jisdorByYear && supplier.jisdorByYear[yr] && supplier.jisdorByYear[yr][monthKey]) || 0;
+  var p = supplier.paramByYear && supplier.paramByYear[yr];
+  var hg = (p && p.hargaGas) || 12.02;
+  var mn = (p && p.mmbtuNm3) || 25;
+  var cps = jis ? ((hg / mn) * jis) : 0;
+  preview.style.display = 'block';
+  preview.innerHTML = '&#128200; Formula: (' + hg + ' / ' + mn + ') &times; ' + (jis || '?') + ' = <strong>Rp' + (jis ? cps.toLocaleString('id-ID', {maximumFractionDigits:0}) : '?')+'/Sm&#179;</strong>' + (jis ? '' : ' &mdash; <span style="color:var(--yellow)">Jisdor ' + monthKey + ' ' + yr + ' belum diisi</span>');
 }
 
 var MONTH_SHORT = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
@@ -2393,7 +2614,8 @@ function saveCogs() {
   const p = found && found.kandang.periodes.find(function(x){ return x.id === _pendingCogsCtx.periodeId; });
   if (!p) return;
   p.cogsEntries = p.cogsEntries || [];
-  p.cogsEntries.push({id:uid(),month:month,day:day,volume:volume});
+  var supplierId = (document.getElementById('input-cogs-supplier') || {}).value || ((state.master.suppliers||[])[0]||{}).id || 'mrj';
+  p.cogsEntries.push({id:uid(),month:month,day:day,volume:volume,supplierId:supplierId});
   p.cogsEntries.sort(function(a,b){ return getMonthIdx(a.month)*31+a.day - (getMonthIdx(b.month)*31+b.day); });
   save(); closeModal('modal-add-cogs');
   renderKandangDetail(_pendingCogsCtx.kandangId);
@@ -2945,7 +3167,7 @@ function renderGantt() {
   var predListSection =
     '<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;margin-top:16px">' +
     '<div style="font-family:Plus Jakarta Sans,sans-serif;font-weight:700;font-size:13px;margin-bottom:12px;color:var(--text2)">PREDIKSI PER BULAN &mdash; '+yr+'</div>' +
-    monthChips + predListHTML + '</div>';
+    monthChips + '<div class="tbl-scroll">' + predListHTML + '</div></div>';
 
   cont.innerHTML = dashHTML + yearNav +
     '<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:0">' +
@@ -3408,7 +3630,7 @@ function renderSummarySupply() {
           var mIdxD = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'].indexOf(e.month);
           var startMIdxD = p.startDate ? parseInt(p.startDate.slice(5,7))-1 : 0;
           if (mIdxD < startMIdxD - 6) entryYearD++;
-          var cps = calcCostPerSm3(e.month, entryYearD);
+          var cps = calcCostPerSm3(e.month, entryYearD, e.supplierId);
           var jisdorVal = (state.master.jisdorByYear && state.master.jisdorByYear[entryYearD] && state.master.jisdorByYear[entryYearD][e.month]) || (state.master.jisdor && state.master.jisdor[e.month]) || 0;
           monthData[key].volume += e.volume;
           monthData[key].cogs += e.volume * cps;
