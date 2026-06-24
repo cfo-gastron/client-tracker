@@ -675,7 +675,7 @@ tr:hover td{background:var(--surface2);}
         </div>
         <div class="form-group">
           <label>Volume (Sm³)</label>
-          <input type="number" id="input-cogs-volume" step="0.01" placeholder="0.00">
+          <input type="number" id="input-cogs-volume" step="0.01" placeholder="0.00" oninput="updateCogsFormula()">
         </div>
         <div id="cogs-formula-preview" style="background:var(--surface2);border-radius:8px;padding:10px 12px;font-size:12px;color:var(--text2);display:none"></div>
         <div id="cogs-existing-note" style="font-size:12px;color:var(--yellow);display:none">⚠ Tanggal ini sudah ada data. Akan menimpa.</div>
@@ -1041,6 +1041,7 @@ function findKandang(id) {
 
 // ============= DASHBOARD =============
 var _dashChart = null;
+var _dashChart2 = null;
 
 function renderDashboard() {
   let totVol=0, totRev=0, totCogs=0, totOpex=0, totIncome=0;
@@ -1110,59 +1111,99 @@ function renderDashboard() {
     var fmtM = function(v){ return 'Rp'+(v>=0?'':'-')+Math.abs(v)+'M'; };
 
     var chartWrap = document.getElementById('dashboard-chart-wrap');
+
+    var isDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+    var textCol = isDark ? '#aaa' : '#666';
+    var gridCol = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.05)';
+
+    // data OpEx
+    var dataOpex = sorted.map(function(m){ return Math.round(m.opex/1e6*10)/10; });
+
     chartWrap.innerHTML =
-      '<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px 20px">' +
-        '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:10px">' +
-          '<div style="font-family:Plus Jakarta Sans,sans-serif;font-weight:700;font-size:15px">Tren Bulanan</div>' +
-          '<div style="display:flex;gap:16px;flex-wrap:wrap;font-size:11px;color:var(--text2)">' +
-            '<span style="display:flex;align-items:center;gap:5px"><span style="width:28px;height:3px;background:#5DCAA5;border-radius:2px;display:inline-block"></span>Revenue</span>' +
-            '<span style="display:flex;align-items:center;gap:5px"><span style="width:28px;height:3px;background:#378ADD;border-radius:2px;display:inline-block"></span>Op. Income</span>' +
-            '<span style="display:flex;align-items:center;gap:5px"><span style="width:20px;height:2px;background:#EF9F27;border-radius:2px;display:inline-block;border-top:2px dashed #EF9F27"></span>Margin %</span>' +
+      // CHART 1 — Bar + Line
+      '<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px 20px;margin-bottom:16px">' +
+        '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px">' +
+          '<div style="font-family:Plus Jakarta Sans,sans-serif;font-weight:700;font-size:15px">Revenue vs Biaya</div>' +
+          '<div style="display:flex;gap:14px;flex-wrap:wrap;font-size:11px;color:var(--text2)">' +
+            '<span style="display:flex;align-items:center;gap:5px"><span style="width:14px;height:14px;background:#5DCAA5;border-radius:3px;display:inline-block"></span>Revenue</span>' +
+            '<span style="display:flex;align-items:center;gap:5px"><span style="width:14px;height:14px;background:#E87C7C;border-radius:3px;display:inline-block"></span>COGS</span>' +
+            '<span style="display:flex;align-items:center;gap:5px"><span style="width:14px;height:14px;background:#A78BDD;border-radius:3px;display:inline-block"></span>OpEx</span>' +
+            '<span style="display:flex;align-items:center;gap:5px"><span style="width:22px;height:3px;background:#378ADD;border-radius:2px;display:inline-block"></span>Op. Income</span>' +
           '</div>' +
         '</div>' +
         '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px">' +
-          '<div style="background:var(--surface2);border-radius:8px;padding:10px 12px"><div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:3px">Avg Vol/Bulan</div><div style="font-family:Plus Jakarta Sans,sans-serif;font-weight:700;font-size:14px">' + fmtNum(avgVol,0) + '</div><div style="font-size:10px;color:var(--text3)">Sm³</div></div>' +
-          '<div style="background:var(--surface2);border-radius:8px;padding:10px 12px"><div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:3px">Avg Revenue/Bulan</div><div style="font-family:Plus Jakarta Sans,sans-serif;font-weight:700;font-size:14px;color:var(--green)">' + (avgRev>=1e9?(avgRev/1e9).toFixed(1)+'B':avgRev>=1e6?(avgRev/1e6).toFixed(1)+'M':fmt(avgRev)) + '</div><div style="font-size:10px;color:var(--text3)">' + fmt(avgRev) + '</div></div>' +
-          '<div style="background:var(--surface2);border-radius:8px;padding:10px 12px"><div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:3px">Avg COGS/Bulan</div><div style="font-family:Plus Jakarta Sans,sans-serif;font-weight:700;font-size:14px;color:var(--red)">' + (avgCogs>=1e9?(avgCogs/1e9).toFixed(1)+'B':avgCogs>=1e6?(avgCogs/1e6).toFixed(1)+'M':fmt(avgCogs)) + '</div><div style="font-size:10px;color:var(--text3)">' + (avgRev?((avgCogs/avgRev)*100).toFixed(1)+'% dari rev':'—') + '</div></div>' +
-          '<div style="background:var(--surface2);border-radius:8px;padding:10px 12px"><div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:3px">Avg Margin/Bulan</div><div style="font-family:Plus Jakarta Sans,sans-serif;font-weight:700;font-size:14px;color:'+(avgMargin>=25?'var(--green)':avgMargin>=15?'var(--yellow)':'var(--red)')+'">'+avgMargin.toFixed(1)+'%</div><div style="font-size:10px;color:var(--text3)">Op. Income: '+fmt(avgOpIncome)+'/bln</div></div>' +
+          '<div style="background:var(--surface2);border-radius:8px;padding:10px 12px"><div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:3px">Avg Revenue/Bln</div><div style="font-family:Plus Jakarta Sans,sans-serif;font-weight:700;font-size:14px;color:var(--green)">' + (avgRev>=1e9?(avgRev/1e9).toFixed(1)+'B':avgRev>=1e6?(avgRev/1e6).toFixed(1)+'M':fmt(avgRev)) + '</div><div style="font-size:10px;color:var(--text3)">' + fmt(avgRev) + '</div></div>' +
+          '<div style="background:var(--surface2);border-radius:8px;padding:10px 12px"><div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:3px">Avg COGS/Bln</div><div style="font-family:Plus Jakarta Sans,sans-serif;font-weight:700;font-size:14px;color:var(--red)">' + (avgCogs>=1e9?(avgCogs/1e9).toFixed(1)+'B':avgCogs>=1e6?(avgCogs/1e6).toFixed(1)+'M':fmt(avgCogs)) + '</div><div style="font-size:10px;color:var(--text3)">' + (avgRev?((avgCogs/avgRev)*100).toFixed(1)+'% dari rev':'—') + '</div></div>' +
+          '<div style="background:var(--surface2);border-radius:8px;padding:10px 12px"><div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:3px">Avg Op. Income/Bln</div><div style="font-family:Plus Jakarta Sans,sans-serif;font-weight:700;font-size:14px;color:var(--accent2)">' + (avgOpIncome>=1e9?(avgOpIncome/1e9).toFixed(1)+'B':avgOpIncome>=1e6?(avgOpIncome/1e6).toFixed(1)+'M':fmt(avgOpIncome)) + '</div><div style="font-size:10px;color:var(--text3)">' + fmt(avgOpIncome) + '</div></div>' +
+          '<div style="background:var(--surface2);border-radius:8px;padding:10px 12px"><div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:3px">Avg Vol/Bln</div><div style="font-family:Plus Jakarta Sans,sans-serif;font-weight:700;font-size:14px">' + fmtNum(avgVol,0) + '</div><div style="font-size:10px;color:var(--text3)">Sm&#179;</div></div>' +
         '</div>' +
-        '<div class="chart-container chart-container-md"><canvas id="dashboard-chart" role="img" aria-label="Line chart tren bulanan revenue, op income, dan margin">Tren bulanan revenue, op. income, dan margin</canvas></div>' +
+        '<div class="chart-container chart-container-lg"><canvas id="dashboard-chart1"></canvas></div>' +
+      '</div>' +
+      // CHART 2 — Margin %
+      '<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px 20px">' +
+        '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px">' +
+          '<div style="font-family:Plus Jakarta Sans,sans-serif;font-weight:700;font-size:15px">Tren Net Margin</div>' +
+          '<div style="display:flex;gap:14px;flex-wrap:wrap;font-size:11px;color:var(--text2)">' +
+            '<span style="display:flex;align-items:center;gap:5px"><span style="width:22px;height:3px;background:#EF9F27;border-radius:2px;display:inline-block"></span>Net Margin %</span>' +
+            '<span style="display:flex;align-items:center;gap:5px"><span style="width:22px;height:2px;background:#1a9e5c;border-radius:2px;display:inline-block;border-top:2px dashed #1a9e5c"></span>Target 25%</span>' +
+          '</div>' +
+        '</div>' +
+        '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px">' +
+          '<div style="background:var(--surface2);border-radius:8px;padding:10px 12px"><div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:3px">Avg Margin</div><div style="font-family:Plus Jakarta Sans,sans-serif;font-weight:700;font-size:18px;color:'+(avgMargin>=25?'var(--green)':avgMargin>=15?'var(--yellow)':'var(--red)')+'">'+avgMargin.toFixed(1)+'%</div></div>' +
+          '<div style="background:var(--surface2);border-radius:8px;padding:10px 12px"><div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:3px">Margin Tertinggi</div><div style="font-family:Plus Jakarta Sans,sans-serif;font-weight:700;font-size:18px;color:var(--green)">'+Math.max.apply(null,dataMargin).toFixed(1)+'%</div><div style="font-size:10px;color:var(--text3)">'+labels[dataMargin.indexOf(Math.max.apply(null,dataMargin))]+'</div></div>' +
+          '<div style="background:var(--surface2);border-radius:8px;padding:10px 12px"><div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:3px">Margin Terendah</div><div style="font-family:Plus Jakarta Sans,sans-serif;font-weight:700;font-size:18px;color:var(--red)">'+Math.min.apply(null,dataMargin).toFixed(1)+'%</div><div style="font-size:10px;color:var(--text3)">'+labels[dataMargin.indexOf(Math.min.apply(null,dataMargin))]+'</div></div>' +
+        '</div>' +
+        '<div class="chart-container chart-container-md"><canvas id="dashboard-chart2"></canvas></div>' +
       '</div>';
 
     if (_dashChart) { _dashChart.destroy(); _dashChart = null; }
+    if (_dashChart2) { _dashChart2.destroy(); _dashChart2 = null; }
 
-    var isDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-    var textCol = isDark ? '#aaa' : '#888';
-    var gridCol = isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.06)';
-
-    _dashChart = new Chart(document.getElementById('dashboard-chart'), {
-      type: 'line',
+    // CHART 1 — Grouped Bar + Line
+    _dashChart = new Chart(document.getElementById('dashboard-chart1'), {
+      type: 'bar',
       data: {
         labels: labels,
         datasets: [
           {
-            label: 'Revenue (M)',
+            label: 'Revenue',
             data: dataRev,
+            backgroundColor: 'rgba(93,202,165,0.80)',
             borderColor: '#5DCAA5',
-            backgroundColor: 'rgba(93,202,165,0.10)',
-            fill: true, tension: 0.35, pointRadius: 4, pointHoverRadius: 6,
-            borderWidth: 2, yAxisID: 'y'
+            borderWidth: 1,
+            borderRadius: 4,
+            order: 2
           },
           {
-            label: 'Op. Income (M)',
+            label: 'COGS',
+            data: dataCogs,
+            backgroundColor: 'rgba(232,124,124,0.80)',
+            borderColor: '#E87C7C',
+            borderWidth: 1,
+            borderRadius: 4,
+            order: 2
+          },
+          {
+            label: 'OpEx',
+            data: dataOpex,
+            backgroundColor: 'rgba(167,139,221,0.80)',
+            borderColor: '#A78BDD',
+            borderWidth: 1,
+            borderRadius: 4,
+            order: 2
+          },
+          {
+            label: 'Op. Income',
             data: dataIncome,
+            type: 'line',
             borderColor: '#378ADD',
-            backgroundColor: 'rgba(55,138,221,0.08)',
-            fill: true, tension: 0.35, pointRadius: 4, pointHoverRadius: 6,
-            borderWidth: 2, yAxisID: 'y'
-          },
-          {
-            label: 'Margin (%)',
-            data: dataMargin,
-            borderColor: '#EF9F27',
             backgroundColor: 'transparent',
-            fill: false, tension: 0.35, pointRadius: 4, pointHoverRadius: 6,
-            borderWidth: 2, borderDash: [5,4], yAxisID: 'y2'
+            pointBackgroundColor: '#378ADD',
+            tension: 0.3,
+            pointRadius: 5,
+            pointHoverRadius: 7,
+            borderWidth: 2.5,
+            order: 1
           }
         ]
       },
@@ -1174,8 +1215,8 @@ function renderDashboard() {
           tooltip: {
             callbacks: {
               label: function(ctx) {
-                if (ctx.dataset.yAxisID === 'y2') return ' Margin: ' + ctx.parsed.y.toFixed(1) + '%';
-                return ' ' + ctx.dataset.label + ': Rp' + ctx.parsed.y.toFixed(1) + 'M';
+                var v = ctx.parsed.y;
+                return ' ' + ctx.dataset.label + ': Rp' + Math.abs(v).toFixed(1) + 'M' + (v < 0 ? ' (rugi)' : '');
               }
             }
           }
@@ -1184,14 +1225,80 @@ function renderDashboard() {
           x: { ticks: { color: textCol, font: { size: 11 } }, grid: { display: false } },
           y: {
             ticks: { color: textCol, font: { size: 11 }, callback: function(v){ return 'Rp'+v+'M'; } },
-            grid: { color: gridCol },
-            title: { display: false }
+            grid: { color: gridCol }
+          }
+        }
+      }
+    });
+
+    // CHART 2 — Margin % with reference line
+    var targetData = labels.map(function(){ return 25; });
+    _dashChart2 = new Chart(document.getElementById('dashboard-chart2'), {
+      type: 'line',
+      data: {
+        labels: labels,
+        datasets: [
+          {
+            label: 'Net Margin %',
+            data: dataMargin,
+            borderColor: '#EF9F27',
+            backgroundColor: function(ctx) {
+              var chart = ctx.chart;
+              var c = chart.ctx;
+              var area = chart.chartArea;
+              if (!area) return 'rgba(239,159,39,0.15)';
+              var grad = c.createLinearGradient(0, area.top, 0, area.bottom);
+              grad.addColorStop(0, 'rgba(239,159,39,0.25)');
+              grad.addColorStop(1, 'rgba(239,159,39,0.02)');
+              return grad;
+            },
+            fill: true, tension: 0.35,
+            pointRadius: 5, pointHoverRadius: 8,
+            pointBackgroundColor: function(ctx) {
+              var v = ctx.parsed ? ctx.parsed.y : 0;
+              return v >= 25 ? '#1a9e5c' : v >= 15 ? '#EF9F27' : '#c8191e';
+            },
+            pointBorderColor: '#fff',
+            pointBorderWidth: 2,
+            borderWidth: 2.5
           },
-          y2: {
-            position: 'right',
-            ticks: { color: '#EF9F27', font: { size: 11 }, callback: function(v){ return v+'%'; } },
-            grid: { display: false },
-            min: 0, max: 60
+          {
+            label: 'Target 25%',
+            data: targetData,
+            borderColor: '#1a9e5c',
+            backgroundColor: 'transparent',
+            borderDash: [6, 4],
+            borderWidth: 1.5,
+            pointRadius: 0,
+            tension: 0
+          }
+        ]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        interaction: { mode: 'index', intersect: false },
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              label: function(ctx) {
+                if (ctx.datasetIndex === 1) return ' Target: 25%';
+                var v = ctx.parsed.y;
+                var status = v >= 25 ? '✓ On target' : v >= 15 ? '~ Mendekati' : '✗ Di bawah target';
+                return ' Margin: ' + v.toFixed(1) + '% — ' + status;
+              }
+            }
+          }
+        },
+        scales: {
+          x: { ticks: { color: textCol, font: { size: 11 } }, grid: { display: false } },
+          y: {
+            ticks: {
+              color: textCol, font: { size: 11 },
+              callback: function(v){ return v + '%'; }
+            },
+            grid: { color: gridCol },
+            min: 0
           }
         }
       }
@@ -2547,8 +2654,19 @@ function updateCogsFormula() {
   var hg = (p && p.hargaGas) || 12.02;
   var mn = (p && p.mmbtuNm3) || 25;
   var cps = jis ? ((hg / mn) * jis) : 0;
+  var vol = parseFloat((document.getElementById('input-cogs-volume')||{}).value) || 0;
+  var totalCost = cps * vol;
+  var jisdorOk = jis > 0;
   preview.style.display = 'block';
-  preview.innerHTML = '&#128200; Formula: (' + hg + ' / ' + mn + ') &times; ' + (jis || '?') + ' = <strong>Rp' + (jis ? cps.toLocaleString('id-ID', {maximumFractionDigits:0}) : '?')+'/Sm&#179;</strong>' + (jis ? '' : ' &mdash; <span style="color:var(--yellow)">Jisdor ' + monthKey + ' ' + yr + ' belum diisi</span>');
+  var html = '<div style="display:flex;flex-direction:column;gap:6px">';
+  html += '<div>&#128200; Formula: (' + hg + ' / ' + mn + ') &times; ' + (jisdorOk ? jis.toLocaleString('id-ID') : '<span style="color:var(--yellow)">? (Jisdor ' + monthKey + ' ' + yr + ' belum diisi)</span>') + ' = <strong style="color:var(--text)">' + (jisdorOk ? 'Rp' + Math.round(cps).toLocaleString('id-ID') + '/Sm&#179;' : '—') + '</strong></div>';
+  if (jisdorOk && vol > 0) {
+    html += '<div style="border-top:1px solid var(--border);padding-top:6px;margin-top:2px">&#128181; Total Cost: ' + vol.toLocaleString('id-ID', {maximumFractionDigits:2}) + ' &times; Rp' + Math.round(cps).toLocaleString('id-ID') + ' = <strong style="color:var(--accent);font-size:13px">Rp' + Math.round(totalCost).toLocaleString('id-ID') + '</strong></div>';
+  } else if (jisdorOk && vol === 0) {
+    html += '<div style="color:var(--text3);font-size:11px;padding-top:4px">Masukkan volume untuk lihat Total Cost</div>';
+  }
+  html += '</div>';
+  preview.innerHTML = html;
 }
 
 var MONTH_SHORT = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
