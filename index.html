@@ -133,7 +133,7 @@ tr:hover td{background:var(--surface2);}
 .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);backdrop-filter:blur(4px);z-index:100;align-items:center;justify-content:center;}
 .modal-overlay.show{display:flex;}
 .modal{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:24px;width:560px;max-width:95vw;max-height:90vh;overflow-y:auto;}
-.modal-lg{width:720px;}
+.modal-lg{width:720px;}.modal-xl{width:95vw;max-width:900px;}
 .modal h3{font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:18px;margin-bottom:20px;}
 .form-row{display:grid;gap:14px;margin-bottom:14px;}
 .form-row.cols-2{grid-template-columns:1fr 1fr;}
@@ -3909,7 +3909,7 @@ function renderSummarySupply() {
       '<td class="mono" style="text-align:right">' + fmt(m.revenue) + '</td>' +
       '<td class="mono" style="text-align:right">' + fmt(m.opIncome) + '</td>' +
       '<td style="text-align:right"><span class="tag tag-' + (m.margin>=25?'green':m.margin>=15?'yellow':'red') + '">' + m.margin.toFixed(1) + '%</span></td>' +
-    '</tr>' + insightHTML;
+    '</tr>';
   }).join('');
 
   // Totals
@@ -3956,7 +3956,7 @@ function renderSummaryInvoice() {
         monthData[key].cogs += pl.totalCogs;
         monthData[key].opIncome += pl.opIncome;
         monthData[key].count++;
-        monthData[key].periodes.push({ client:cl.name, kandang:k.name, label:p.label, cutoff:p.cutoffDate, cashIn:cashInDate, revenue:pl.revenue, margin:pl.netMargin, harga:p.hargaJual||0 });
+        monthData[key].periodes.push({ client:cl.name, kandang:k.name, label:p.label, cutoff:p.cutoffDate, cashIn:cashInDate, revenue:pl.revenue, cogs:pl.totalCogs, opex:pl.totalOpex, opIncome:pl.opIncome, margin:pl.netMargin, harga:p.hargaJual||0, volume:pl.totalVolume, clientId:cl.id, kandangId:k.id, periodeId:p.id, paidDate:p.paidDate||null, invoiceLink:p.invoiceLink||null, invoiceNumber:p.invoiceNumber||null });
       });
     });
   });
@@ -3993,13 +3993,32 @@ function renderSummaryInvoice() {
         '<td style="text-align:right"><span class="tag tag-' + (p.margin>=25?'green':p.margin>=15?'yellow':'red') + '" style="font-size:10px">' + p.margin.toFixed(1) + '%</span></td>' +
       '</tr>';
     }).join('');
+    var detailRows2 = m.periodes.sort(function(a,b){ return b.revenue-a.revenue; }).map(function(p) {
+      var mColor = p.margin>=25?'var(--green)':p.margin>=15?'var(--yellow)':'var(--red)';
+      var pKey = 'pl_' + m.mIdx + '_' + m.year + '_' + p.periodeId;
+      window._plDetailCache = window._plDetailCache || {};
+      window._plDetailCache[pKey] = p;
+      return '<tr style="font-size:12px;cursor:pointer" onmouseover="this.style.background=\'var(--surface2)\'" onmouseout="this.style.background=\'\'" data-pkey="' + pKey + '" onclick="openKandangDetailModal(this.dataset.pkey)" title="Klik untuk detail P&L kandang ini">' +
+        '<td><strong>' + p.client + '</strong></td>' +
+        '<td><span class="tag tag-blue" style="font-size:10px">' + p.kandang + '</span> <span class="tag tag-gray" style="font-size:10px">' + p.label + '</span></td>' +
+        '<td class="mono" style="text-align:right">' + fmtDate(p.cutoff) + '</td>' +
+        '<td class="mono" style="text-align:right"><strong>' + fmtDate(p.cashIn) + '</strong></td>' +
+        '<td class="mono" style="text-align:right">' + fmt(p.harga) + '/Sm&#179;</td>' +
+        '<td class="mono" style="text-align:right">' + fmt(p.revenue) + '</td>' +
+        '<td style="text-align:right"><span class="tag tag-' + (p.margin>=25?'green':p.margin>=15?'yellow':'red') + '" style="font-size:10px">' + p.margin.toFixed(1) + '%</span></td>' +
+        '<td style="text-align:center;color:var(--text3);font-size:11px">&#128269;</td>' +
+      '</tr>';
+    }).join('');
     var insightHTML =
       '<tr id="' + insightId + '" style="display:none;background:rgba(42,125,225,0.02)">' +
       '<td colspan="7" style="padding:0 0 12px 0">' +
       '<div style="overflow-x:auto"><table style="margin:0">' +
-      '<thead><tr style="background:var(--surface2)"><th>Client</th><th>Kandang</th><th style="text-align:right">Cut-off</th><th style="text-align:right">Cash In</th><th style="text-align:right">Harga Jual</th><th style="text-align:right">Revenue</th><th style="text-align:right">Margin</th></tr></thead>' +
-      '<tbody>' + detailRows + '</tbody></table></div></td></tr>';
-    return '<tr style="cursor:pointer" data-iid="' + insightId + '" onclick="toggleInsight(this.dataset.iid)" title="Klik untuk lihat detail invoice">' +
+      '<thead><tr style="background:var(--surface2)"><th>Client</th><th>Kandang</th><th style="text-align:right">Cut-off</th><th style="text-align:right">Cash In</th><th style="text-align:right">Harga Jual</th><th style="text-align:right">Revenue</th><th style="text-align:right">Margin</th><th style="text-align:center">Detail</th></tr></thead>' +
+      '<tbody>' + detailRows2 + '</tbody></table></div></td></tr>';
+    var mKey = 'pl_' + m.mIdx + '_' + m.year;
+    window._plDetailCache = window._plDetailCache || {};
+    window._plDetailCache[mKey] = { periodes: m.periodes, bulan: MONTH_ID[m.mIdx] + ' ' + m.year };
+    return '<tr style="cursor:pointer" data-iid="' + insightId + '" onclick="toggleInsight(this.dataset.iid)" title="Klik untuk expand detail">' +
       '<td class="mono"><strong>' + MONTH_ID[m.mIdx] + ' ' + m.year + '</strong></td>' +
       '<td class="mono" style="text-align:right">' + m.count + ' invoice</td>' +
       '<td class="mono" style="text-align:right">' + fmt(m.revenue) + '</td>' +
@@ -4027,6 +4046,89 @@ function renderSummaryInvoice() {
     '<div class="table-wrap"><div class="table-header"><div class="table-title">Laporan Bulanan — Cash In (H+7 Cut-off)</div><div style="font-size:12px;color:var(--text2)">' + sorted.length + ' bulan · klik baris untuk detail invoice</div></div>' +
     '<table><thead><tr><th>Bulan Cash Masuk</th><th style="text-align:right">Jumlah Invoice</th><th style="text-align:right">Revenue</th><th style="text-align:right">COGS</th><th style="text-align:right">Op. Income</th><th style="text-align:right">Margin</th></tr></thead>' +
     '<tbody>' + tableRows + totalRow + '</tbody></table>' + buildInvoiceSummaryMobileCards(sorted) + '</div>';
+}
+
+// ============= PL DETAIL MODAL =============
+function openKandangDetailModal(pKey) {
+  var p = (window._plDetailCache || {})[pKey];
+  if (!p) return;
+
+  // Ambil P&L detail lengkap dari state
+  var found = null;
+  state.clients.forEach(function(cl) {
+    (cl.kandangs||[]).forEach(function(k) {
+      (k.periodes||[]).forEach(function(per) {
+        if (per.id === p.periodeId) found = { cl:cl, k:k, p:per };
+      });
+    });
+  });
+
+  var title = document.getElementById('pl-detail-title');
+  var body = document.getElementById('pl-detail-body');
+  title.textContent = p.client + ' — ' + p.kandang + ' ' + p.label;
+
+  var mColor = p.margin>=25?'var(--green)':p.margin>=15?'var(--yellow)':'var(--red)';
+  var paidBadge = p.paidDate
+    ? '<span style="background:#e8f5ee;color:var(--green);padding:3px 8px;border-radius:6px;font-weight:600;font-size:12px">&#10003; Lunas ' + fmtDate(p.paidDate) + '</span>'
+    : '<span style="background:#fff3e0;color:var(--yellow);padding:3px 8px;border-radius:6px;font-weight:600;font-size:12px">Belum Lunas</span>';
+
+  // Summary cards
+  var summaryCards =
+    '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px">' +
+    '<div style="background:var(--surface2);border-radius:8px;padding:10px 12px"><div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:1px">Volume</div><div style="font-weight:700;font-size:16px;margin-top:2px">' + fmtNum(p.volume||0,2) + ' Sm&#179;</div></div>' +
+    '<div style="background:var(--surface2);border-radius:8px;padding:10px 12px"><div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:1px">Revenue</div><div style="font-weight:700;font-size:16px;margin-top:2px;color:var(--green)">' + fmt(p.revenue) + '</div><div style="font-size:10px;color:var(--text3)">@ ' + fmt(p.harga) + '/Sm&#179;</div></div>' +
+    '<div style="background:var(--surface2);border-radius:8px;padding:10px 12px"><div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:1px">COGS + OpEx</div><div style="font-weight:700;font-size:16px;margin-top:2px;color:var(--red)">(' + fmt(p.cogs + p.opex) + ')</div><div style="font-size:10px;color:var(--text3)">' + fmt(p.cogs) + ' + ' + fmt(p.opex) + '</div></div>' +
+    '<div style="background:var(--surface2);border-radius:8px;padding:10px 12px"><div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:1px">Op. Income</div><div style="font-weight:700;font-size:18px;margin-top:2px;color:' + mColor + '">' + fmt(p.opIncome) + '</div><div style="font-size:11px;font-weight:700;color:' + mColor + '">' + p.margin.toFixed(1) + '% margin</div></div>' +
+    '</div>' +
+    '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;padding:10px 14px;background:var(--surface2);border-radius:8px;font-size:13px">' +
+    '<div><span style="color:var(--text3)">Cut-off:</span> <strong>' + fmtDate(p.cutoff) + '</strong> &nbsp;·&nbsp; <span style="color:var(--text3)">Cash In:</span> <strong>' + fmtDate(p.cashIn) + '</strong></div>' +
+    '<div>' + paidBadge + '</div>' +
+    '</div>';
+
+  // COGS detail table (ambil dari state)
+  var cogsHtml = '', opexHtml = '', opsHtml = '';
+  if (found) {
+    var per = found.p;
+    var k = found.k;
+    // COGS entries
+    if (per.cogsEntries && per.cogsEntries.length) {
+      var cogsRows = per.cogsEntries.map(function(e) {
+        var cps = calcCostPerSm3(e.month, null, e.supplierId);
+        var cost = e.isManual ? (e.manualCost||0) : cps * (e.volume||0);
+        return '<tr style="font-size:12px"><td>' + e.month + ' ' + (e.day||'') + '</td>' +
+          '<td class="mono" style="text-align:right">' + fmtNum(e.volume||0,3) + '</td>' +
+          '<td class="mono" style="text-align:right">' + (e.isManual ? '<span style="color:var(--accent3)">Manual</span>' : fmt(Math.round(cps))) + '</td>' +
+          '<td class="mono" style="text-align:right;font-weight:600">' + fmt(Math.round(cost)) + '</td></tr>';
+      }).join('');
+      cogsHtml = '<div style="margin-bottom:14px"><div style="font-weight:700;font-size:12px;text-transform:uppercase;letter-spacing:1px;color:var(--text3);margin-bottom:8px">COGS Entries (' + per.cogsEntries.length + ')</div>' +
+        '<div style="overflow-x:auto"><table style="font-size:12px;min-width:400px"><thead><tr style="background:var(--surface2)"><th>Tanggal</th><th style="text-align:right">Vol (Sm&#179;)</th><th style="text-align:right">Cost/Sm&#179;</th><th style="text-align:right">Total Cost</th></tr></thead><tbody>' + cogsRows + '</tbody></table></div></div>';
+    }
+    // OpEx entries
+    if (per.opexEntries && per.opexEntries.length) {
+      var opexRows = per.opexEntries.map(function(e) {
+        return '<tr style="font-size:12px"><td>' + e.month + ' ' + (e.day||'') + '</td>' +
+          '<td style="font-size:11px">' + (e.category||'') + '</td>' +
+          '<td style="font-size:11px;color:var(--text2)">' + (e.desc||'—') + '</td>' +
+          '<td class="mono" style="text-align:right;font-weight:600">' + fmt(e.pengajuan||0) + '</td></tr>';
+      }).join('');
+      opexHtml = '<div style="margin-bottom:14px"><div style="font-weight:700;font-size:12px;text-transform:uppercase;letter-spacing:1px;color:var(--text3);margin-bottom:8px">OpEx Entries (' + per.opexEntries.length + ')</div>' +
+        '<div style="overflow-x:auto"><table style="font-size:12px;min-width:400px"><thead><tr style="background:var(--surface2)"><th>Tanggal</th><th>Kategori</th><th>Keterangan</th><th style="text-align:right">Pengajuan</th></tr></thead><tbody>' + opexRows + '</tbody></table></div></div>';
+    }
+    // Ops Tak Terduga
+    if (per.opsEntries && per.opsEntries.length) {
+      var opsRows = per.opsEntries.map(function(e) {
+        return '<tr style="font-size:12px"><td class="mono">' + fmtDate(e.date) + '</td>' +
+          '<td style="font-size:11px">' + (e.category||'') + '</td>' +
+          '<td style="font-size:11px;color:var(--text2)">' + (e.desc||'—') + '</td>' +
+          '<td class="mono" style="text-align:right;font-weight:600;color:var(--red)">' + fmt(e.nominal||0) + '</td></tr>';
+      }).join('');
+      opsHtml = '<div style="margin-bottom:14px"><div style="font-weight:700;font-size:12px;text-transform:uppercase;letter-spacing:1px;color:var(--text3);margin-bottom:8px">Ops Tak Terduga (' + per.opsEntries.length + ')</div>' +
+        '<div style="overflow-x:auto"><table style="font-size:12px;min-width:400px"><thead><tr style="background:var(--surface2)"><th>Tanggal</th><th>Kategori</th><th>Keterangan</th><th style="text-align:right">Nominal</th></tr></thead><tbody>' + opsRows + '</tbody></table></div></div>';
+    }
+  }
+
+  body.innerHTML = summaryCards + cogsHtml + opexHtml + opsHtml;
+  openModal('modal-pl-detail');
 }
 
 // ============= INVOICE TRACKER =============
@@ -5360,7 +5462,21 @@ if (typeof _firestoreReady !== 'undefined' && _firestoreReady) {
     </div>
   </div>
 </div>
-  <nav class="bottom-nav" id="bottom-nav">
+  <!-- PL Detail Modal -->
+<div class="modal-overlay" id="modal-pl-detail">
+  <div class="modal modal-xl" style="max-width:900px;width:95vw">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px">
+      <h3 style="margin:0;font-size:16px" id="pl-detail-title">Detail P&L</h3>
+      <button onclick="closeModal('modal-pl-detail')" style="background:none;border:none;font-size:22px;line-height:1;cursor:pointer;color:var(--text3);padding:2px 8px;border-radius:6px;">&#215;</button>
+    </div>
+    <div id="pl-detail-body"></div>
+    <div style="margin-top:16px;text-align:right">
+      <button class="btn btn-secondary" onclick="closeModal('modal-pl-detail')">Tutup</button>
+    </div>
+  </div>
+</div>
+
+<nav class="bottom-nav" id="bottom-nav">
     <div class="bottom-nav-item active" id="bnav-dashboard" onclick="navigateMobile('dashboard')"><span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></span><span class="nav-label">Dashboard</span><span class="nav-badge" id="bnav-badge" style="display:none"></span></div>
     <div class="bottom-nav-item" id="bnav-clients" onclick="navigateMobile('clients')"><span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span><span class="nav-label">Clients</span></div>
     <div class="bottom-nav-item" id="bnav-summary" onclick="navigateMobile('summary')"><span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></span><span class="nav-label">P&amp;L</span></div>
