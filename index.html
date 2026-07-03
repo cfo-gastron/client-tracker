@@ -3909,7 +3909,7 @@ function renderSummarySupply() {
       '<td class="mono" style="text-align:right">' + fmt(m.revenue) + '</td>' +
       '<td class="mono" style="text-align:right">' + fmt(m.opIncome) + '</td>' +
       '<td style="text-align:right"><span class="tag tag-' + (m.margin>=25?'green':m.margin>=15?'yellow':'red') + '">' + m.margin.toFixed(1) + '%</span></td>' +
-    '</tr>';
+    '</tr>' + insightHTML;
   }).join('');
 
   // Totals
