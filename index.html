@@ -2402,7 +2402,27 @@ function renderMaster() {
 
   var formula = '(' + (py.hargaGas||12.02) + '/' + (py.mmbtuNm3||25) + ') × Jisdor';
 
+  // Build GTM section
+  var gtms = state.master.gtms || [];
+  var gtmRows = gtms.map(function(g, i) {
+    var totalVol = (state.trips||[]).filter(function(t){return t.gtmId===g.id;}).reduce(function(s,t){return s+(t.volume||0);},0);
+    var statusColor = totalVol > 0 ? 'var(--green)' : 'var(--text3)';
+    return '<tr>' +
+      '<td style="font-weight:600">' + g.name + '</td>' +
+      '<td style="font-size:12px;color:var(--text2)">' + (g.keterangan||'—') + '</td>' +
+      '<td class="mono" style="text-align:right;color:' + statusColor + '">' + fmtNum(totalVol,2) + ' Sm&#179;</td>' +
+      '<td><button class="btn btn-danger btn-sm btn-icon" data-gid="' + g.id + '" onclick="deleteGTM(this.dataset.gid)">&#215;</button></td>' +
+    '</tr>';
+  }).join('');
+
+  var gtmSection = '<div class="table-wrap" style="margin-bottom:20px"><div class="table-header"><div class="table-title">GTM / Kendaraan Angkut</div>' +
+    '<button class="btn btn-primary btn-sm" onclick="addGTM()">+ Tambah GTM</button></div>' +
+    (gtms.length ? '<table><thead><tr><th>Nama GTM</th><th>Keterangan</th><th style="text-align:right">Total Volume Trip</th><th></th></tr></thead><tbody>' + gtmRows + '</tbody></table>'
+    : '<div style="padding:20px;text-align:center;color:var(--text3);font-size:13px">Belum ada GTM. Klik "+ Tambah GTM" untuk mulai.</div>') +
+    '</div>';
+
   document.getElementById('content-master').innerHTML =
+    gtmSection +
     '<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:14px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:12px 16px">' +
     '<span style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-right:4px">Supplier:</span>' +
     supplierTabs + '</div>' +
@@ -2461,6 +2481,31 @@ function updateJisdorYear(mo) {
 function switchMasterYear(yr) {
   window._masterYear = yr;
   window._masterJisdorYear = yr;
+  renderMaster();
+}
+
+function addGTM() {
+  var name = prompt('Nama GTM (contoh: PGS-001):', '');
+  if (!name) return;
+  name = name.trim();
+  if (!name) return;
+  var ket = prompt('Keterangan (opsional, contoh: Truk CNG besar):', '') || '';
+  if (!state.master.gtms) state.master.gtms = [];
+  var id = 'gtm_' + name.toLowerCase().replace(/[^a-z0-9]/g,'_');
+  if (state.master.gtms.find(function(g){return g.id===id;})) {
+    alert('GTM dengan nama ini sudah ada!'); return;
+  }
+  state.master.gtms.push({ id: id, name: name, keterangan: ket });
+  save();
+  renderMaster();
+}
+
+function deleteGTM(gtmId) {
+  var used = (state.trips||[]).some(function(t){return t.gtmId===gtmId;});
+  if (used && !confirm('GTM ini sudah dipakai di beberapa trip. Tetap hapus?')) return;
+  if (!used && !confirm('Hapus GTM ini?')) return;
+  state.master.gtms = (state.master.gtms||[]).filter(function(g){return g.id!==gtmId;});
+  save();
   renderMaster();
 }
 function switchMasterSupplier(supplierId) {
@@ -4835,6 +4880,12 @@ function openAddTripModal() {
   document.getElementById('trip-volume').value = '';
   document.getElementById('trip-biaya').value = state.master.biayaTrip || 1100000;
   document.getElementById('trip-notes').value = '';
+  // Populate GTM dropdown
+  var gtmSel = document.getElementById('trip-gtm');
+  var gtms = state.master.gtms || [];
+  gtmSel.innerHTML = '<option value="">— Pilih GTM —</option>' +
+    gtms.map(function(g){ return '<option value="' + g.id + '">' + g.name + '</option>'; }).join('');
+  if (!gtms.length) gtmSel.innerHTML += '<option disabled>Belum ada GTM — tambah di Master Data</option>';
   openModal('modal-add-trip');
 }
 
@@ -4843,9 +4894,10 @@ function saveTrip() {
   var volume = parseFloat(document.getElementById('trip-volume').value) || 0;
   var biaya = parseFloat(document.getElementById('trip-biaya').value) || 0;
   var notes = document.getElementById('trip-notes').value.trim();
+  var gtmId = (document.getElementById('trip-gtm') || {}).value || '';
   if (!date || !volume) return alert('Tanggal dan volume wajib diisi');
   ensureTrips();
-  state.trips.push({ id: uid(), date: date, volume: volume, biaya: biaya, notes: notes, allocated: 0 });
+  state.trips.push({ id: uid(), date: date, volume: volume, biaya: biaya, notes: notes, allocated: 0, gtmId: gtmId });
   state.trips.sort(function(a,b){ return a.date.localeCompare(b.date); });
   save();
   closeModal('modal-add-trip');
@@ -4905,8 +4957,11 @@ function renderTripManager() {
     var pct = t.volume > 0 ? (allocated/t.volume*100) : 0;
     var sisaColor = sisa < 0 ? 'var(--red)' : sisa === 0 ? 'var(--green)' : 'var(--yellow)';
     var barColor = pct >= 100 ? 'var(--green)' : pct >= 50 ? 'var(--accent2)' : 'var(--yellow)';
+    var gtm = (state.master.gtms||[]).find(function(g){return g.id===t.gtmId;});
+    var gtmName = gtm ? gtm.name : (t.notes && t.notes.match(/PGS-\d+/i) ? t.notes.match(/PGS-\d+/i)[0] : '—');
     return '<tr>' +
       '<td class="mono">' + fmtDate(t.date) + '</td>' +
+      '<td style="font-size:12px;font-weight:600;color:var(--accent2)">' + gtmName + '</td>' +
       '<td class="mono" style="text-align:right">' + fmtNum(t.volume,2) + '</td>' +
       '<td class="mono" style="text-align:right">' + fmt(t.biaya) + '</td>' +
       '<td>' +
@@ -4930,7 +4985,7 @@ function renderTripManager() {
     '<div class="stat-card ' + (totalSisa > 0 ? 'yellow' : 'green') + '"><div class="stat-label">Gas Belum Dialokasi</div><div class="stat-value">' + fmtNum(totalSisa,0) + '</div><div class="stat-sub">Sm&#179; nganggur</div></div>' +
     '</div>' +
     '<div class="table-wrap"><div class="table-header"><div class="table-title">Daftar Trip SPBG</div><div style="font-size:12px;color:var(--text2)">' + totalTrips + ' trip</div></div>' +
-    '<table><thead><tr><th>Tanggal</th><th style="text-align:right">Volume (Sm&#179;)</th><th style="text-align:right">Biaya Trip</th><th>Alokasi ke Kandang</th><th style="text-align:right">Sisa</th><th>Catatan</th><th></th></tr></thead>' +
+    '<table><thead><tr><th>Tanggal</th><th>GTM</th><th style="text-align:right">Volume (Sm&#179;)</th><th style="text-align:right">Biaya Trip</th><th>Alokasi ke Kandang</th><th style="text-align:right">Sisa</th><th>Catatan</th><th></th></tr></thead>' +
     '<tbody>' + rows + '</tbody></table>' + buildTripMobileCards(state.trips.slice().reverse()) + '</div>';
 }
 
@@ -5287,7 +5342,13 @@ if (typeof _firestoreReady !== 'undefined' && _firestoreReady) {
       <div class="form-group"><label>Volume SPBG (Sm³)</label><input type="number" id="trip-volume" step="0.01" placeholder="e.g. 800" oninput="updateTripSisa()"></div>
       <div class="form-group"><label>Biaya Trip (Rp)</label><input type="number" id="trip-biaya" placeholder="e.g. 1100000"></div>
     </div>
-    <div class="form-row">
+    <div class="form-row cols-2">
+      <div class="form-group">
+        <label>GTM / Kendaraan</label>
+        <select id="trip-gtm" style="font-size:14px;font-weight:600">
+          <option value="">— Pilih GTM —</option>
+        </select>
+      </div>
       <div class="form-group"><label>Catatan</label><input type="text" id="trip-notes" placeholder="e.g. E-Money, Solar, Ongkos Driver"></div>
     </div>
     <div style="background:var(--surface2);border-radius:8px;padding:12px 14px;font-size:13px;color:var(--text2);margin-bottom:4px">
