@@ -3802,7 +3802,7 @@ function renderSummarySupply() {
           monthData[key].clients[kandangKey].vol += e.volume;
           // Store per-kandang detail for expanded view
           var detailKey = cl.id + '|' + k.id + '|' + p.id;
-          if (!monthData[key].kandangDetail[detailKey]) monthData[key].kandangDetail[detailKey] = { client:cl.name, kandang:k.name, label:p.label, harga:harga, isCutoff:p.isCutoff||false, vol:0, cogs:0, revenue:0, opex:0 };
+          if (!monthData[key].kandangDetail[detailKey]) monthData[key].kandangDetail[detailKey] = { client:cl.name, kandang:k.name, label:p.label, harga:harga, isCutoff:p.isCutoff||false, vol:0, cogs:0, revenue:0, opex:0, periodeId:p.id, clientId:cl.id, kandangId:k.id };
           monthData[key].kandangDetail[detailKey].vol += e.volume;
           monthData[key].kandangDetail[detailKey].cogs += e.volume * cps;
           monthData[key].kandangDetail[detailKey].revenue += e.volume * harga;
@@ -3876,7 +3876,11 @@ function renderSummarySupply() {
       var kdStatus = kd.isCutoff
         ? '<span style="background:#e8f5e9;color:#1a9e5c;font-size:9px;padding:1px 6px;border-radius:10px;font-weight:600;margin-left:5px">&#10003; Selesai</span>'
         : '<span style="background:#fff3e0;color:#e07b00;font-size:9px;padding:1px 6px;border-radius:10px;font-weight:600;margin-left:5px">&#9679; Berjalan</span>';
-      return '<tr style="font-size:12px">' +
+      // Cache untuk modal detail
+      var spKey = 'sp_' + kd.periodeId;
+      window._plDetailCache = window._plDetailCache || {};
+      window._plDetailCache[spKey] = { periodeId: kd.periodeId, client: kd.client, kandang: kd.kandang, label: kd.label, volume: kd.vol, harga: kd.harga, revenue: kd.revenue, cogs: kd.cogs, opex: kd.opex, opIncome: opIncome, margin: margin, cutoff: null, cashIn: null, paidDate: null };
+      return '<tr style="font-size:12px;cursor:pointer" onmouseover="this.style.background=\'var(--surface2)\'" onmouseout="this.style.background=\'\'" data-pkey="' + spKey + '" onclick="openKandangDetailModal(this.dataset.pkey)" title="Klik untuk detail">' +
         '<td><strong>' + kd.client + '</strong></td>' +
         '<td><span class="tag tag-blue" style="font-size:10px">' + kd.kandang + '</span> <span class="tag tag-gray" style="font-size:10px">' + kd.label + '</span></td>' +
         '<td class="mono" style="text-align:right">' + fmtNum(kd.vol,2) + '</td>' +
@@ -3888,6 +3892,7 @@ function renderSummarySupply() {
         '<td style="text-align:right"><span class="tag tag-gray" style="font-size:10px">' + opexPct.toFixed(1) + '%</span></td>' +
         '<td class="mono" style="text-align:right;font-weight:600;color:' + (opIncome>=0?'var(--green)':'var(--red)') + '">' + fmt(opIncome) + '</td>' +
         '<td style="text-align:right"><span class="tag tag-' + (margin>=25?'green':margin>=15?'yellow':'red') + '" style="font-size:10px">' + margin.toFixed(1) + '%</span>' + kdStatus + '</td>' +
+        '<td style="text-align:center;color:var(--text3);font-size:11px">&#128269;</td>' +
       '</tr>';
     }).join('');
     var insightHTML =
@@ -3899,7 +3904,7 @@ function renderSummarySupply() {
       '<th>Client</th><th>Kandang</th><th style="text-align:right">Vol (Sm&#179;)</th><th style="text-align:right">Harga/Sm&#179;</th><th style="text-align:right">Revenue</th>' +
       '<th style="text-align:right">COGS</th><th style="text-align:right">%</th>' +
       '<th style="text-align:right">OpEx</th><th style="text-align:right">%</th>' +
-      '<th style="text-align:right">Op. Income</th><th style="text-align:right">Margin</th>' +
+      '<th style="text-align:right">Op. Income</th><th style="text-align:right">Margin</th><th style="text-align:center">Detail</th>' +
       '</tr></thead><tbody>' + detailRows + '</tbody></table>' +
       '</div></td></tr>';
     return '<tr style="cursor:pointer" data-iid="' + insightId + '" onclick="toggleInsight(this.dataset.iid)" title="Klik untuk lihat breakdown kandang">' +
