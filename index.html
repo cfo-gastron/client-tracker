@@ -251,9 +251,7 @@ tr:hover td{background:var(--surface2);}
 .periode-toggle{flex-wrap:wrap!important;gap:8px!important;padding:12px 14px!important;}
 .periode-toggle > div:last-child{width:100%;justify-content:flex-end;flex-wrap:wrap;gap:6px;}
 #gantt-wrap,#gantt-year-nav{display:none!important;}
-/* Client cards */
-#content-clients .table-wrap table{display:none!important;}
-#content-clients .table-wrap .table-header{display:none!important;}
+/* Client cards - legacy rules removed, using nc-block system */
 .m-client-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;margin-bottom:12px;overflow:hidden;}
 /* Notion-style client cards */
 .nc-block{border:0.5px solid var(--border);border-radius:12px;margin-bottom:8px;overflow:hidden;background:var(--surface)}
@@ -295,13 +293,13 @@ tr:hover td{background:var(--surface2);}
 .nc-add-kandang{display:flex;align-items:center;gap:6px;padding:8px 14px 8px 36px;color:var(--text3);font-size:12px;cursor:pointer;border-top:0.5px dashed var(--border)}
 .nc-add-kandang:hover{color:var(--accent2);background:var(--surface2)}
 /* Kebab dropdown */
-.nc-dropdown{position:absolute;right:0;top:100%;background:var(--surface);border:0.5px solid var(--border);border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,0.1);z-index:200;min-width:140px;overflow:hidden;display:none}
+.nc-dropdown{position:absolute;right:0;top:calc(100% + 4px);background:var(--surface);border:0.5px solid var(--border);border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,0.12);z-index:500;min-width:160px;overflow:hidden;display:none}
 .nc-dropdown.show{display:block}
 .nc-dropdown-item{display:flex;align-items:center;gap:8px;padding:9px 14px;font-size:13px;color:var(--text);cursor:pointer;white-space:nowrap}
 .nc-dropdown-item:hover{background:var(--surface2)}
 .nc-dropdown-item.danger{color:var(--red)}
 .nc-dropdown-item.danger:hover{background:#fdeaea}
-.nc-relative{position:relative}
+.nc-relative{position:relative;display:flex;align-items:center}
 .m-client-header{display:flex;align-items:center;padding:14px 16px;gap:10px;cursor:pointer;-webkit-tap-highlight-color:transparent;}
 .m-client-avatar{width:40px;height:40px;border-radius:10px;background:rgba(200,25,30,0.08);color:var(--accent);font-weight:800;font-size:16px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
 .m-client-info{flex:1;min-width:0;}
@@ -1451,7 +1449,7 @@ function renderClients() {
         '<div class="nc-relative">' +
           '<button class="nc-kebab" data-cid="' + cl.id + '" onclick="event.stopPropagation();ncShowMenu(this)">&#8943;</button>' +
           '<div class="nc-dropdown" id="dd-' + cl.id + '">' +
-            '<div class="nc-dropdown-item" data-cid="' + cl.id + '" onclick="viewClientSummary(this.dataset.cid)">P&L Summary</div>' +
+            '<div class="nc-dropdown-item" data-cid="' + cl.id + '" onclick="viewClientSummary(this.dataset.cid)">P&amp;L Summary</div>' +
             '<div class="nc-dropdown-item" data-cid="' + cl.id + '" data-name="' + cl.name + '" data-loc="' + (cl.location||'') + '" onclick="openEditClient(this)">Edit client</div>' +
             '<div class="nc-dropdown-item" data-cid="' + cl.id + '" onclick="openAddKandangModal(this.dataset.cid)">+ Tambah kandang</div>' +
             '<div class="nc-dropdown-item danger" data-cid="' + cl.id + '" onclick="deleteClientById(this.dataset.cid)">&#215; Hapus client</div>' +
