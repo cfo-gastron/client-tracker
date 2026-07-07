@@ -3151,8 +3151,14 @@ function openTMModal(type) {
       : '<span style="font-size:9px;background:#e8f5ee;color:#1a9e5c;padding:2px 6px;border-radius:10px;font-weight:600">Selesai</span>';
     var valColor = type==='opincome' ? (val>=0?'var(--green)':'var(--red)') : type==='cogs' ? 'var(--red)' : 'var(--green)';
     var avgHarian = pr ? ('<span style="color:var(--text3)">' + fmtNum(pr.avgHarian,1) + ' Sm&#179;/hari &middot; sisa ' + pr.sisaHari + ' hari</span>') : '';
-    var cutoffInfo = item.periode.cutoffDate ? fmtDate(item.periode.cutoffDate) : (pr && item.periode.startDate ? '<span style="color:var(--accent2)">~'+fmtDate(addDays(item.periode.startDate, 30))+'</span>' : '&#8212;');
-    var invoiceInfo = item.periode.paidDate ? '<span style="color:var(--green);font-weight:600">'+fmtDate(item.periode.paidDate)+'</span>' : (item.periode.invoiceDate ? '<span style="color:var(--yellow)">'+fmtDate(addDays(item.periode.invoiceDate||item.periode.cutoffDate||'', 7))+'</span>' : (item.periode.cutoffDate ? '<span style="color:var(--yellow)">~'+fmtDate(addDays(item.periode.cutoffDate,7))+'</span>' : '&#8212;'));
+    var effCutoff = item.estCutoff || item.periode.cutoffDate || null;
+    var cutoffInfo = item.periode.cutoffDate
+      ? fmtDate(item.periode.cutoffDate)
+      : (effCutoff ? '<span style="color:var(--accent2)">~'+fmtDate(effCutoff)+'</span>' : '&#8212;');
+    var estInvoice = effCutoff ? addDays(effCutoff, 7) : null;
+    var invoiceInfo = item.periode.paidDate
+      ? '<span style="color:var(--green);font-weight:600">'+fmtDate(item.periode.paidDate)+'</span>'
+      : (estInvoice ? '<span style="color:var(--yellow)">~'+fmtDate(estInvoice)+'</span>' : '&#8212;');
     return '<tr style="font-size:12px">' +
       '<td><strong>' + item.client + '</strong><br><span style="color:var(--text3)">' + item.kandang + ' &middot; ' + (item.periode.label||'') + '</span></td>' +
       '<td style="text-align:center">' + statusBadge + '</td>' +
@@ -3419,7 +3425,7 @@ function renderGantt() {
           var proyeksi = !p.isCutoff ? calcActiveProyeksi(p, k, estCutoff) : null;
           var revFinal = proyeksi ? Math.round(proyeksi.proyeksiRev) : pl.revenue;
           var opFinal = proyeksi ? Math.round(proyeksi.proyeksiOpIncome) : pl.opIncome;
-          thisMonthPeriodes.push({ client: cl.name, kandang: k.name, pl: pl, periode: p, proyeksi: proyeksi, revFinal: revFinal, opFinal: opFinal });
+          thisMonthPeriodes.push({ client: cl.name, kandang: k.name, pl: pl, periode: p, proyeksi: proyeksi, revFinal: revFinal, opFinal: opFinal, estCutoff: estCutoff });
         }
       });
     });
