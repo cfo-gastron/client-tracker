@@ -3119,6 +3119,69 @@ function deleteOpexByData(btn) { deleteOpex(btn.dataset.kid,btn.dataset.pid,btn.
 // ============= GANTT CHART PREDIKSI =============
 var _ganttYear = new Date().getFullYear();
 
+function openTMModal(type) {
+  var periodes = window._tmPeriodes || [];
+  var bulan = window._tmBulan || '';
+  var titles = { rev: 'Proj. Revenue', cogs: 'Proj. COGS', opincome: 'Proj. Op. Income' };
+  var overlay = document.getElementById('modal-tm-breakdown');
+  var title = document.getElementById('tm-modal-title');
+  var body = document.getElementById('tm-modal-body');
+  title.textContent = titles[type] + ' — ' + bulan;
+
+  var sorted = periodes.slice().sort(function(a, b) {
+    var va = type==='rev' ? (a.revFinal||0) : type==='cogs' ? (a.proyeksi?a.proyeksi.proyeksiCogs:a.pl.totalCogs||0) : (a.opFinal||0);
+    var vb = type==='rev' ? (b.revFinal||0) : type==='cogs' ? (b.proyeksi?b.proyeksi.proyeksiCogs:b.pl.totalCogs||0) : (b.opFinal||0);
+    return vb - va;
+  });
+
+  var total = 0;
+  var rows = sorted.map(function(item) {
+    var pr = item.proyeksi;
+    var val = type==='rev' ? (item.revFinal||0)
+            : type==='cogs' ? (pr ? Math.round(pr.proyeksiCogs) : item.pl.totalCogs||0)
+            : (item.opFinal||0);
+    total += val;
+    var rev = item.revFinal || 0;
+    var cogs = pr ? Math.round(pr.proyeksiCogs) : item.pl.totalCogs||0;
+    var margin = rev > 0 ? ((item.opFinal||0)/rev*100).toFixed(1) : '—';
+    var cogsPct = rev > 0 ? ((cogs/rev)*100).toFixed(1) : '—';
+    var isActive = !item.periode.isCutoff;
+    var statusBadge = isActive
+      ? '<span style="font-size:9px;background:#fff8e0;color:#cc8800;padding:2px 6px;border-radius:10px;font-weight:600">Berjalan</span>'
+      : '<span style="font-size:9px;background:#e8f5ee;color:#1a9e5c;padding:2px 6px;border-radius:10px;font-weight:600">Selesai</span>';
+    var valColor = type==='opincome' ? (val>=0?'var(--green)':'var(--red)') : type==='cogs' ? 'var(--red)' : 'var(--green)';
+    var avgHarian = pr ? ('<span style="color:var(--text3)">' + fmtNum(pr.avgHarian,1) + ' Sm&#179;/hari &middot; sisa ' + pr.sisaHari + ' hari</span>') : '';
+    return '<tr style="font-size:12px">' +
+      '<td><strong>' + item.client + '</strong><br><span style="color:var(--text3)">' + item.kandang + ' &middot; ' + (item.periode.label||'') + '</span></td>' +
+      '<td style="text-align:center">' + statusBadge + '</td>' +
+      '<td class="mono" style="text-align:right;font-weight:700;color:' + valColor + '">' + (type==='cogs'?'(':'') + fmt(Math.abs(val)) + (type==='cogs'?')':'') + '</td>' +
+      '<td class="mono" style="text-align:right;color:var(--text2)">' + fmt(rev) + '</td>' +
+      '<td class="mono" style="text-align:right;color:var(--red)">(' + fmt(cogs) + ')</td>' +
+      '<td style="text-align:right">' +
+        '<span style="font-size:11px;font-weight:700;color:' + (parseFloat(margin)>=25?'var(--green)':parseFloat(margin)>=15?'var(--yellow)':'var(--red)') + '">' + margin + '%</span>' +
+        (avgHarian ? '<br>' + avgHarian : '') +
+      '</td>' +
+    '</tr>';
+  }).join('');
+
+  var totColor = type==='opincome' ? (total>=0?'var(--green)':'var(--red)') : type==='cogs' ? 'var(--red)' : 'var(--green)';
+  var totalRow = '<tr style="background:var(--surface2);font-weight:700;font-size:12px">' +
+    '<td colspan="2">TOTAL (' + sorted.length + ' periode)</td>' +
+    '<td class="mono" style="text-align:right;color:' + totColor + '">' + (type==='cogs'?'(':'') + fmt(Math.abs(total)) + (type==='cogs'?')':'') + '</td>' +
+    '<td colspan="3"></td>' +
+    '</tr>';
+
+  body.innerHTML = '<div style="overflow-x:auto"><table style="width:100%;min-width:560px">' +
+    '<thead><tr style="background:var(--surface2);font-size:11px">' +
+    '<th>Client / Kandang</th><th style="text-align:center">Status</th>' +
+    '<th style="text-align:right">' + titles[type] + '</th>' +
+    '<th style="text-align:right">Proj. Rev</th><th style="text-align:right">Proj. COGS</th>' +
+    '<th style="text-align:right">Margin / Detail</th>' +
+    '</tr></thead><tbody>' + rows + totalRow + '</tbody></table></div>';
+
+  overlay.classList.add('show');
+}
+
 function renderGantt() {
   var cont = document.getElementById('content-prediksi');
   var today = new Date(); today.setHours(0,0,0,0);
@@ -3333,27 +3396,45 @@ function renderGantt() {
     (cl.kandangs||[]).forEach(function(k) {
       (k.periodes||[]).forEach(function(p) {
         if (!p.startDate) return;
-        var pStart = new Date(p.startDate); var pEnd = new Date(p.cutoffDate || addDays(p.startDate,30));
-        var mStart = new Date(nowYear, nowMonth, 1); var mEnd = new Date(nowYear, nowMonth+1, 0);
+        // Untuk periode berjalan, estimasi cutoff dari avg durasi periode sebelumnya
+        var cp2 = (k.periodes||[]).filter(function(x){ return x.isCutoff && x.startDate && x.cutoffDate; });
+        var estCutoff = p.cutoffDate;
+        if (!p.isCutoff && cp2.length >= 1) {
+          var durs3 = cp2.map(function(x){ return daysBetween(x.startDate, x.cutoffDate); });
+          var avgDur3 = Math.round(durs3.reduce(function(a,b){return a+b;},0)/durs3.length);
+          estCutoff = addDays(p.startDate, avgDur3);
+        }
+        var pStart = new Date(p.startDate);
+        var pEnd = new Date(estCutoff || addDays(p.startDate, 30));
+        var mStart = new Date(nowYear, nowMonth, 1);
+        var mEnd = new Date(nowYear, nowMonth+1, 0);
         if (pStart <= mEnd && pEnd >= mStart) {
           var pl = calcPeriodePL(p, k);
-          thisMonthPeriodes.push({ client: cl.name, kandang: k.name, pl: pl, periode: p });
+          var proyeksi = !p.isCutoff ? calcActiveProyeksi(p, k, estCutoff) : null;
+          var revFinal = proyeksi ? Math.round(proyeksi.proyeksiRev) : pl.revenue;
+          var opFinal = proyeksi ? Math.round(proyeksi.proyeksiOpIncome) : pl.opIncome;
+          thisMonthPeriodes.push({ client: cl.name, kandang: k.name, pl: pl, periode: p, proyeksi: proyeksi, revFinal: revFinal, opFinal: opFinal });
         }
       });
     });
   });
-  var tmRev = thisMonthPeriodes.reduce(function(s,x){return s+x.pl.revenue;},0);
-  var tmOp = thisMonthPeriodes.reduce(function(s,x){return s+x.pl.opIncome;},0);
+  var tmRev = thisMonthPeriodes.reduce(function(s,x){return s+(x.revFinal||0);},0);
+  var tmOp = thisMonthPeriodes.reduce(function(s,x){return s+(x.opFinal||0);},0);
+  var tmCogs = thisMonthPeriodes.reduce(function(s,x){return s+(x.proyeksi?Math.round(x.proyeksi.proyeksiCogs):x.pl.totalCogs||0);},0);
   var tmInvoice = thisMonthPeriodes.filter(function(x){return x.periode.isCutoff;}).length;
+  var tmAktif = thisMonthPeriodes.filter(function(x){return !x.periode.isCutoff;}).length;
+  // Cache for modal
+  window._tmPeriodes = thisMonthPeriodes;
+  window._tmBulan = MONTHS_FULL2[nowMonth] + ' ' + nowYear;
 
   var dashHTML =
     '<div style="margin-bottom:16px;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px">' +
     '<div style="font-family:Plus Jakarta Sans,sans-serif;font-weight:700;font-size:13px;margin-bottom:12px;color:var(--text2)">BULAN INI &mdash; '+MONTHS_FULL2[nowMonth].toUpperCase()+' '+nowYear+'</div>' +
     '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px">' +
-    '<div class="stat-card blue"><div class="stat-label">Kandang Aktif</div><div class="stat-value mono" style="font-size:22px">'+thisMonthPeriodes.length+'</div><div class="stat-sub">periode berjalan</div></div>' +
-    '<div class="stat-card green"><div class="stat-label">Invoice Masuk</div><div class="stat-value mono" style="font-size:22px">'+tmInvoice+'</div><div class="stat-sub">periode cutoff</div></div>' +
-    '<div class="stat-card green"><div class="stat-label">Est. Revenue</div><div class="stat-value mono" style="font-size:18px">'+fmt(tmRev)+'</div><div class="stat-sub">bulan ini</div></div>' +
-    '<div class="stat-card '+(tmOp>=0?'green':'red')+'"><div class="stat-label">Est. Op. Income</div><div class="stat-value mono" style="font-size:18px">'+fmt(tmOp)+'</div><div class="stat-sub">bulan ini</div></div>' +
+    '<div class="stat-card blue"><div class="stat-label">Kandang Aktif</div><div class="stat-value mono" style="font-size:22px">'+tmAktif+'</div><div class="stat-sub">periode berjalan</div></div>' +
+    '<div class="stat-card green" style="cursor:pointer" onclick="openTMModal(\'rev\')" title="Klik untuk detail"><div class="stat-label">Proj. Revenue &#128269;</div><div class="stat-value mono" style="font-size:18px">'+fmt(tmRev)+'</div><div class="stat-sub">proyeksi periode berjalan</div></div>' +
+    '<div class="stat-card red" style="cursor:pointer" onclick="openTMModal(\'cogs\')" title="Klik untuk detail"><div class="stat-label">Proj. COGS &#128269;</div><div class="stat-value mono" style="font-size:18px">('+fmt(tmCogs)+')</div><div class="stat-sub">'+(tmRev>0?((tmCogs/tmRev)*100).toFixed(1)+'% dari rev':'&#8212;')+'</div></div>' +
+    '<div class="stat-card '+(tmOp>=0?'green':'red')+'" style="cursor:pointer" onclick="openTMModal(\'opincome\')" title="Klik untuk detail"><div class="stat-label">Proj. Op. Income &#128269;</div><div class="stat-value mono" style="font-size:18px">'+fmt(tmOp)+'</div><div class="stat-sub">'+(tmRev>0?((tmOp/tmRev)*100).toFixed(1)+'% margin':'&#8212;')+'</div></div>' +
     '</div></div>';
 
   // Monthly prediction list
@@ -5684,7 +5765,21 @@ if (typeof _firestoreReady !== 'undefined' && _firestoreReady) {
     </div>
   </div>
 </div>
-  <!-- PL Detail Modal -->
+  <!-- TM Breakdown Modal -->
+<div class="modal-overlay" id="modal-tm-breakdown">
+  <div class="modal modal-xl" style="max-width:860px;width:95vw">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+      <h3 style="margin:0;font-size:15px;font-family:Plus Jakarta Sans,sans-serif" id="tm-modal-title">Breakdown</h3>
+      <button onclick="document.getElementById('modal-tm-breakdown').classList.remove('show')" style="background:none;border:none;font-size:22px;line-height:1;cursor:pointer;color:var(--text3);padding:2px 8px;border-radius:6px;">&#215;</button>
+    </div>
+    <div id="tm-modal-body"></div>
+    <div style="margin-top:14px;text-align:right">
+      <button class="btn btn-secondary" onclick="document.getElementById('modal-tm-breakdown').classList.remove('show')">Tutup</button>
+    </div>
+  </div>
+</div>
+
+<!-- PL Detail Modal -->
 <div class="modal-overlay" id="modal-pl-detail">
   <div class="modal modal-xl" style="max-width:900px;width:95vw">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px">
