@@ -255,6 +255,53 @@ tr:hover td{background:var(--surface2);}
 #content-clients .table-wrap table{display:none!important;}
 #content-clients .table-wrap .table-header{display:none!important;}
 .m-client-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;margin-bottom:12px;overflow:hidden;}
+/* Notion-style client cards */
+.nc-block{border:0.5px solid var(--border);border-radius:12px;margin-bottom:8px;overflow:hidden;background:var(--surface)}
+.nc-client-row{display:flex;align-items:center;gap:8px;padding:10px 14px;cursor:pointer;transition:background 0.12s}
+.nc-client-row:hover{background:var(--surface2)}
+.nc-chevron{font-size:11px;color:var(--text3);transition:transform 0.15s;flex-shrink:0}
+.nc-block.open .nc-chevron{transform:rotate(90deg)}
+.nc-client-name{font-size:14px;font-weight:700;color:var(--text);flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.nc-client-loc{font-size:11px;color:var(--text3);flex-shrink:0}
+.nc-client-meta{display:flex;gap:10px;align-items:center;flex-shrink:0}
+.nc-meta-chip{font-size:11px;color:var(--text2)}
+.nc-margin-pill{font-size:11px;font-weight:600;padding:2px 8px;border-radius:20px}
+.nc-mg-green{background:#e8f5ee;color:#1a9e5c}
+.nc-mg-yellow{background:#fff8e0;color:#cc8800}
+.nc-mg-red{background:#fdeaea;color:#c8191e}
+.nc-kebab{padding:4px 8px;border:none;background:none;cursor:pointer;color:var(--text3);font-size:18px;line-height:1;border-radius:6px;flex-shrink:0}
+.nc-kebab:hover{background:var(--surface2);color:var(--text)}
+.nc-body{display:none;border-top:0.5px solid var(--border)}
+.nc-block.open .nc-body{display:block}
+.nc-kandang-row{display:flex;align-items:center;gap:10px;padding:9px 14px 9px 36px;border-bottom:0.5px solid var(--border);cursor:pointer;transition:background 0.1s}
+.nc-kandang-row:last-of-type{border-bottom:none}
+.nc-kandang-row:hover{background:var(--surface2)}
+.nc-k-badge{width:24px;height:24px;border-radius:6px;background:rgba(42,125,225,0.1);color:var(--accent2);font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.nc-k-info{flex:1;min-width:0}
+.nc-k-name{font-size:13px;font-weight:600;color:var(--text)}
+.nc-k-meta{font-size:11px;color:var(--text3);margin-top:1px}
+.nc-k-stats{display:flex;gap:16px;align-items:center;flex-shrink:0}
+.nc-kstat{text-align:right}
+.nc-kstat-val{font-size:12px;font-weight:600;color:var(--text)}
+.nc-kstat-lbl{font-size:10px;color:var(--text3)}
+.nc-k-detail-btn{padding:3px 10px;border-radius:6px;border:0.5px solid var(--border);background:none;font-size:11px;color:var(--text2);cursor:pointer;white-space:nowrap;flex-shrink:0}
+.nc-k-detail-btn:hover{background:var(--surface2);color:var(--text);border-color:var(--text2)}
+.nc-capex-row{display:flex;align-items:center;gap:6px;padding:5px 14px 5px 36px;background:var(--surface2);border-bottom:0.5px solid var(--border)}
+.nc-capex-label{font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:0.5px}
+.nc-capex-empty{font-size:11px;color:var(--text3);font-style:italic}
+.nc-capex-val{font-size:11px;color:var(--text2);font-weight:600}
+.nc-capex-add{margin-left:auto;padding:2px 8px;border-radius:5px;border:0.5px solid var(--border);background:none;font-size:10px;color:var(--text3);cursor:pointer}
+.nc-capex-add:hover{color:var(--accent);border-color:var(--accent)}
+.nc-add-kandang{display:flex;align-items:center;gap:6px;padding:8px 14px 8px 36px;color:var(--text3);font-size:12px;cursor:pointer;border-top:0.5px dashed var(--border)}
+.nc-add-kandang:hover{color:var(--accent2);background:var(--surface2)}
+/* Kebab dropdown */
+.nc-dropdown{position:absolute;right:0;top:100%;background:var(--surface);border:0.5px solid var(--border);border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,0.1);z-index:200;min-width:140px;overflow:hidden;display:none}
+.nc-dropdown.show{display:block}
+.nc-dropdown-item{display:flex;align-items:center;gap:8px;padding:9px 14px;font-size:13px;color:var(--text);cursor:pointer;white-space:nowrap}
+.nc-dropdown-item:hover{background:var(--surface2)}
+.nc-dropdown-item.danger{color:var(--red)}
+.nc-dropdown-item.danger:hover{background:#fdeaea}
+.nc-relative{position:relative}
 .m-client-header{display:flex;align-items:center;padding:14px 16px;gap:10px;cursor:pointer;-webkit-tap-highlight-color:transparent;}
 .m-client-avatar{width:40px;height:40px;border-radius:10px;background:rgba(200,25,30,0.08);color:var(--accent);font-weight:800;font-size:16px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
 .m-client-info{flex:1;min-width:0;}
@@ -411,6 +458,14 @@ tr:hover td{background:var(--surface2);}
 .master-data-grid{grid-template-columns:1fr!important;}
 /* Jisdor grid stays 2 col but use 3 col on mobile to be compact */
 .master-data-grid .table-wrap [style*="grid-template-columns:1fr 1fr;gap:10px"]{grid-template-columns:repeat(3,1fr)!important;}
+/* NC block mobile fixes */
+.nc-client-meta{display:none!important;}
+.nc-k-stats{display:none!important;}
+.nc-client-loc{display:none!important;}
+.nc-k-detail-btn:last-of-type{display:none!important;}
+.nc-client-row{flex-wrap:nowrap;}
+.nc-client-name{font-size:13px!important;}
+.nc-kandang-row{padding-left:14px!important;}
 }
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
@@ -424,8 +479,6 @@ tr:hover td{background:var(--surface2);}
 </div>
 <style>@keyframes ldbar{0%{transform:translateX(0)}100%{transform:translateX(200%)}}</style>
 <div class="app" style="position:relative">
-  <!-- SIDEBAR TOGGLE -->
-  <button id="sidebar-toggle-btn" onclick="toggleSidebar()" style="position:fixed;top:16px;left:216px;z-index:300;background:var(--surface);border:1px solid var(--border);border-radius:50%;width:26px;height:26px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:12px;color:var(--text2);transition:left 0.2s;box-shadow:0 1px 4px rgba(0,0,0,0.15)" title="Toggle sidebar">◀</button>
   <!-- SIDEBAR -->
   <div class="sidebar" id="sidebar">
     <div class="sidebar-logo">
@@ -1344,42 +1397,78 @@ function renderDashboard() {
 function renderClients() {
   var cont = document.getElementById('content-clients');
   if (!state.clients.length) {
-    cont.innerHTML = '<div class="empty-state"><div class="icon">◈</div><p>Belum ada client terdaftar</p><button class="btn btn-primary" onclick="openModal(&#39;modal-add-client&#39;)">+ Tambah Client Pertama</button></div>';
+    cont.innerHTML = '<div class="empty-state"><div class="icon">&#9670;</div><p>Belum ada client terdaftar</p><button class="btn btn-primary" onclick="openModal(\'modal-add-client\')">+ Tambah Client Pertama</button></div>';
     return;
   }
   var html = '';
   state.clients.forEach(function(cl) {
-    var rows = '';
-    (cl.kandangs||[]).forEach(function(k) {
-      var tv=0,tr2=0,ti=0;
-      (k.periodes||[]).forEach(function(p){ var pl=calcPeriodePL(p,k); tv+=pl.totalVolume; tr2+=pl.revenue; ti+=pl.opIncome; });
-      var mg = tr2 ? ti/tr2*100 : 0;
-      rows += '<tr><td><span class="tag tag-blue">' + k.name + '</span> <button class="btn btn-secondary btn-sm btn-icon" data-kid="' + k.id + '" data-name="' + k.name + '" onclick="openEditKandang(this)" title="Edit nama kandang" style="margin-left:4px">&#9998;</button>' +
-        ' <button class="btn btn-danger btn-sm btn-icon" data-kid="' + k.id + '" data-cid="' + cl.id + '" data-name="' + k.name + '" onclick="confirmDeleteKandang(this)" title="Hapus kandang" style="margin-left:2px">&#215;</button></td>' +
-        '<td class="mono">' + (k.periodes||[]).length + ' periode</td>' +
-        '<td class="mono" style="text-align:right">' + fmtNum(tv,0) + ' Sm³</td>' +
-        '<td class="mono" style="text-align:right">' + fmt(tr2) + '</td>' +
-        '<td style="text-align:right"><span class="tag tag-' + (mg>=20?'green':mg>=10?'yellow':'red') + '">' + mg.toFixed(1) + '%</span></td>' +
-        '<td><button class="btn btn-secondary btn-sm" data-kid="' + k.id + '" onclick="navigate(&#39;kandang&#39;,this.dataset.kid)">Detail &#8594;</button></td></tr>' +
-        '<tr><td colspan="6" style="padding:0 16px 14px;background:transparent">' + renderCapexSection(k) + '</td></tr>';
+    var totV=0,totR=0,totI=0;
+    (cl.kandangs||[]).forEach(function(k){
+      (k.periodes||[]).forEach(function(p){var pl=calcPeriodePL(p,k);totV+=pl.totalVolume;totR+=pl.revenue;totI+=pl.opIncome;});
     });
-    html += '<div class="table-wrap" style="margin-bottom:20px">' +
-      '<div class="table-header"><div>' +
-      '<div style="display:flex;align-items:center;gap:8px">' +
-      '<div class="table-title">' + cl.name + '</div>' +
-      '<button class="btn btn-secondary btn-sm btn-icon" data-cid="' + cl.id + '" data-name="' + cl.name + '" data-loc="' + (cl.location||'') + '" onclick="openEditClient(this)" title="Edit client" style="font-size:11px">&#9998;</button>' +
+    var clMg = totR ? totI/totR*100 : 0;
+    var clMgClass = clMg>=25?'nc-mg-green':clMg>=15?'nc-mg-yellow':'nc-mg-red';
+    var blockId = 'nc-cl-' + cl.id;
+    var kandangRows = '';
+    (cl.kandangs||[]).forEach(function(k) {
+      var tv=0,tr=0,ti=0,latestLabel='',latestRunning=false;
+      (k.periodes||[]).forEach(function(p){var pl=calcPeriodePL(p,k);tv+=pl.totalVolume;tr+=pl.revenue;ti+=pl.opIncome;latestLabel=p.label;latestRunning=!p.isCutoff;});
+      var mg = tr ? ti/tr*100 : 0;
+      var mgClass = mg>=25?'nc-mg-green':mg>=15?'nc-mg-yellow':'nc-mg-red';
+      var statusDot = latestLabel ? (' <span style="font-size:9px;color:' + (latestRunning?'var(--yellow)':'var(--green)') + '">' + (latestRunning?'&#9679;':'&#10003;') + '</span>') : '';
+      var capexTotal = (k.capex||[]).reduce(function(s,c){return s+(c.amount||0);},0);
+      var capexHtml = '<div class="nc-capex-row">' +
+        '<span class="nc-capex-label">CAPEX</span>' +
+        (capexTotal > 0 ? '<span class="nc-capex-val">' + fmt(capexTotal) + '</span>' : '<span class="nc-capex-empty">Belum ada</span>') +
+        '<button class="nc-capex-add" data-kid="' + k.id + '" onclick="event.stopPropagation();openCapexModal(this.dataset.kid)">+ Input</button>' +
+        '</div>';
+      kandangRows +=
+        '<div class="nc-kandang-row" data-kid="' + k.id + '" onclick="navigate(\'kandang\',this.dataset.kid)">' +
+        '<div class="nc-k-badge">' + (k.name||'?').charAt(0).toUpperCase() + '</div>' +
+        '<div class="nc-k-info"><div class="nc-k-name">' + k.name + '</div>' +
+        '<div class="nc-k-meta">' + (k.periodes||[]).length + ' periode' + (latestLabel?' &middot; '+latestLabel+statusDot:'') + '</div></div>' +
+        '<div class="nc-k-stats">' +
+          '<div class="nc-kstat"><div class="nc-kstat-val">' + fmtNum(tv,0) + ' Sm&#179;</div><div class="nc-kstat-lbl">volume</div></div>' +
+          '<div class="nc-kstat"><div class="nc-kstat-val">' + (tr>=1e6?(tr/1e6).toFixed(1)+'M':fmt(tr)) + '</div><div class="nc-kstat-lbl">revenue</div></div>' +
+          '<span class="nc-margin-pill ' + mgClass + '">' + mg.toFixed(1) + '%</span>' +
+        '</div>' +
+        '<button class="nc-k-detail-btn" data-kid="' + k.id + '" onclick="event.stopPropagation();navigate(\'kandang\',this.dataset.kid)">Detail &#8594;</button>' +
+        '<button class="nc-k-detail-btn" style="color:var(--red)" data-kid="' + k.id + '" data-cid="' + cl.id + '" data-name="' + k.name + '" onclick="event.stopPropagation();confirmDeleteKandang(this)">&#215;</button>' +
+        '</div>' + capexHtml;
+    });
+    kandangRows += '<div class="nc-add-kandang" data-cid="' + cl.id + '" onclick="openAddKandangModal(this.dataset.cid)"><span>+</span><span>Tambah kandang</span></div>';
+    html +=
+      '<div class="nc-block" id="' + blockId + '">' +
+      '<div class="nc-client-row" onclick="ncToggle(\'' + blockId + '\')">' +
+        '<span class="nc-chevron">&#9656;</span>' +
+        '<span class="nc-client-name">' + cl.name + '</span>' +
+        '<span class="nc-client-loc">' + (cl.location||'') + '</span>' +
+        '<div class="nc-client-meta">' +
+          '<span class="nc-meta-chip">' + (cl.kandangs||[]).length + ' kandang</span>' +
+          (totR>0?'<span class="nc-meta-chip">' + (totR>=1e9?(totR/1e9).toFixed(1)+'B':totR>=1e6?(totR/1e6).toFixed(1)+'M':fmt(totR)) + ' rev</span>':'') +
+          (totR>0?'<span class="nc-margin-pill ' + clMgClass + '">' + clMg.toFixed(1) + '%</span>':'') +
+        '</div>' +
+        '<div class="nc-relative">' +
+          '<button class="nc-kebab" data-cid="' + cl.id + '" onclick="event.stopPropagation();ncShowMenu(this)">&#8943;</button>' +
+          '<div class="nc-dropdown" id="dd-' + cl.id + '">' +
+            '<div class="nc-dropdown-item" data-cid="' + cl.id + '" onclick="viewClientSummary(this.dataset.cid)">P&L Summary</div>' +
+            '<div class="nc-dropdown-item" data-cid="' + cl.id + '" data-name="' + cl.name + '" data-loc="' + (cl.location||'') + '" onclick="openEditClient(this)">Edit client</div>' +
+            '<div class="nc-dropdown-item" data-cid="' + cl.id + '" onclick="openAddKandangModal(this.dataset.cid)">+ Tambah kandang</div>' +
+            '<div class="nc-dropdown-item danger" data-cid="' + cl.id + '" onclick="deleteClientById(this.dataset.cid)">&#215; Hapus client</div>' +
+          '</div>' +
+        '</div>' +
       '</div>' +
-      '<div style="font-size:12px;color:var(--text3);margin-top:2px">' + (cl.location ? cl.location : '<span style=\"color:var(--text3);font-style:italic\">Lokasi belum diisi</span>') + '</div>' +
-      '</div>' +
-      '<div style="display:flex;gap:8px">' +
-      '<button class="btn btn-secondary btn-sm" data-cid="' + cl.id + '" onclick="viewClientSummary(this.dataset.cid)">P&L Summary</button>' +
-      '<button class="btn btn-secondary btn-sm" data-cid="' + cl.id + '" onclick="openAddKandangModal(this.dataset.cid)">+ Kandang</button>' +
-      '<button class="btn btn-danger btn-sm" data-cid="' + cl.id + '" onclick="deleteClientById(this.dataset.cid)">Hapus</button>' +
-      '</div></div>' +
-      '<table><thead><tr><th>Kandang</th><th>Periode</th><th style="text-align:right">Volume</th><th style="text-align:right">Revenue</th><th style="text-align:right">Net Margin</th><th></th></tr></thead><tbody>' + rows + '</tbody></table></div>';
+      '<div class="nc-body">' + kandangRows + '</div>' +
+      '</div>';
   });
   cont.innerHTML = html;
+  document.removeEventListener('click', _ncCloseDropdowns);
+  document.addEventListener('click', _ncCloseDropdowns);
 }
+function ncToggle(id){var el=document.getElementById(id);if(el)el.classList.toggle('open');}
+function _ncCloseDropdowns(){document.querySelectorAll('.nc-dropdown.show').forEach(function(d){d.classList.remove('show');});}
+function ncShowMenu(btn){_ncCloseDropdowns();var dd=document.getElementById('dd-'+btn.dataset.cid);if(dd)dd.classList.toggle('show');}
+function openCapexModal(kandangId){openAddCapex(kandangId);}
 
 function toggleSidebar() {
   var sb = document.getElementById('sidebar');
@@ -3802,7 +3891,7 @@ function renderSummarySupply() {
           monthData[key].clients[kandangKey].vol += e.volume;
           // Store per-kandang detail for expanded view
           var detailKey = cl.id + '|' + k.id + '|' + p.id;
-          if (!monthData[key].kandangDetail[detailKey]) monthData[key].kandangDetail[detailKey] = { client:cl.name, kandang:k.name, label:p.label, harga:harga, isCutoff:p.isCutoff||false, vol:0, cogs:0, revenue:0, opex:0, periodeId:p.id, clientId:cl.id, kandangId:k.id };
+          if (!monthData[key].kandangDetail[detailKey]) monthData[key].kandangDetail[detailKey] = { client:cl.name, kandang:k.name, label:p.label, harga:harga, isCutoff:p.isCutoff||false, vol:0, cogs:0, revenue:0, opex:0, periodeId:p.id, clientId:cl.id, kandangId:k.id, cutoffDate:p.cutoffDate||null, paidDate:p.paidDate||null, invoiceNumber:p.invoiceNumber||null };
           monthData[key].kandangDetail[detailKey].vol += e.volume;
           monthData[key].kandangDetail[detailKey].cogs += e.volume * cps;
           monthData[key].kandangDetail[detailKey].revenue += e.volume * harga;
@@ -3879,7 +3968,7 @@ function renderSummarySupply() {
       // Cache untuk modal detail
       var spKey = 'sp_' + kd.periodeId;
       window._plDetailCache = window._plDetailCache || {};
-      window._plDetailCache[spKey] = { periodeId: kd.periodeId, client: kd.client, kandang: kd.kandang, label: kd.label, volume: kd.vol, harga: kd.harga, revenue: kd.revenue, cogs: kd.cogs, opex: kd.opex, opIncome: opIncome, margin: margin, cutoff: null, cashIn: null, paidDate: null };
+      window._plDetailCache[spKey] = { periodeId: kd.periodeId, client: kd.client, kandang: kd.kandang, label: kd.label, volume: kd.vol, harga: kd.harga, revenue: kd.revenue, cogs: kd.cogs, opex: kd.opex, opIncome: opIncome, margin: margin, cutoff: kd.cutoffDate||null, cashIn: null, paidDate: kd.paidDate||null, invoiceNumber: kd.invoiceNumber||null };
       return '<tr style="font-size:12px;cursor:pointer" onmouseover="this.style.background=\'var(--surface2)\'" onmouseout="this.style.background=\'\'" data-pkey="' + spKey + '" onclick="openKandangDetailModal(this.dataset.pkey)" title="Klik untuk detail">' +
         '<td><strong>' + kd.client + '</strong></td>' +
         '<td><span class="tag tag-blue" style="font-size:10px">' + kd.kandang + '</span> <span class="tag tag-gray" style="font-size:10px">' + kd.label + '</span></td>' +
