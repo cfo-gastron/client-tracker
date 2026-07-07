@@ -3204,11 +3204,13 @@ function renderGantt() {
         var endD = p.cutoffDate || addDays(p.startDate, 30);
         var pl = p.isCutoff ? calcPeriodePL(p, k) : null;
         var proyeksi = null;
-        var predCutoff = null;
-        if (!p.isCutoff && cp.length >= 1) {
+        var predCutoff = p.cutoffDate || null; // pakai yg udah di-set dulu
+        if (!p.isCutoff && !p.cutoffDate && cp.length >= 1) {
           var durs0 = cp.map(function(x){ return daysBetween(x.startDate, x.cutoffDate); });
           var avgDur0 = Math.round(durs0.reduce(function(a,b){return a+b;},0)/durs0.length);
           predCutoff = addDays(p.startDate, avgDur0);
+        }
+        if (!p.isCutoff && predCutoff) {
           endD = predCutoff;
           proyeksi = calcActiveProyeksi(p, k, predCutoff);
         }
@@ -3399,10 +3401,11 @@ function renderGantt() {
     (cl.kandangs||[]).forEach(function(k) {
       (k.periodes||[]).forEach(function(p) {
         if (!p.startDate) return;
-        // Untuk periode berjalan, estimasi cutoff dari avg durasi periode sebelumnya
+        // Untuk periode berjalan, pakai cutoffDate yang udah di-set dulu
+        // Kalau belum ada, estimasi dari avg durasi periode sebelumnya
         var cp2 = (k.periodes||[]).filter(function(x){ return x.isCutoff && x.startDate && x.cutoffDate; });
-        var estCutoff = p.cutoffDate;
-        if (!p.isCutoff && cp2.length >= 1) {
+        var estCutoff = p.cutoffDate; // pakai yg udah di-set jika ada
+        if (!p.isCutoff && !p.cutoffDate && cp2.length >= 1) {
           var durs3 = cp2.map(function(x){ return daysBetween(x.startDate, x.cutoffDate); });
           var avgDur3 = Math.round(durs3.reduce(function(a,b){return a+b;},0)/durs3.length);
           estCutoff = addDays(p.startDate, avgDur3);
@@ -3732,13 +3735,15 @@ function renderPrediksi() {
       var activePeriode = periodes.find(function(p){ return !p.isCutoff; });
       var activeRevMasuk = null, activePredCutoff = null, activeProyeksi = null;
       if (activePeriode) {
-        if (cp.length >= 1) {
+        if (activePeriode.cutoffDate) {
+          // Pakai cutoffDate yang udah di-set
+          activePredCutoff = activePeriode.cutoffDate;
+          activeRevMasuk = addDays(activePredCutoff, 7);
+        } else if (cp.length >= 1) {
+          // Estimasi dari avg durasi
           var durs2 = cp.map(function(x){ return daysBetween(x.startDate, x.cutoffDate); });
           var avgDur2 = Math.round(durs2.reduce(function(a,b){return a+b;},0)/durs2.length);
           activePredCutoff = addDays(activePeriode.startDate, avgDur2);
-          activeRevMasuk = addDays(activePredCutoff, 7);
-        } else if (activePeriode.cutoffDate) {
-          activePredCutoff = activePeriode.cutoffDate;
           activeRevMasuk = addDays(activePredCutoff, 7);
         }
         activeProyeksi = calcActiveProyeksi(activePeriode, k, activePredCutoff);
