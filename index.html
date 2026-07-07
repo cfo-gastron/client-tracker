@@ -271,7 +271,7 @@ tr:hover td{background:var(--surface2);}
 .nc-kebab:hover{background:var(--surface2);color:var(--text)}
 .nc-body{display:none;border-top:0.5px solid var(--border)}
 .nc-block.open .nc-body{display:block}
-.nc-kandang-row{display:flex;align-items:center;gap:10px;padding:9px 14px 9px 36px;border-bottom:0.5px solid var(--border);cursor:pointer;transition:background 0.1s}
+.nc-kandang-row{display:flex!important;align-items:center;gap:10px;padding:9px 14px 9px 36px;border-bottom:0.5px solid var(--border);cursor:pointer;transition:background 0.1s}
 .nc-kandang-row:last-of-type{border-bottom:none}
 .nc-kandang-row:hover{background:var(--surface2)}
 .nc-k-badge{width:24px;height:24px;border-radius:6px;background:rgba(42,125,225,0.1);color:var(--accent2);font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
@@ -284,17 +284,17 @@ tr:hover td{background:var(--surface2);}
 .nc-kstat-lbl{font-size:10px;color:var(--text3)}
 .nc-k-detail-btn{padding:3px 10px;border-radius:6px;border:0.5px solid var(--border);background:none;font-size:11px;color:var(--text2);cursor:pointer;white-space:nowrap;flex-shrink:0}
 .nc-k-detail-btn:hover{background:var(--surface2);color:var(--text);border-color:var(--text2)}
-.nc-capex-row{display:flex;align-items:center;gap:6px;padding:5px 14px 5px 36px;background:var(--surface2);border-bottom:0.5px solid var(--border)}
+.nc-capex-row{display:flex!important;align-items:center;gap:6px;padding:5px 14px 5px 36px;background:var(--surface2);border-bottom:0.5px solid var(--border)}
 .nc-capex-label{font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:0.5px}
 .nc-capex-empty{font-size:11px;color:var(--text3);font-style:italic}
 .nc-capex-val{font-size:11px;color:var(--text2);font-weight:600}
 .nc-capex-add{margin-left:auto;padding:2px 8px;border-radius:5px;border:0.5px solid var(--border);background:none;font-size:10px;color:var(--text3);cursor:pointer}
 .nc-capex-add:hover{color:var(--accent);border-color:var(--accent)}
-.nc-add-kandang{display:flex;align-items:center;gap:6px;padding:8px 14px 8px 36px;color:var(--text3);font-size:12px;cursor:pointer;border-top:0.5px dashed var(--border)}
+.nc-add-kandang{display:flex!important;align-items:center;gap:6px;padding:8px 14px 8px 36px;color:var(--text3);font-size:12px;cursor:pointer;border-top:0.5px dashed var(--border)}
 .nc-add-kandang:hover{color:var(--accent2);background:var(--surface2)}
 /* Kebab dropdown */
-.nc-dropdown{position:absolute;right:0;top:calc(100% + 4px);background:var(--surface);border:0.5px solid var(--border);border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,0.12);z-index:500;min-width:160px;overflow:hidden;display:none}
-.nc-dropdown.show{display:block}
+.nc-dropdown{position:absolute;right:0;top:calc(100% + 4px);background:var(--surface);border:0.5px solid var(--border);border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,0.12);z-index:500;min-width:160px;overflow:hidden;display:none!important}
+.nc-dropdown.show{display:block!important}
 .nc-dropdown-item{display:flex;align-items:center;gap:8px;padding:9px 14px;font-size:13px;color:var(--text);cursor:pointer;white-space:nowrap}
 .nc-dropdown-item:hover{background:var(--surface2)}
 .nc-dropdown-item.danger{color:var(--red)}
