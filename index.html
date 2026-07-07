@@ -3161,13 +3161,13 @@ function openTMModal(type) {
       : (estInvoice ? '<span style="color:var(--yellow)">~'+fmtDate(estInvoice)+'</span>' : '&#8212;');
     return '<tr style="font-size:12px">' +
       '<td><strong>' + item.client + '</strong><br><span style="color:var(--text3)">' + item.kandang + ' &middot; ' + (item.periode.label||'') + '</span></td>' +
-      '<td style="text-align:center">' + statusBadge + '</td>' +
       '<td class="mono" style="text-align:right;font-weight:700;color:' + valColor + '">' + (type==='cogs'?'(':'') + fmt(Math.abs(val)) + (type==='cogs'?')':'') + '</td>' +
       '<td class="mono" style="text-align:right;color:var(--text2)">' + fmt(rev) + '</td>' +
       '<td class="mono" style="text-align:right;color:var(--red)">(' + fmt(cogs) + ')</td>' +
       '<td style="text-align:right"><span style="font-size:11px;font-weight:700;color:' + (parseFloat(margin)>=25?'var(--green)':parseFloat(margin)>=15?'var(--yellow)':'var(--red)') + '">' + margin + '%</span>' + (avgHarian ? '<br>' + avgHarian : '') + '</td>' +
       '<td class="mono" style="text-align:center;font-size:11px">' + cutoffInfo + '</td>' +
       '<td class="mono" style="text-align:center;font-size:11px">' + invoiceInfo + '</td>' +
+      '<td style="text-align:center">' + statusBadge + '</td>' +
     '</tr>';
   }).join('');
 
@@ -3180,12 +3180,13 @@ function openTMModal(type) {
 
   body.innerHTML = '<div style="overflow-x:auto"><table style="width:100%;min-width:680px">' +
     '<thead><tr style="background:var(--surface2);font-size:11px">' +
-    '<th>Client / Kandang</th><th style="text-align:center">Status</th>' +
+    '<th>Client / Kandang</th>' +
     '<th style="text-align:right">' + titles[type] + '</th>' +
     '<th style="text-align:right">Proj. Rev</th><th style="text-align:right">Proj. COGS</th>' +
     '<th style="text-align:right">Margin / Detail</th>' +
     '<th style="text-align:center">Cut-off</th>' +
     '<th style="text-align:center">Est. Invoice</th>' +
+    '<th style="text-align:center">Status</th>' +
     '</tr></thead><tbody>' + rows + totalRow + '</tbody></table></div>';
 
   overlay.classList.add('show');
