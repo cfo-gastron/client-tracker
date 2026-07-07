@@ -3137,10 +3137,20 @@ function renderGantt() {
         if (!p.startDate) return;
         var endD = p.cutoffDate || addDays(p.startDate, 30);
         var pl = p.isCutoff ? calcPeriodePL(p, k) : null;
+        var proyeksi = null;
+        var predCutoff = null;
+        if (!p.isCutoff && cp.length >= 1) {
+          var durs0 = cp.map(function(x){ return daysBetween(x.startDate, x.cutoffDate); });
+          var avgDur0 = Math.round(durs0.reduce(function(a,b){return a+b;},0)/durs0.length);
+          predCutoff = addDays(p.startDate, avgDur0);
+          endD = predCutoff;
+          proyeksi = calcActiveProyeksi(p, k, predCutoff);
+        }
         bars.push({
           startDate: p.startDate, endDate: endD,
           label: p.label || 'P', isPred: false, isActive: !p.isCutoff,
-          periode: p, pl: pl, client: cl.name, kandang: k.name, clientId: cl.id, kandangId: k.id
+          periode: p, pl: pl, proyeksi: proyeksi, predCutoff: predCutoff,
+          client: cl.name, kandang: k.name, clientId: cl.id, kandangId: k.id
         });
       });
 
@@ -3260,7 +3270,15 @@ function renderGantt() {
       tooltipData[tid] = bar;
 
       bars += '<rect class="gantt-bar" data-tid="'+tid+'" x="'+x1+'" y="'+by+'" width="'+bw+'" height="'+bh+'" rx="4" fill="'+fillColor+'" stroke="'+strokeColor+'" stroke-width="1.5" style="cursor:pointer"/>';
-      if (bw > 24) bars += '<text x="'+(x1+5)+'" y="'+(by+bh/2+4)+'" font-size="9" fill="'+strokeColor+'" font-family="DM Mono,monospace" style="pointer-events:none;font-weight:600">'+escapeXML(bar.label)+'</text>';
+      if (bw > 24) {
+        var barLabel = escapeXML(bar.label);
+        if (bar.isActive && bar.proyeksi && bw > 50) {
+          barLabel = escapeXML(bar.label) + ' ~' + Math.round(bar.proyeksi.proyeksiTotalVol) + 'Sm\u00b3';
+        } else if (bar.isFuturePred && bw > 50) {
+          barLabel = 'Pred ~' + fmtNum(bar.avgRev/1e6,1) + 'M';
+        }
+        bars += '<text x="'+(x1+5)+'" y="'+(by+bh/2+4)+'" font-size="9" fill="'+strokeColor+'" font-family="DM Mono,monospace" style="pointer-events:none;font-weight:600">'+barLabel+'</text>';
+      }
     });
   });
 
@@ -3502,15 +3520,33 @@ function showGanttDetail(tid) {
     inner += statBox('Pred. Revenue', fmt(bar.avgRev||0), 'var(--green)');
     inner += statBox('Pred. Op. Income', fmt(Math.round((bar.avgRev||0)*0.15)), 'var(--green)');
   } else if (bar.isActive) {
+    var pr = bar.proyeksi;
+    var mColor2 = pr && pr.proyeksiMargin>=25?'var(--green)':pr && pr.proyeksiMargin>=15?'var(--yellow)':'var(--red)';
     inner += statBox('Mulai', fmtDate(bar.startDate), 'var(--accent2)');
     inner += statBox('Pred. Cut-off', fmtDate(bar.endDate), 'var(--accent2)');
-    inner += statBox('Pred. Revenue', fmt(pl.revenue||0), 'var(--green)');
-    inner += statBox('Op. Income', fmt(pl.opIncome||0), (pl.opIncome||0)>=0?'var(--green)':'var(--red)');
-    inner += statBox('Volume', fmtNum(pl.totalVolume||0,0)+' Sm³', 'var(--text)');
-    inner += statBox('COGS', fmt(pl.totalCogs||0), 'var(--text2)');
-    inner += statBox('OpEx', fmt(pl.totalOpex||0), 'var(--text2)');
-    inner += statBox('Net Margin', (pl.netMargin||0).toFixed(1)+'%', (pl.netMargin||0)>=0?'var(--green)':'var(--red)');
-  } else {
+    inner += statBox('Proj. Revenue', pr ? fmt(Math.round(pr.proyeksiRev)) : fmt(pl.revenue||0), 'var(--green)');
+    inner += statBox('Proj. Op. Income', pr ? fmt(Math.round(pr.proyeksiOpIncome)) : fmt(pl.opIncome||0), pr&&pr.proyeksiOpIncome>=0?'var(--green)':'var(--red)');
+    inner += statBox('Vol Aktual', fmtNum(pr?pr.volAktual:(pl.totalVolume||0),0)+' Sm&#179;', 'var(--text2)');
+    inner += statBox('Proj. Total Vol', pr ? fmtNum(Math.round(pr.proyeksiTotalVol),0)+' Sm&#179;' : '—', 'var(--accent2)');
+    inner += statBox('Avg Harian', pr ? fmtNum(pr.avgHarian,1)+' Sm&#179;/hari' : '—', 'var(--text2)');
+    inner += statBox('Sisa Hari', pr ? pr.sisaHari+' hari' : '—', 'var(--text2)');
+    inner += statBox('Proj. COGS', pr ? fmt(Math.round(pr.proyeksiCogs)) : fmt(pl.totalCogs||0), 'var(--red)');
+    inner += statBox('Proj. Margin', pr ? pr.proyeksiMargin.toFixed(1)+'%' : (pl.netMargin||0).toFixed(1)+'%', mColor2);
+    // Progress bar
+    if (pr) {
+      var prog = Math.min(100, pr.volAktual/(pr.proyeksiTotalVol||1)*100).toFixed(0);
+      inner += '</div><div style="margin-top:8px;margin-bottom:4px">' +
+        '<div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text3);margin-bottom:4px">' +
+          '<span>Progress Volume: <strong>' + fmtNum(pr.volAktual,0) + '</strong> / <strong>' + fmtNum(Math.round(pr.proyeksiTotalVol),0) + '</strong> Sm&#179;</span>' +
+          '<span>' + prog + '%</span>' +
+        '</div>' +
+        '<div style="height:6px;background:var(--surface2);border-radius:3px;overflow:hidden">' +
+          '<div style="width:'+prog+'%;height:100%;background:var(--accent2);border-radius:3px"></div>' +
+        '</div>';
+      inner += '<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:10px">';
+    } else {
+      inner += '</div><div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:4px">';
+    }
     inner += statBox('Mulai', fmtDate(bar.startDate), 'var(--text)');
     inner += statBox('Cut-off', fmtDate(bar.endDate), 'var(--text)');
     inner += statBox('Revenue', fmt(pl.revenue||0), 'var(--green)');
@@ -3541,6 +3577,47 @@ function statBox(label, value, color) {
 }
 
 
+function calcActiveProyeksi(activePeriode, kandangObj, cutoffDate) {
+  // Hitung proyeksi volume/revenue untuk periode yang lagi berjalan
+  var entries = activePeriode.cogsEntries || [];
+  if (!entries.length) return null;
+  var totalVol = entries.reduce(function(s,e){ return s+(e.volume||0); }, 0);
+  var today = new Date().toISOString().slice(0,10);
+  var startDate = activePeriode.startDate;
+  var endDate = cutoffDate || today;
+  var daysElapsed = Math.max(1, daysBetween(startDate, today));
+  var avgHarian = totalVol / daysElapsed;
+  var sisaHari = cutoffDate ? Math.max(0, daysBetween(today, cutoffDate)) : 0;
+  var proyeksiSisa = avgHarian * sisaHari;
+  var proyeksiTotalVol = totalVol + proyeksiSisa;
+  // Hitung proyeksi revenue dan COGS
+  var harga = activePeriode.hargaJual || 0;
+  var proyeksiRev = proyeksiTotalVol * harga;
+  // Rata-rata COGS/Sm3 dari entries yang sudah ada
+  var pl = calcPeriodePL(activePeriode, kandangObj);
+  var avgCogsSm3 = pl.totalVolume > 0 ? pl.totalCogs / pl.totalVolume : 0;
+  var proyeksiCogs = proyeksiTotalVol * avgCogsSm3;
+  var proyeksiOpIncome = proyeksiRev - proyeksiCogs - pl.totalOpex;
+  var proyeksiMargin = proyeksiRev > 0 ? proyeksiOpIncome / proyeksiRev * 100 : 0;
+  return {
+    volAktual: totalVol,
+    avgHarian: avgHarian,
+    sisaHari: sisaHari,
+    daysElapsed: daysElapsed,
+    proyeksiSisaVol: proyeksiSisa,
+    proyeksiTotalVol: proyeksiTotalVol,
+    proyeksiRev: proyeksiRev,
+    proyeksiCogs: proyeksiCogs,
+    proyeksiOpex: pl.totalOpex,
+    proyeksiOpIncome: proyeksiOpIncome,
+    proyeksiMargin: proyeksiMargin,
+    revAktual: pl.revenue,
+    cogsAktual: pl.totalCogs,
+    opexAktual: pl.totalOpex,
+    opIncomeAktual: pl.opIncome
+  };
+}
+
 function renderPrediksi() {
   var cont = document.getElementById('content-prediksi');
   var cards = [];
@@ -3569,14 +3646,20 @@ function renderPrediksi() {
         pred = { pStart:pStart, pEnd:pEnd, revMasuk:revMasuk, avgDur:avgDur, avgGap:avgGap, avgBudget:avgBudget, avgBuffer:avgBuffer, avgRev:avgRev, avgVol:avgVol, avgMgn:avgMgn, count:cp.length };
       }
       var activePeriode = periodes.find(function(p){ return !p.isCutoff; });
-      var activeRevMasuk = null, activePredCutoff = null;
-      if (activePeriode && cp.length >= 1) {
-        var durs2 = cp.map(function(x){ return daysBetween(x.startDate, x.cutoffDate); });
-        var avgDur2 = Math.round(durs2.reduce(function(a,b){return a+b;},0)/durs2.length);
-        activePredCutoff = addDays(activePeriode.startDate, avgDur2);
-        activeRevMasuk = addDays(activePredCutoff, 7);
+      var activeRevMasuk = null, activePredCutoff = null, activeProyeksi = null;
+      if (activePeriode) {
+        if (cp.length >= 1) {
+          var durs2 = cp.map(function(x){ return daysBetween(x.startDate, x.cutoffDate); });
+          var avgDur2 = Math.round(durs2.reduce(function(a,b){return a+b;},0)/durs2.length);
+          activePredCutoff = addDays(activePeriode.startDate, avgDur2);
+          activeRevMasuk = addDays(activePredCutoff, 7);
+        } else if (activePeriode.cutoffDate) {
+          activePredCutoff = activePeriode.cutoffDate;
+          activeRevMasuk = addDays(activePredCutoff, 7);
+        }
+        activeProyeksi = calcActiveProyeksi(activePeriode, k, activePredCutoff);
       }
-      cards.push({ client:cl.name, kandang:k.name, kandangId:k.id, kandangObj:k, cp:cp, pred:pred, activePeriode:activePeriode, activeRevMasuk:activeRevMasuk, activePredCutoff:activePredCutoff, lastCutoff:lastCutoff });
+      cards.push({ client:cl.name, kandang:k.name, kandangId:k.id, kandangObj:k, cp:cp, pred:pred, activePeriode:activePeriode, activeRevMasuk:activeRevMasuk, activePredCutoff:activePredCutoff, activeProyeksi:activeProyeksi, lastCutoff:lastCutoff });
     });
   });
 
@@ -3587,9 +3670,10 @@ function renderPrediksi() {
 
   var timelineItems = [];
   cards.forEach(function(card) {
-    if (card.activePeriode && card.activeRevMasuk) {
+    if (card.activePeriode) {
       var pl = calcPeriodePL(card.activePeriode, card.kandangObj);
-      timelineItems.push({ type:'active', card:card, pl:pl, date:card.activeRevMasuk });
+      var useDate = card.activeRevMasuk || addDays(new Date().toISOString().slice(0,10), 30);
+      timelineItems.push({ type:'active', card:card, pl:pl, date:useDate });
     }
     if (card.pred) timelineItems.push({ type:'pred', card:card, date:card.pred.revMasuk });
   });
@@ -3600,14 +3684,55 @@ function renderPrediksi() {
     var card = item.card;
     if (item.type === 'active') {
       var pl = item.pl;
+      var pr = card.activeProyeksi;
+      var mColor = pr && pr.proyeksiMargin>=25?'var(--green)':pr && pr.proyeksiMargin>=15?'var(--yellow)':'var(--red)';
+      var progPct = pr ? Math.min(100, (pr.volAktual / (pr.proyeksiTotalVol||1) * 100)).toFixed(0) : 0;
       timelineHTML += '<div style="display:flex;gap:14px;align-items:flex-start;margin-bottom:14px">' +
-        '<div style="min-width:105px;text-align:right;padding-top:2px"><div style="font-size:12px;font-weight:700;color:var(--accent2)">' + fmtDate(item.date) + '</div><div style="font-size:10px;color:var(--text3)">est. H+7</div></div>' +
+        '<div style="min-width:105px;text-align:right;padding-top:2px">' +
+          '<div style="font-size:12px;font-weight:700;color:var(--accent2)">' + fmtDate(item.date) + '</div>' +
+          '<div style="font-size:10px;color:var(--text3)">est. H+7</div>' +
+        '</div>' +
         '<div style="width:3px;min-height:54px;background:rgba(42,125,225,0.25);border-radius:2px;margin-top:3px"></div>' +
         '<div style="flex:1;background:rgba(42,125,225,0.05);border:1px solid rgba(42,125,225,0.18);border-radius:10px;padding:12px">' +
-        '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">' +
-        '<div><strong>' + card.client + '</strong> &middot; <span class="tag tag-blue" style="font-size:11px">' + card.kandang + '</span> &middot; <span class="tag tag-yellow" style="font-size:10px">Berjalan</span></div>' +
-        '<div style="font-family:DM Mono,monospace;font-size:14px;font-weight:700;color:var(--green)">' + fmt(pl.revenue) + '</div></div>' +
-        '<div style="font-size:11px;color:var(--text3)">Mulai: ' + fmtDate(card.activePeriode.startDate) + ' &middot; Vol: ' + fmtNum(pl.totalVolume,0) + ' Sm&#179; &middot; Pred. cut-off: ' + fmtDate(card.activePredCutoff) + '</div>' +
+          '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">' +
+            '<div><strong>' + card.client + '</strong> &middot; <span class="tag tag-blue" style="font-size:11px">' + card.kandang + '</span> &middot; <span class="tag tag-yellow" style="font-size:10px">&#9679; Berjalan</span></div>' +
+            '<div style="text-align:right">' +
+              '<div style="font-family:DM Mono,monospace;font-size:15px;font-weight:700;color:var(--green)">' + (pr ? fmt(Math.round(pr.proyeksiRev)) : fmt(pl.revenue)) + '</div>' +
+              '<div style="font-size:10px;color:var(--text3)">proj. revenue</div>' +
+            '</div>' +
+          '</div>' +
+          (pr ? (
+            // Progress bar volume
+            '<div style="margin-bottom:8px">' +
+              '<div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text3);margin-bottom:3px">' +
+                '<span>Volume: <strong style="color:var(--text)">' + fmtNum(pr.volAktual,0) + '</strong> / <strong style="color:var(--accent2)">' + fmtNum(Math.round(pr.proyeksiTotalVol),0) + '</strong> Sm&#179; proj.</span>' +
+                '<span>' + progPct + '%</span>' +
+              '</div>' +
+              '<div style="height:5px;background:var(--surface2);border-radius:3px;overflow:hidden">' +
+                '<div style="width:' + progPct + '%;height:100%;background:var(--accent2);border-radius:3px"></div>' +
+              '</div>' +
+            '</div>' +
+            // Stats row
+            '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:6px">' +
+              '<div style="background:var(--surface);border-radius:6px;padding:6px 8px">' +
+                '<div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:0.5px">Avg Harian</div>' +
+                '<div style="font-size:11px;font-weight:600">' + fmtNum(pr.avgHarian,1) + ' Sm&#179;</div>' +
+              '</div>' +
+              '<div style="background:var(--surface);border-radius:6px;padding:6px 8px">' +
+                '<div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:0.5px">Sisa Hari</div>' +
+                '<div style="font-size:11px;font-weight:600">' + pr.sisaHari + ' hari</div>' +
+              '</div>' +
+              '<div style="background:var(--surface);border-radius:6px;padding:6px 8px">' +
+                '<div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:0.5px">Proj. COGS</div>' +
+                '<div style="font-size:11px;font-weight:600;color:var(--red)">(' + fmt(Math.round(pr.proyeksiCogs)) + ')</div>' +
+              '</div>' +
+              '<div style="background:var(--surface);border-radius:6px;padding:6px 8px">' +
+                '<div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:0.5px">Proj. Margin</div>' +
+                '<div style="font-size:11px;font-weight:700;color:' + mColor + '">' + pr.proyeksiMargin.toFixed(1) + '%</div>' +
+              '</div>' +
+            '</div>'
+          ) : '') +
+          '<div style="font-size:11px;color:var(--text3)">Mulai: ' + fmtDate(card.activePeriode.startDate) + (card.activePredCutoff ? ' &middot; Pred. cut-off: ' + fmtDate(card.activePredCutoff) : '') + '</div>' +
         '</div></div>';
     } else {
       var p = item.card.pred;
@@ -4867,11 +4992,16 @@ function renderPrediksiKalender() {
         var alreadyReal = (dateMap[predRevMasuk]||[]).some(function(e){ return !e.isEstimate && e.kandangId===k.id; });
         if (!alreadyReal) {
           var plAct = calcPeriodePL(activePeriode, k);
+          var proyAct = calcActiveProyeksi(activePeriode, k, predCutoff);
           addEvent(predRevMasuk, {
             isEstimate: true, type: 'active-pred', color: 'var(--accent2)',
             client: cl.name, kandang: k.name, label: activePeriode.label || '—',
-            revenue: plAct.revenue > 0 ? plAct.revenue : avgRev,
-            volume: plAct.totalVolume > 0 ? plAct.totalVolume : avgVol,
+            revenue: proyAct ? Math.round(proyAct.proyeksiRev) : (plAct.revenue > 0 ? plAct.revenue : avgRev),
+            volume: proyAct ? Math.round(proyAct.proyeksiTotalVol) : (plAct.totalVolume > 0 ? plAct.totalVolume : avgVol),
+            volAktual: proyAct ? proyAct.volAktual : plAct.totalVolume,
+            proyeksiMargin: proyAct ? proyAct.proyeksiMargin : null,
+            avgHarian: proyAct ? proyAct.avgHarian : null,
+            sisaHari: proyAct ? proyAct.sisaHari : null,
             avgMgn: avgMgn, avgDur: avgDur,
             cutoffDate: predCutoff, deadline: predRevMasuk,
             startDate: activePeriode.startDate, endDate: predCutoff,
