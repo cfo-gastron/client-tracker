@@ -3151,16 +3151,17 @@ function openTMModal(type) {
       : '<span style="font-size:9px;background:#e8f5ee;color:#1a9e5c;padding:2px 6px;border-radius:10px;font-weight:600">Selesai</span>';
     var valColor = type==='opincome' ? (val>=0?'var(--green)':'var(--red)') : type==='cogs' ? 'var(--red)' : 'var(--green)';
     var avgHarian = pr ? ('<span style="color:var(--text3)">' + fmtNum(pr.avgHarian,1) + ' Sm&#179;/hari &middot; sisa ' + pr.sisaHari + ' hari</span>') : '';
+    var cutoffInfo = item.periode.cutoffDate ? fmtDate(item.periode.cutoffDate) : (pr && item.periode.startDate ? '<span style="color:var(--accent2)">~'+fmtDate(addDays(item.periode.startDate, 30))+'</span>' : '&#8212;');
+    var invoiceInfo = item.periode.paidDate ? '<span style="color:var(--green);font-weight:600">'+fmtDate(item.periode.paidDate)+'</span>' : (item.periode.invoiceDate ? '<span style="color:var(--yellow)">'+fmtDate(addDays(item.periode.invoiceDate||item.periode.cutoffDate||'', 7))+'</span>' : (item.periode.cutoffDate ? '<span style="color:var(--yellow)">~'+fmtDate(addDays(item.periode.cutoffDate,7))+'</span>' : '&#8212;'));
     return '<tr style="font-size:12px">' +
       '<td><strong>' + item.client + '</strong><br><span style="color:var(--text3)">' + item.kandang + ' &middot; ' + (item.periode.label||'') + '</span></td>' +
       '<td style="text-align:center">' + statusBadge + '</td>' +
       '<td class="mono" style="text-align:right;font-weight:700;color:' + valColor + '">' + (type==='cogs'?'(':'') + fmt(Math.abs(val)) + (type==='cogs'?')':'') + '</td>' +
       '<td class="mono" style="text-align:right;color:var(--text2)">' + fmt(rev) + '</td>' +
       '<td class="mono" style="text-align:right;color:var(--red)">(' + fmt(cogs) + ')</td>' +
-      '<td style="text-align:right">' +
-        '<span style="font-size:11px;font-weight:700;color:' + (parseFloat(margin)>=25?'var(--green)':parseFloat(margin)>=15?'var(--yellow)':'var(--red)') + '">' + margin + '%</span>' +
-        (avgHarian ? '<br>' + avgHarian : '') +
-      '</td>' +
+      '<td style="text-align:right"><span style="font-size:11px;font-weight:700;color:' + (parseFloat(margin)>=25?'var(--green)':parseFloat(margin)>=15?'var(--yellow)':'var(--red)') + '">' + margin + '%</span>' + (avgHarian ? '<br>' + avgHarian : '') + '</td>' +
+      '<td class="mono" style="text-align:center;font-size:11px">' + cutoffInfo + '</td>' +
+      '<td class="mono" style="text-align:center;font-size:11px">' + invoiceInfo + '</td>' +
     '</tr>';
   }).join('');
 
@@ -3168,15 +3169,17 @@ function openTMModal(type) {
   var totalRow = '<tr style="background:var(--surface2);font-weight:700;font-size:12px">' +
     '<td colspan="2">TOTAL (' + sorted.length + ' periode)</td>' +
     '<td class="mono" style="text-align:right;color:' + totColor + '">' + (type==='cogs'?'(':'') + fmt(Math.abs(total)) + (type==='cogs'?')':'') + '</td>' +
-    '<td colspan="3"></td>' +
+    '<td colspan="5"></td>' +
     '</tr>';
 
-  body.innerHTML = '<div style="overflow-x:auto"><table style="width:100%;min-width:560px">' +
+  body.innerHTML = '<div style="overflow-x:auto"><table style="width:100%;min-width:680px">' +
     '<thead><tr style="background:var(--surface2);font-size:11px">' +
     '<th>Client / Kandang</th><th style="text-align:center">Status</th>' +
     '<th style="text-align:right">' + titles[type] + '</th>' +
     '<th style="text-align:right">Proj. Rev</th><th style="text-align:right">Proj. COGS</th>' +
     '<th style="text-align:right">Margin / Detail</th>' +
+    '<th style="text-align:center">Cut-off</th>' +
+    '<th style="text-align:center">Est. Invoice</th>' +
     '</tr></thead><tbody>' + rows + totalRow + '</tbody></table></div>';
 
   overlay.classList.add('show');
