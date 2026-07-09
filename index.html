@@ -1482,66 +1482,7 @@ function toggleSidebar() {
 function isMobile(){return window.innerWidth<=768;}
 function tagColor(m){return m>=25?'green':m>=15?'yellow':'red';}
 
-var _origRenderClients = renderClients;
-renderClients = function() {
-  _origRenderClients();
-  if (!isMobile()) return;
-  var cont = document.getElementById('content-clients');
-  if (!cont) return;
-  var mHtml = '';
-  (state.clients||[]).forEach(function(cl) {
-    var totV=0,totR=0,totI=0,mKrows='';
-    (cl.kandangs||[]).forEach(function(k) {
-      var tv=0,tr=0,ti=0;
-      (k.periodes||[]).forEach(function(p){var pl=calcPeriodePL(p,k);tv+=pl.totalVolume;tr+=pl.revenue;ti+=pl.opIncome;});
-      totV+=tv;totR+=tr;totI+=ti;
-      var ini=k.name?k.name.charAt(0).toUpperCase():'?';
-      var cxId='capex-m-'+k.id;
-      mKrows+='<div class="m-kandang-row">'
-        +'<div class="m-kandang-badge">'+ini+'</div>'
-        +'<div class="m-kandang-info"><div class="m-kandang-name">'+k.name+'</div>'
-        +'<div class="m-kandang-meta">'+(k.periodes||[]).length+' periode &middot; '+fmtNum(tv,0)+' Sm&#179;</div></div>'
-        +'<div class="m-kandang-revenue">'+fmt(tr)+'</div>'
-        +'<div class="m-kandang-actions">'
-          +'<div class="m-icon-btn-sm" data-kid="'+k.id+'" onclick="navigate(\'kandang\',this.dataset.kid)">&rarr;</div>'
-          +'<div class="m-icon-btn-sm" data-kid="'+k.id+'" data-name="'+k.name+'" onclick="openEditKandang(this)">&#9998;</div>'
-          +'<div class="m-icon-btn-sm danger" data-kid="'+k.id+'" data-cid="'+cl.id+'" data-name="'+k.name+'" onclick="confirmDeleteKandang(this)">&times;</div>'
-        +'</div></div>'
-        +'<div class="m-capex-toggle" onclick="toggleMobileCapex(\''+cxId+'\')">'
-          +'<span class="m-capex-toggle-label">CAPEX</span>'
-          +'<span class="m-capex-toggle-chevron" id="chevron-'+cxId+'">&#9662;</span>'
-        +'</div>'
-        +'<div class="m-capex-section" id="'+cxId+'">'+renderCapexSection(k)+'</div>';
-    });
-    var clIni=cl.name?cl.name.charAt(0).toUpperCase():'?';
-    var cId='m-cl-'+cl.id;
-    mHtml+='<div class="m-client-card" id="'+cId+'">'
-      +'<div class="m-client-header" onclick="toggleMobileClientCard(\''+cId+'\')">'
-        +'<div class="m-client-avatar">'+clIni+'</div>'
-        +'<div class="m-client-info"><div class="m-client-name">'+cl.name+'</div>'
-        +'<div class="m-client-loc">'+(cl.location||'Lokasi belum diisi')+' &middot; '+(cl.kandangs||[]).length+' kandang</div></div>'
-        +'<div class="m-client-icon-actions">'
-          +'<div class="m-icon-btn primary" data-cid="'+cl.id+'" onclick="event.stopPropagation();viewClientSummary(this.dataset.cid)">&#128202;</div>'
-          +'<div class="m-icon-btn" data-cid="'+cl.id+'" data-name="'+cl.name+'" data-loc="'+(cl.location||'')+'" onclick="event.stopPropagation();openEditClient(this)">&#9998;</div>'
-          +'<div class="m-icon-btn danger" data-cid="'+cl.id+'" onclick="event.stopPropagation();deleteClientById(this.dataset.cid)">&times;</div>'
-        +'</div>'
-        +'<span class="m-client-chevron">&#9662;</span>'
-      +'</div>'
-      +'<div class="m-client-stats">'
-        +'<div class="m-stat-item"><div class="m-stat-label">Volume</div><div class="m-stat-val">'+fmtNum(totV,0)+' Sm&#179;</div></div>'
-        +'<div class="m-stat-item"><div class="m-stat-label">Revenue</div><div class="m-stat-val">'+fmt(totR)+'</div></div>'
-        +'<div class="m-stat-item"><div class="m-stat-label">Op. Income</div><div class="m-stat-val green">'+fmt(totI)+'</div></div>'
-      +'</div>'
-      +'<div class="m-kandang-list">'+mKrows+'</div>'
-      +'<div class="m-add-kandang"><button class="m-add-kandang-btn" data-cid="'+cl.id+'" onclick="openAddKandangModal(this.dataset.cid)">+ Tambah Kandang</button></div>'
-    +'</div>';
-  });
-  var wrapper = document.createElement('div');
-  wrapper.id = 'm-clients-wrapper';
-  wrapper.innerHTML = mHtml;
-  cont.appendChild(wrapper);
-};
-
+// Mobile clients now handled by nc-block system in renderClients directly
 function toggleMobileClientCard(id){var c=document.getElementById(id);if(c)c.classList.toggle('open');}
 function toggleMobileCapex(id){var s=document.getElementById(id),ch=document.getElementById('chevron-'+id);if(!s)return;s.classList.toggle('open');if(ch)ch.style.transform=s.classList.contains('open')?'rotate(180deg)':'';}
 
