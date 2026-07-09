@@ -1414,13 +1414,13 @@ function renderClients() {
       var mgClass = mg>=25?'nc-mg-green':mg>=15?'nc-mg-yellow':'nc-mg-red';
       var statusDot = latestLabel ? (' <span style="font-size:9px;color:' + (latestRunning?'var(--yellow)':'var(--green)') + '">' + (latestRunning?'&#9679;':'&#10003;') + '</span>') : '';
       var capexTotal = (k.capex||[]).reduce(function(s,c){return s+(c.amount||0);},0);
-      var capexHtml = '<div class="nc-capex-row">' +
+      var capexHtml = '<div class="nc-capex-row" style="display:flex!important;align-items:center;gap:6px;padding:5px 14px 5px 36px;background:var(--surface2);border-bottom:0.5px solid var(--border)">' +
         '<span class="nc-capex-label">CAPEX</span>' +
         (capexTotal > 0 ? '<span class="nc-capex-val">' + fmt(capexTotal) + '</span>' : '<span class="nc-capex-empty">Belum ada</span>') +
         '<button class="nc-capex-add" data-kid="' + k.id + '" onclick="event.stopPropagation();openCapexModal(this.dataset.kid)">+ Input</button>' +
         '</div>';
       kandangRows +=
-        '<div class="nc-kandang-row" data-kid="' + k.id + '" onclick="navigate(\'kandang\',this.dataset.kid)">' +
+        '<div class="nc-kandang-row" style="display:flex!important;align-items:center;gap:10px;padding:9px 14px" data-kid="' + k.id + '" onclick="navigate(\'kandang\',this.dataset.kid)">' +
         '<div class="nc-k-badge">' + (k.name||'?').charAt(0).toUpperCase() + '</div>' +
         '<div class="nc-k-info"><div class="nc-k-name">' + k.name + '</div>' +
         '<div class="nc-k-meta">' + (k.periodes||[]).length + ' periode' + (latestLabel?' &middot; '+latestLabel+statusDot:'') + '</div></div>' +
@@ -1433,21 +1433,21 @@ function renderClients() {
         '<button class="nc-k-detail-btn" style="color:var(--red)" data-kid="' + k.id + '" data-cid="' + cl.id + '" data-name="' + k.name + '" onclick="event.stopPropagation();confirmDeleteKandang(this)">&#215;</button>' +
         '</div>' + capexHtml;
     });
-    kandangRows += '<div class="nc-add-kandang" data-cid="' + cl.id + '" onclick="openAddKandangModal(this.dataset.cid)"><span>+</span><span>Tambah kandang</span></div>';
+    kandangRows += '<div class="nc-add-kandang" style="display:flex!important;align-items:center;gap:6px;padding:8px 14px 8px 36px;color:var(--text3);font-size:12px;cursor:pointer;border-top:0.5px dashed var(--border)" data-cid="' + cl.id + '" onclick="openAddKandangModal(this.dataset.cid)"><span>+</span><span>Tambah kandang</span></div>';
     html +=
       '<div class="nc-block" id="' + blockId + '">' +
-      '<div class="nc-client-row" onclick="ncToggle(\'' + blockId + '\')">' +
+      '<div class="nc-client-row" style="display:flex!important;align-items:center;gap:8px;padding:10px 14px;cursor:pointer" onclick="ncToggle(\'' + blockId + '\')">' +
         '<span class="nc-chevron">&#9656;</span>' +
         '<span class="nc-client-name">' + cl.name + '</span>' +
         '<span class="nc-client-loc">' + (cl.location||'') + '</span>' +
-        '<div class="nc-client-meta">' +
+        '<div class="nc-client-meta" style="display:flex!important;gap:10px;align-items:center;flex-shrink:0">' +
           '<span class="nc-meta-chip">' + (cl.kandangs||[]).length + ' kandang</span>' +
           (totR>0?'<span class="nc-meta-chip">' + (totR>=1e9?(totR/1e9).toFixed(1)+'B':totR>=1e6?(totR/1e6).toFixed(1)+'M':fmt(totR)) + ' rev</span>':'') +
           (totR>0?'<span class="nc-margin-pill ' + clMgClass + '">' + clMg.toFixed(1) + '%</span>':'') +
         '</div>' +
-        '<div class="nc-relative">' +
+        '<div class="nc-relative" style="position:relative;display:flex;align-items:center">' +
           '<button class="nc-kebab" data-cid="' + cl.id + '" onclick="event.stopPropagation();ncShowMenu(this)">&#8943;</button>' +
-          '<div class="nc-dropdown" id="dd-' + cl.id + '">' +
+          '<div class="nc-dropdown" id="dd-' + cl.id + '" style="display:none;position:absolute;right:0;top:calc(100% + 4px);background:var(--surface);border:0.5px solid var(--border);border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,0.12);z-index:500;min-width:160px;overflow:hidden">' +
             '<div class="nc-dropdown-item" data-cid="' + cl.id + '" onclick="viewClientSummary(this.dataset.cid)">P&amp;L Summary</div>' +
             '<div class="nc-dropdown-item" data-cid="' + cl.id + '" data-name="' + cl.name + '" data-loc="' + (cl.location||'') + '" onclick="openEditClient(this)">Edit client</div>' +
             '<div class="nc-dropdown-item" data-cid="' + cl.id + '" onclick="openAddKandangModal(this.dataset.cid)">+ Tambah kandang</div>' +
@@ -1463,8 +1463,17 @@ function renderClients() {
   document.addEventListener('click', _ncCloseDropdowns);
 }
 function ncToggle(id){var el=document.getElementById(id);if(el)el.classList.toggle('open');}
-function _ncCloseDropdowns(){document.querySelectorAll('.nc-dropdown.show').forEach(function(d){d.classList.remove('show');});}
-function ncShowMenu(btn){_ncCloseDropdowns();var dd=document.getElementById('dd-'+btn.dataset.cid);if(dd)dd.classList.toggle('show');}
+function _ncCloseDropdowns(){document.querySelectorAll('[id^="dd-"]').forEach(function(d){d.style.display='none';});}
+function ncShowMenu(btn){
+  _ncCloseDropdowns();
+  var dd=document.getElementById('dd-'+btn.dataset.cid);
+  if(!dd)return;
+  var isHidden=dd.style.display==='none'||dd.style.display==='';
+  dd.style.display=isHidden?'block':'none';
+}
+function _ncCloseDropdownsAll(){
+  document.querySelectorAll('[id^="dd-"]').forEach(function(d){d.style.display='none';});
+}
 function openCapexModal(kandangId){openAddCapex(kandangId);}
 
 function toggleSidebar() {
