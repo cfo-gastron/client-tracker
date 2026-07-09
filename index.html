@@ -456,15 +456,14 @@ tr:hover td{background:var(--surface2);}
 .master-data-grid{grid-template-columns:1fr!important;}
 /* Jisdor grid stays 2 col but use 3 col on mobile to be compact */
 .master-data-grid .table-wrap [style*="grid-template-columns:1fr 1fr;gap:10px"]{grid-template-columns:repeat(3,1fr)!important;}
-/* NC block mobile fixes */
-.nc-client-meta{display:none!important;}
-.nc-k-stats{display:none!important;}
-.nc-client-loc{display:none!important;}
-.nc-k-detail-btn:last-of-type{display:none!important;}
-.nc-client-row{flex-wrap:nowrap;}
-.nc-client-name{font-size:13px!important;}
-.nc-kandang-row{padding-left:14px!important;}
+/* NC block mobile - hide secondary info on small screens */
+.nc-client-meta .nc-meta-chip{display:none!important;}
+.nc-k-stats .nc-kstat:not(:last-child){display:none!important;}
 }
+/* NC block - force flex regardless of viewport */
+.nc-client-row{display:flex!important;align-items:center;gap:8px;padding:10px 14px;cursor:pointer;transition:background 0.12s;}
+.nc-client-meta{display:flex!important;gap:10px;align-items:center;flex-shrink:0;}
+.nc-k-stats{display:flex!important;gap:16px;align-items:center;flex-shrink:0;}
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 </head>
@@ -3150,7 +3149,9 @@ function openTMModal(type) {
       ? '<span style="font-size:9px;background:#fff8e0;color:#cc8800;padding:2px 6px;border-radius:10px;font-weight:600">Berjalan</span>'
       : '<span style="font-size:9px;background:#e8f5ee;color:#1a9e5c;padding:2px 6px;border-radius:10px;font-weight:600">Selesai</span>';
     var valColor = type==='opincome' ? (val>=0?'var(--green)':'var(--red)') : type==='cogs' ? 'var(--red)' : 'var(--green)';
-    var avgHarian = pr ? ('<span style="color:var(--text3)">' + fmtNum(pr.avgHarian,1) + ' Sm&#179;/hari &middot; sisa ' + pr.sisaHari + ' hari</span>') : '';
+    var avgHarian = pr
+      ? ('<span style="color:var(--text3)">' + fmtNum(pr.avgHarian,1) + ' Sm&#179;/hari &middot; sisa ' + pr.sisaHari + ' hari' + (pr.usedFallback ? ' <span style="color:var(--yellow)" title="Pakai avg periode lalu karena data < 5 hari">&#9888;</span>' : '') + '</span>')
+      : '';
     var effCutoff = item.estCutoff || item.periode.cutoffDate || null;
     var cutoffInfo = item.periode.cutoffDate
       ? fmtDate(item.periode.cutoffDate)
@@ -3672,43 +3673,53 @@ function statBox(label, value, color) {
 
 
 function calcActiveProyeksi(activePeriode, kandangObj, cutoffDate) {
-  // Hitung proyeksi volume/revenue untuk periode yang lagi berjalan
   var entries = activePeriode.cogsEntries || [];
   if (!entries.length) return null;
   var totalVol = entries.reduce(function(s,e){ return s+(e.volume||0); }, 0);
   var today = new Date().toISOString().slice(0,10);
   var startDate = activePeriode.startDate;
-  var endDate = cutoffDate || today;
   var daysElapsed = Math.max(1, daysBetween(startDate, today));
-  var avgHarian = totalVol / daysElapsed;
   var sisaHari = cutoffDate ? Math.max(0, daysBetween(today, cutoffDate)) : 0;
+
+  // Kalau data < 5 hari, pakai avg volume harian dari periode sebelumnya sebagai baseline
+  var avgHarian;
+  var usedFallback = false;
+  if (daysElapsed < 5) {
+    var cpPrev = (kandangObj.periodes||[]).filter(function(p){
+      return p.isCutoff && p.startDate && p.cutoffDate && p.cogsEntries && p.cogsEntries.length;
+    });
+    if (cpPrev.length) {
+      var prevAvgs = cpPrev.map(function(p){
+        var vol = p.cogsEntries.reduce(function(s,e){return s+(e.volume||0);},0);
+        var dur = Math.max(1, daysBetween(p.startDate, p.cutoffDate));
+        return vol / dur;
+      });
+      avgHarian = prevAvgs.reduce(function(a,b){return a+b;},0) / prevAvgs.length;
+      usedFallback = true;
+    } else {
+      avgHarian = totalVol / daysElapsed;
+    }
+  } else {
+    avgHarian = totalVol / daysElapsed;
+  }
+
   var proyeksiSisa = avgHarian * sisaHari;
   var proyeksiTotalVol = totalVol + proyeksiSisa;
-  // Hitung proyeksi revenue dan COGS
   var harga = activePeriode.hargaJual || 0;
   var proyeksiRev = proyeksiTotalVol * harga;
-  // Rata-rata COGS/Sm3 dari entries yang sudah ada
   var pl = calcPeriodePL(activePeriode, kandangObj);
   var avgCogsSm3 = pl.totalVolume > 0 ? pl.totalCogs / pl.totalVolume : 0;
   var proyeksiCogs = proyeksiTotalVol * avgCogsSm3;
   var proyeksiOpIncome = proyeksiRev - proyeksiCogs - pl.totalOpex;
   var proyeksiMargin = proyeksiRev > 0 ? proyeksiOpIncome / proyeksiRev * 100 : 0;
   return {
-    volAktual: totalVol,
-    avgHarian: avgHarian,
-    sisaHari: sisaHari,
-    daysElapsed: daysElapsed,
-    proyeksiSisaVol: proyeksiSisa,
-    proyeksiTotalVol: proyeksiTotalVol,
-    proyeksiRev: proyeksiRev,
-    proyeksiCogs: proyeksiCogs,
-    proyeksiOpex: pl.totalOpex,
-    proyeksiOpIncome: proyeksiOpIncome,
-    proyeksiMargin: proyeksiMargin,
-    revAktual: pl.revenue,
-    cogsAktual: pl.totalCogs,
-    opexAktual: pl.totalOpex,
-    opIncomeAktual: pl.opIncome
+    volAktual: totalVol, avgHarian: avgHarian, sisaHari: sisaHari,
+    daysElapsed: daysElapsed, usedFallback: usedFallback,
+    proyeksiSisaVol: proyeksiSisa, proyeksiTotalVol: proyeksiTotalVol,
+    proyeksiRev: proyeksiRev, proyeksiCogs: proyeksiCogs,
+    proyeksiOpex: pl.totalOpex, proyeksiOpIncome: proyeksiOpIncome,
+    proyeksiMargin: proyeksiMargin, revAktual: pl.revenue,
+    cogsAktual: pl.totalCogs, opexAktual: pl.totalOpex, opIncomeAktual: pl.opIncome
   };
 }
 
@@ -3828,6 +3839,9 @@ function renderPrediksi() {
               '</div>' +
             '</div>'
           ) : '') +
+          '<div style="font-size:11px;color:var(--text3);margin-top:2px">' +
+            (pr.usedFallback ? '<span style="color:var(--yellow)">&#9888; Basis: avg periode lalu (data < 5 hari)</span>' : 'Avg aktual ' + pr.daysElapsed + ' hari berjalan') +
+          '</div>' +
           '<div style="font-size:11px;color:var(--text3)">Mulai: ' + fmtDate(card.activePeriode.startDate) + (card.activePredCutoff ? ' &middot; Pred. cut-off: ' + fmtDate(card.activePredCutoff) : '') + '</div>' +
         '</div></div>';
     } else {
