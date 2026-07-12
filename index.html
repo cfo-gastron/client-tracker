@@ -1391,6 +1391,11 @@ function renderDashboard() {
 }
 
 // ============= CLIENTS =============
+function mgPill(mg) {
+  var bg = mg>=25?'#e8f5ee':mg>=15?'#fff8e0':'#fdeaea';
+  var col = mg>=25?'#1a9e5c':mg>=15?'#cc8800':'#c8191e';
+  return '<span style="font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;background:'+bg+';color:'+col+'">'+mg.toFixed(1)+'%</span>';
+}
 function renderClients() {
   var cont = document.getElementById('content-clients');
   if (!state.clients.length) {
@@ -1404,59 +1409,60 @@ function renderClients() {
       (k.periodes||[]).forEach(function(p){var pl=calcPeriodePL(p,k);totV+=pl.totalVolume;totR+=pl.revenue;totI+=pl.opIncome;});
     });
     var clMg = totR ? totI/totR*100 : 0;
-    var clMgClass = clMg>=25?'nc-mg-green':clMg>=15?'nc-mg-yellow':'nc-mg-red';
     var blockId = 'nc-cl-' + cl.id;
     var kandangRows = '';
     (cl.kandangs||[]).forEach(function(k) {
       var tv=0,tr=0,ti=0,latestLabel='',latestRunning=false;
       (k.periodes||[]).forEach(function(p){var pl=calcPeriodePL(p,k);tv+=pl.totalVolume;tr+=pl.revenue;ti+=pl.opIncome;latestLabel=p.label;latestRunning=!p.isCutoff;});
       var mg = tr ? ti/tr*100 : 0;
-      var mgClass = mg>=25?'nc-mg-green':mg>=15?'nc-mg-yellow':'nc-mg-red';
-      var statusDot = latestLabel ? (' <span style="font-size:9px;color:' + (latestRunning?'var(--yellow)':'var(--green)') + '">' + (latestRunning?'&#9679;':'&#10003;') + '</span>') : '';
+      var statusBadge = latestLabel
+        ? '<span style="font-size:10px;padding:1px 7px;border-radius:10px;font-weight:600;'+(latestRunning?'background:#fff8e0;color:#cc8800':'background:#e8f5ee;color:#1a9e5c')+'">'+latestLabel+(latestRunning?' &#9679;':' &#10003;')+'</span>'
+        : '';
       var capexTotal = (k.capex||[]).reduce(function(s,c){return s+(c.amount||0);},0);
-      var capexHtml = '<div class="nc-capex-row" style="display:flex!important;align-items:center;gap:6px;padding:5px 14px 5px 36px;background:var(--surface2);border-bottom:0.5px solid var(--border)">' +
-        '<span class="nc-capex-label">CAPEX</span>' +
-        (capexTotal > 0 ? '<span class="nc-capex-val">' + fmt(capexTotal) + '</span>' : '<span class="nc-capex-empty">Belum ada</span>') +
-        '<button class="nc-capex-add" data-kid="' + k.id + '" onclick="event.stopPropagation();openCapexModal(this.dataset.kid)">+ Input</button>' +
-        '</div>';
+      var capexRow = '<div style="display:flex;align-items:center;gap:8px;padding:4px 14px 4px 52px;background:var(--surface2);border-bottom:0.5px solid var(--border)">'
+        +'<span style="font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:0.5px">Capex</span>'
+        +(capexTotal>0?'<span style="font-size:11px;font-weight:600;color:var(--text2)">'+fmt(capexTotal)+'</span>':'<span style="font-size:11px;color:var(--text3);font-style:italic">Belum ada</span>')
+        +'<button style="margin-left:auto;padding:1px 8px;border-radius:5px;border:0.5px solid var(--border);background:none;font-size:10px;color:var(--text3);cursor:pointer" data-kid="'+k.id+'" onclick="event.stopPropagation();openCapexModal(this.dataset.kid)">+ Input</button>'
+        +'</div>';
       kandangRows +=
-        '<div class="nc-kandang-row" style="display:flex!important;align-items:center;gap:10px;padding:9px 14px" data-kid="' + k.id + '" onclick="navigate(\'kandang\',this.dataset.kid)">' +
-        '<div class="nc-k-badge">' + (k.name||'?').charAt(0).toUpperCase() + '</div>' +
-        '<div class="nc-k-info"><div class="nc-k-name">' + k.name + '</div>' +
-        '<div class="nc-k-meta">' + (k.periodes||[]).length + ' periode' + (latestLabel?' &middot; '+latestLabel+statusDot:'') + '</div></div>' +
-        '<div class="nc-k-stats">' +
-          '<div class="nc-kstat"><div class="nc-kstat-val">' + fmtNum(tv,0) + ' Sm&#179;</div><div class="nc-kstat-lbl">volume</div></div>' +
-          '<div class="nc-kstat"><div class="nc-kstat-val">' + (tr>=1e6?(tr/1e6).toFixed(1)+'M':fmt(tr)) + '</div><div class="nc-kstat-lbl">revenue</div></div>' +
-          '<span class="nc-margin-pill ' + mgClass + '">' + mg.toFixed(1) + '%</span>' +
-        '</div>' +
-        '<button class="nc-k-detail-btn" data-kid="' + k.id + '" onclick="event.stopPropagation();navigate(\'kandang\',this.dataset.kid)">Detail &#8594;</button>' +
-        '<button class="nc-k-detail-btn" style="color:var(--red)" data-kid="' + k.id + '" data-cid="' + cl.id + '" data-name="' + k.name + '" onclick="event.stopPropagation();confirmDeleteKandang(this)">&#215;</button>' +
-        '</div>' + capexHtml;
+        '<div style="display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:0.5px solid var(--border);cursor:pointer" onmouseover="this.style.background=\'var(--surface2)\'" onmouseout="this.style.background=\'\'" data-kid="'+k.id+'" onclick="navigate(\'kandang\',this.dataset.kid)">'
+        +'<div style="width:28px;height:28px;border-radius:7px;background:rgba(42,125,225,0.12);color:var(--accent2);font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0">'+((k.name||'?').charAt(0).toUpperCase())+'</div>'
+        +'<div style="flex:1;min-width:0">'
+          +'<div style="font-size:13px;font-weight:600;color:var(--text);display:flex;align-items:center;gap:6px">'+k.name+' '+statusBadge+'</div>'
+          +'<div style="font-size:11px;color:var(--text3);margin-top:1px">'+((k.periodes||[]).length)+' periode</div>'
+        +'</div>'
+        +'<div style="display:flex;gap:18px;align-items:center;flex-shrink:0">'
+          +'<div style="text-align:right"><div style="font-size:12px;font-weight:600;color:var(--text)">'+fmtNum(tv,0)+' Sm&#179;</div><div style="font-size:10px;color:var(--text3)">volume</div></div>'
+          +'<div style="text-align:right"><div style="font-size:12px;font-weight:600;color:var(--green)">'+(tr>=1e6?(tr/1e6).toFixed(1)+'M':fmt(tr))+'</div><div style="font-size:10px;color:var(--text3)">revenue</div></div>'
+          +mgPill(mg)
+        +'</div>'
+        +'<button style="padding:4px 10px;border-radius:6px;border:0.5px solid var(--border);background:none;font-size:11px;color:var(--text2);cursor:pointer;flex-shrink:0" data-kid="'+k.id+'" onclick="event.stopPropagation();navigate(\'kandang\',this.dataset.kid)">Detail &#8594;</button>'
+        +'<button style="padding:4px 8px;border-radius:6px;border:none;background:none;font-size:15px;color:var(--text3);cursor:pointer;flex-shrink:0" data-kid="'+k.id+'" data-cid="'+cl.id+'" data-name="'+k.name+'" onclick="event.stopPropagation();confirmDeleteKandang(this)">&#215;</button>'
+        +'</div>'+capexRow;
     });
-    kandangRows += '<div class="nc-add-kandang" style="display:flex!important;align-items:center;gap:6px;padding:8px 14px 8px 36px;color:var(--text3);font-size:12px;cursor:pointer;border-top:0.5px dashed var(--border)" data-cid="' + cl.id + '" onclick="openAddKandangModal(this.dataset.cid)"><span>+</span><span>Tambah kandang</span></div>';
+    kandangRows += '<div style="display:flex;align-items:center;gap:6px;padding:9px 14px 9px 52px;color:var(--text3);font-size:12px;cursor:pointer" onmouseover="this.style.color=\'var(--accent2)\'" onmouseout="this.style.color=\'var(--text3)\'" data-cid="'+cl.id+'" onclick="openAddKandangModal(this.dataset.cid)">+ Tambah kandang</div>';
     html +=
-      '<div class="nc-block" id="' + blockId + '">' +
-      '<div class="nc-client-row" style="display:flex!important;align-items:center;gap:8px;padding:10px 14px;cursor:pointer" onclick="ncToggle(\'' + blockId + '\')">' +
-        '<span class="nc-chevron">&#9656;</span>' +
-        '<span class="nc-client-name">' + cl.name + '</span>' +
-        '<span class="nc-client-loc">' + (cl.location||'') + '</span>' +
-        '<div class="nc-client-meta" style="display:flex!important;gap:10px;align-items:center;flex-shrink:0">' +
-          '<span class="nc-meta-chip">' + (cl.kandangs||[]).length + ' kandang</span>' +
-          (totR>0?'<span class="nc-meta-chip">' + (totR>=1e9?(totR/1e9).toFixed(1)+'B':totR>=1e6?(totR/1e6).toFixed(1)+'M':fmt(totR)) + ' rev</span>':'') +
-          (totR>0?'<span class="nc-margin-pill ' + clMgClass + '">' + clMg.toFixed(1) + '%</span>':'') +
-        '</div>' +
-        '<div class="nc-relative" style="position:relative;display:flex;align-items:center">' +
-          '<button class="nc-kebab" data-cid="' + cl.id + '" onclick="event.stopPropagation();ncShowMenu(this)">&#8943;</button>' +
-          '<div class="nc-dropdown" id="dd-' + cl.id + '" style="display:none;position:absolute;right:0;top:calc(100% + 4px);background:var(--surface);border:0.5px solid var(--border);border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,0.12);z-index:500;min-width:160px;overflow:hidden">' +
-            '<div class="nc-dropdown-item" data-cid="' + cl.id + '" onclick="viewClientSummary(this.dataset.cid)">P&amp;L Summary</div>' +
-            '<div class="nc-dropdown-item" data-cid="' + cl.id + '" data-name="' + cl.name + '" data-loc="' + (cl.location||'') + '" onclick="openEditClient(this)">Edit client</div>' +
-            '<div class="nc-dropdown-item" data-cid="' + cl.id + '" onclick="openAddKandangModal(this.dataset.cid)">+ Tambah kandang</div>' +
-            '<div class="nc-dropdown-item danger" data-cid="' + cl.id + '" onclick="deleteClientById(this.dataset.cid)">&#215; Hapus client</div>' +
-          '</div>' +
-        '</div>' +
-      '</div>' +
-      '<div class="nc-body">' + kandangRows + '</div>' +
-      '</div>';
+      '<div class="nc-block" id="'+blockId+'" style="border:1px solid var(--border);border-radius:12px;margin-bottom:8px;overflow:hidden;background:var(--surface)">'
+      +'<div style="display:flex;align-items:center;gap:10px;padding:12px 14px;cursor:pointer" onmouseover="this.style.background=\'var(--surface2)\'" onmouseout="this.style.background=\'\'" onclick="ncToggle(\''+blockId+'\')">'
+        +'<span class="nc-chevron" style="font-size:10px;color:var(--text3);flex-shrink:0;display:inline-block;transition:transform 0.15s">&#9656;</span>'
+        +'<span style="font-size:14px;font-weight:700;color:var(--text);flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+cl.name+'</span>'
+        +(cl.location?'<span style="font-size:11px;color:var(--text3);flex-shrink:0;background:var(--surface2);padding:2px 8px;border-radius:10px">'+cl.location+'</span>':'')
+        +'<span style="font-size:11px;color:var(--text3);flex-shrink:0">'+((cl.kandangs||[]).length)+' kandang</span>'
+        +(totR>0?'<span style="font-size:12px;font-weight:600;color:var(--text2)">'+(totR>=1e9?(totR/1e9).toFixed(1)+'B':totR>=1e6?(totR/1e6).toFixed(1)+'M':fmt(totR))+'</span>':'')
+        +(totR>0?mgPill(clMg):'')
+        +'<div style="position:relative;display:flex;align-items:center">'
+          +'<button style="padding:4px 9px;border:none;background:none;cursor:pointer;color:var(--text3);font-size:20px;line-height:1;border-radius:6px" data-cid="'+cl.id+'" onclick="event.stopPropagation();ncShowMenu(this)">&#8943;</button>'
+          +'<div id="dd-'+cl.id+'" style="display:none;position:absolute;right:0;top:calc(100% + 4px);background:var(--surface);border:1px solid var(--border);border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,0.1);z-index:500;min-width:170px;overflow:hidden">'
+            +'<div style="padding:10px 16px;font-size:13px;color:var(--text);cursor:pointer" onmouseover="this.style.background=\'var(--surface2)\'" onmouseout="this.style.background=\'\'" data-cid="'+cl.id+'" onclick="viewClientSummary(this.dataset.cid)">&#128202; P&amp;L Summary</div>'
+            +'<div style="padding:10px 16px;font-size:13px;color:var(--text);cursor:pointer" onmouseover="this.style.background=\'var(--surface2)\'" onmouseout="this.style.background=\'\'" data-cid="'+cl.id+'" data-name="'+cl.name+'" data-loc="'+(cl.location||'')+'" onclick="openEditClient(this)">&#9998; Edit client</div>'
+            +'<div style="padding:10px 16px;font-size:13px;color:var(--text);cursor:pointer" onmouseover="this.style.background=\'var(--surface2)\'" onmouseout="this.style.background=\'\'" data-cid="'+cl.id+'" onclick="openAddKandangModal(this.dataset.cid)">+ Tambah kandang</div>'
+            +'<div style="height:0.5px;background:var(--border)"></div>'
+            +'<div style="padding:10px 16px;font-size:13px;color:var(--red);cursor:pointer" onmouseover="this.style.background=\'#fdeaea\'" onmouseout="this.style.background=\'\'" data-cid="'+cl.id+'" onclick="deleteClientById(this.dataset.cid)">&#215; Hapus client</div>'
+          +'</div>'
+        +'</div>'
+      +'</div>'
+      +'<div class="nc-body" style="border-top:1px solid var(--border)">'+kandangRows+'</div>'
+      +'</div>';
   });
   cont.innerHTML = html;
   document.removeEventListener('click', _ncCloseDropdowns);
