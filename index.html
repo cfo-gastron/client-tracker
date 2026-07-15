@@ -31,7 +31,7 @@
       }
       _firestoreReady = true;
       window.dispatchEvent(new Event('firestoreReady'));
-      console.log('Supabase loaded:', _firestoreState ? 'data found' : 'empty');
+      
     })
     .catch(function(err) {
       console.error('Supabase load error:', err);
@@ -41,7 +41,7 @@
 
   function _saveToFirestore(stateStr) {
     _supa.from('app_state').upsert({ id: 1, state: stateStr, updated_at: new Date().toISOString() })
-      .then(function(){ console.log('Saved to Supabase'); })
+      .then(function(){  })
       .catch(function(err){ console.error('Supabase save error:', err); });
   }
 </script>
@@ -255,51 +255,51 @@ tr:hover td{background:var(--surface2);}
 .m-client-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;margin-bottom:12px;overflow:hidden;}
 /* Notion-style client cards */
 .nc-block{border:0.5px solid var(--border);border-radius:12px;margin-bottom:8px;overflow:hidden;background:var(--surface)}
-.nc-client-row{display:flex;align-items:center;gap:8px;padding:10px 14px;cursor:pointer;transition:background 0.12s}
+
 .nc-client-row:hover{background:var(--surface2)}
 .nc-chevron{font-size:11px;color:var(--text3);transition:transform 0.15s;flex-shrink:0}
 .nc-block.open .nc-chevron{transform:rotate(90deg)}
-.nc-client-name{font-size:14px;font-weight:700;color:var(--text);flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.nc-client-loc{font-size:11px;color:var(--text3);flex-shrink:0}
-.nc-client-meta{display:flex;gap:10px;align-items:center;flex-shrink:0}
-.nc-meta-chip{font-size:11px;color:var(--text2)}
-.nc-margin-pill{font-size:11px;font-weight:600;padding:2px 8px;border-radius:20px}
-.nc-mg-green{background:#e8f5ee;color:#1a9e5c}
-.nc-mg-yellow{background:#fff8e0;color:#cc8800}
-.nc-mg-red{background:#fdeaea;color:#c8191e}
-.nc-kebab{padding:4px 8px;border:none;background:none;cursor:pointer;color:var(--text3);font-size:18px;line-height:1;border-radius:6px;flex-shrink:0}
+
+
+
+
+
+
+
+
+
 .nc-kebab:hover{background:var(--surface2);color:var(--text)}
 .nc-body{display:none;border-top:0.5px solid var(--border)}
 .nc-block.open .nc-body{display:block}
-.nc-kandang-row{display:flex!important;align-items:center;gap:10px;padding:9px 14px 9px 36px;border-bottom:0.5px solid var(--border);cursor:pointer;transition:background 0.1s}
+
 .nc-kandang-row:last-of-type{border-bottom:none}
 .nc-kandang-row:hover{background:var(--surface2)}
-.nc-k-badge{width:24px;height:24px;border-radius:6px;background:rgba(42,125,225,0.1);color:var(--accent2);font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-.nc-k-info{flex:1;min-width:0}
-.nc-k-name{font-size:13px;font-weight:600;color:var(--text)}
-.nc-k-meta{font-size:11px;color:var(--text3);margin-top:1px}
-.nc-k-stats{display:flex;gap:16px;align-items:center;flex-shrink:0}
-.nc-kstat{text-align:right}
+
+
+
+
+
+
 .nc-kstat-val{font-size:12px;font-weight:600;color:var(--text)}
 .nc-kstat-lbl{font-size:10px;color:var(--text3)}
-.nc-k-detail-btn{padding:3px 10px;border-radius:6px;border:0.5px solid var(--border);background:none;font-size:11px;color:var(--text2);cursor:pointer;white-space:nowrap;flex-shrink:0}
+
 .nc-k-detail-btn:hover{background:var(--surface2);color:var(--text);border-color:var(--text2)}
-.nc-capex-row{display:flex!important;align-items:center;gap:6px;padding:5px 14px 5px 36px;background:var(--surface2);border-bottom:0.5px solid var(--border)}
-.nc-capex-label{font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:0.5px}
-.nc-capex-empty{font-size:11px;color:var(--text3);font-style:italic}
-.nc-capex-val{font-size:11px;color:var(--text2);font-weight:600}
-.nc-capex-add{margin-left:auto;padding:2px 8px;border-radius:5px;border:0.5px solid var(--border);background:none;font-size:10px;color:var(--text3);cursor:pointer}
+
+
+
+
+
 .nc-capex-add:hover{color:var(--accent);border-color:var(--accent)}
-.nc-add-kandang{display:flex!important;align-items:center;gap:6px;padding:8px 14px 8px 36px;color:var(--text3);font-size:12px;cursor:pointer;border-top:0.5px dashed var(--border)}
+
 .nc-add-kandang:hover{color:var(--accent2);background:var(--surface2)}
 /* Kebab dropdown */
-.nc-dropdown{position:absolute;right:0;top:calc(100% + 4px);background:var(--surface);border:0.5px solid var(--border);border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,0.12);z-index:500;min-width:160px;overflow:hidden;display:none!important}
+
 .nc-dropdown.show{display:block!important}
-.nc-dropdown-item{display:flex;align-items:center;gap:8px;padding:9px 14px;font-size:13px;color:var(--text);cursor:pointer;white-space:nowrap}
+
 .nc-dropdown-item:hover{background:var(--surface2)}
 .nc-dropdown-item.danger{color:var(--red)}
 .nc-dropdown-item.danger:hover{background:#fdeaea}
-.nc-relative{position:relative;display:flex;align-items:center}
+
 .m-client-header{display:flex;align-items:center;padding:14px 16px;gap:10px;cursor:pointer;-webkit-tap-highlight-color:transparent;}
 .m-client-avatar{width:40px;height:40px;border-radius:10px;background:rgba(200,25,30,0.08);color:var(--accent);font-weight:800;font-size:16px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
 .m-client-info{flex:1;min-width:0;}
@@ -456,15 +456,7 @@ tr:hover td{background:var(--surface2);}
 .master-data-grid{grid-template-columns:1fr!important;}
 /* Jisdor grid stays 2 col but use 3 col on mobile to be compact */
 .master-data-grid .table-wrap [style*="grid-template-columns:1fr 1fr;gap:10px"]{grid-template-columns:repeat(3,1fr)!important;}
-/* NC block mobile - hide secondary info on small screens */
-.nc-client-meta .nc-meta-chip{display:none!important;}
-.nc-k-stats .nc-kstat:not(:last-child){display:none!important;}
-}
-/* NC block - force flex regardless of viewport */
-.nc-client-row{display:flex!important;align-items:center;gap:8px;padding:10px 14px;cursor:pointer;transition:background 0.12s;}
-.nc-client-meta{display:flex!important;gap:10px;align-items:center;flex-shrink:0;}
-.nc-k-stats{display:flex!important;gap:16px;align-items:center;flex-shrink:0;}
-</style>
+}</style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 </head>
 <body>
@@ -1477,9 +1469,7 @@ function ncShowMenu(btn){
   var isHidden=dd.style.display==='none'||dd.style.display==='';
   dd.style.display=isHidden?'block':'none';
 }
-function _ncCloseDropdownsAll(){
-  document.querySelectorAll('[id^="dd-"]').forEach(function(d){d.style.display='none';});
-}
+
 function openCapexModal(kandangId){openAddCapex(kandangId);}
 
 function toggleSidebar() {
@@ -1906,7 +1896,72 @@ function renderKandangDetail(kandangId) {
     cont.innerHTML = '<div class="empty-state"><div class="icon">◎</div><p>Belum ada periode</p><button class="btn btn-primary" onclick="openAddPeriodeModal()">+ Tambah Periode Pertama</button></div>';
     renderSidebar(); return;
   }
-  let html = '';
+
+  // Build volume chart data
+  const chartLabels = kandang.periodes.map(function(p){ return p.label || 'P?'; });
+  const chartVols = kandang.periodes.map(function(p){
+    return Math.round((p.cogsEntries||[]).reduce(function(s,e){return s+(e.volume||0);},0) * 10) / 10;
+  });
+  const totalVol = chartVols.reduce(function(s,v){return s+v;},0);
+  const chartId = 'vol-chart-' + kandangId;
+  const chartHTML = '<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px 20px;margin-bottom:16px">' +
+    '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">' +
+      '<div style="font-family:Plus Jakarta Sans,sans-serif;font-weight:700;font-size:14px">Volume per Periode</div>' +
+      '<div style="font-size:12px;color:var(--text3)">Total: <strong>' + fmtNum(totalVol,1) + ' Sm&#179;</strong></div>' +
+    '</div>' +
+    '<div style="display:flex;gap:12px;font-size:11px;color:var(--text3);margin-bottom:12px">' +
+      '<span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:2px;background:#2a78d6;display:inline-block"></span>Selesai</span>' +
+      '<span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:2px;background:#eda100;display:inline-block"></span>Berjalan</span>' +
+    '</div>' +
+    '<div style="position:relative;width:100%;height:160px"><canvas id="' + chartId + '" role="img" aria-label="Volume Sm3 per periode kandang ' + kandang.name + '">Volume: ' + chartLabels.map(function(l,i){return l+': '+chartVols[i];}).join(', ') + '</canvas></div>' +
+    '</div>';
+
+  setTimeout(function() {
+    var canvas = document.getElementById(chartId);
+    if (!canvas || !window.Chart) return;
+    var isDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+    var gridCol = isDark ? '#2c2c2a' : '#e1e0d9';
+    var textMuted = isDark ? '#898781' : '#898781';
+    var bgColors = kandang.periodes.map(function(p){ return p.isCutoff ? '#2a78d6bb' : '#eda100bb'; });
+    var bdColors = kandang.periodes.map(function(p){ return p.isCutoff ? '#2a78d6' : '#eda100'; });
+    // Destroy existing chart if any
+    var existingChart = Chart.getChart(canvas);
+    if (existingChart) existingChart.destroy();
+    new Chart(canvas, {
+      type: 'bar',
+      data: {
+        labels: chartLabels,
+        datasets: [{
+          data: chartVols,
+          backgroundColor: bgColors,
+          borderColor: bdColors,
+          borderWidth: 1.5,
+          borderRadius: 4,
+          borderSkipped: 'bottom'
+        }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              label: function(ctx) {
+                var p = kandang.periodes[ctx.dataIndex];
+                return ' ' + ctx.parsed.y.toFixed(1) + ' Sm\u00b3' + (p && !p.isCutoff ? ' (berjalan)' : '');
+              }
+            }
+          }
+        },
+        scales: {
+          x: { ticks: { color: textMuted, font: { size: 12 } }, grid: { display: false } },
+          y: { ticks: { color: textMuted, font: { size: 11 }, callback: function(v){ return v + ' Sm\u00b3'; } }, grid: { color: gridCol }, beginAtZero: true, border: { display: false } }
+        }
+      }
+    });
+  }, 100);
+
+  let html = chartHTML;
   kandang.periodes.forEach(function(p, pIdx) {
     const pl = calcPeriodePL(p, kandang);
     const statusTag = p.isCutoff ?
@@ -3106,7 +3161,10 @@ function openTMModal(type) {
       : '<span style="font-size:9px;background:#e8f5ee;color:#1a9e5c;padding:2px 6px;border-radius:10px;font-weight:600">Selesai</span>';
     var valColor = type==='opincome' ? (val>=0?'var(--green)':'var(--red)') : type==='cogs' ? 'var(--red)' : 'var(--green)';
     var avgHarian = pr
-      ? ('<span style="color:var(--text3)">' + fmtNum(pr.avgHarian,1) + ' Sm&#179;/hari &middot; sisa ' + pr.sisaHari + ' hari' + (pr.usedFallback ? ' <span style="color:var(--yellow)" title="Pakai avg periode lalu karena data < 5 hari">&#9888;</span>' : '') + '</span>')
+      ? ('<span style="color:var(--text3)">' + fmtNum(pr.avgHarian,1) + ' Sm&#179;/hari &middot; sisa ' + pr.sisaHari + ' hari'
+          + (pr.usedFallback && pr.blendWeight > 0 ? ' <span style="color:var(--accent2)" title="Blend '+Math.round(pr.blendWeight*100)+'% aktual + '+Math.round((1-pr.blendWeight)*100)+'% hist">&#9432;</span>' : '')
+          + (pr.usedFallback && pr.blendWeight === 0 ? ' <span style="color:var(--yellow)" title="Pakai avg periode lalu karena data < 7 hari">&#9888;</span>' : '')
+          + '</span>')
       : '';
     var effCutoff = item.estCutoff || item.periode.cutoffDate || null;
     var cutoffInfo = item.periode.cutoffDate
@@ -3637,26 +3695,82 @@ function calcActiveProyeksi(activePeriode, kandangObj, cutoffDate) {
   var daysElapsed = Math.max(1, daysBetween(startDate, today));
   var sisaHari = cutoffDate ? Math.max(0, daysBetween(today, cutoffDate)) : 0;
 
-  // Kalau data < 5 hari, pakai avg volume harian dari periode sebelumnya sebagai baseline
-  var avgHarian;
-  var usedFallback = false;
-  if (daysElapsed < 5) {
-    var cpPrev = (kandangObj.periodes||[]).filter(function(p){
-      return p.isCutoff && p.startDate && p.cutoffDate && p.cogsEntries && p.cogsEntries.length;
-    });
-    if (cpPrev.length) {
-      var prevAvgs = cpPrev.map(function(p){
-        var vol = p.cogsEntries.reduce(function(s,e){return s+(e.volume||0);},0);
-        var dur = Math.max(1, daysBetween(p.startDate, p.cutoffDate));
-        return vol / dur;
-      });
-      avgHarian = prevAvgs.reduce(function(a,b){return a+b;},0) / prevAvgs.length;
-      usedFallback = true;
+  // Periode historis yang sudah selesai
+  var cpPrev = (kandangObj.periodes||[]).filter(function(p){
+    return p.isCutoff && p.startDate && p.cutoffDate && (p.cogsEntries||[]).length;
+  });
+
+  var avgAktual = totalVol / daysElapsed;
+  var avgHarian, usedFallback = false, blendWeight = 1, method = 'aktual';
+
+  if (cpPrev.length === 0) {
+    // 0 periode selesai → pure aktual
+    avgHarian = avgAktual;
+    method = 'aktual';
+
+  } else if (cpPrev.length === 1) {
+    // 1 periode selesai → blend
+    var prevVol = cpPrev[0].cogsEntries.reduce(function(s,e){return s+(e.volume||0);},0);
+    var prevDur = Math.max(1, daysBetween(cpPrev[0].startDate, cpPrev[0].cutoffDate));
+    var avgPrev = prevVol / prevDur;
+
+    if (daysElapsed < 7) {
+      avgHarian = avgPrev; blendWeight = 0; usedFallback = true; method = 'blend';
+    } else if (daysElapsed <= 21) {
+      blendWeight = (daysElapsed - 7) / 14;
+      avgHarian = avgPrev * (1 - blendWeight) + avgAktual * blendWeight;
+      usedFallback = blendWeight < 1; method = 'blend';
     } else {
-      avgHarian = totalVol / daysElapsed;
+      avgHarian = avgAktual; blendWeight = 1; method = 'blend';
     }
+
   } else {
-    avgHarian = totalVol / daysElapsed;
+    // 2+ periode selesai → same-period pattern
+    // Est. durasi total periode aktif dari avg historis
+    var histDurs = cpPrev.map(function(p){ return daysBetween(p.startDate, p.cutoffDate); });
+    var estTotalDur = Math.round(histDurs.reduce(function(a,b){return a+b;},0) / histDurs.length);
+
+    // Progress saat ini dalam persentase
+    var progressPct = Math.min(daysElapsed / estTotalDur, 0.99);
+
+    // Dari setiap periode historis, ambil volume dari progress% sampai akhir
+    var sisaVolHistArr = cpPrev.map(function(p) {
+      var dur = daysBetween(p.startDate, p.cutoffDate);
+      var dayFrom = Math.round(progressPct * dur);
+      // Hitung volume dari hari dayFrom sampai cutoff
+      var allEntries = (p.cogsEntries||[]).slice().sort(function(a,b){
+        return (a.month+String(a.day).padStart(2,'0')).localeCompare(b.month+String(b.day).padStart(2,'0'));
+      });
+      // Estimasi berapa hari yang tersisa
+      var sisaDurHist = dur - dayFrom;
+      var totalVolHist = allEntries.reduce(function(s,e){return s+(e.volume||0);},0);
+      var avgHarianHist = totalVolHist / Math.max(1, dur);
+      return avgHarianHist * sisaDurHist;
+    });
+
+    // Rata-rata sisa volume dari semua periode historis
+    var avgSisaVolHist = sisaVolHistArr.reduce(function(a,b){return a+b;},0) / sisaVolHistArr.length;
+
+    // Scale ke sisa hari aktual
+    var avgHarianHist2 = cpPrev.reduce(function(s,p){
+      var vol = (p.cogsEntries||[]).reduce(function(sv,e){return sv+(e.volume||0);},0);
+      var dur = Math.max(1, daysBetween(p.startDate, p.cutoffDate));
+      return s + vol/dur;
+    }, 0) / cpPrev.length;
+
+    var proyeksiSisaPattern = sisaHari > 0
+      ? (avgSisaVolHist / Math.max(1, estTotalDur - Math.round(progressPct * estTotalDur))) * sisaHari
+      : 0;
+
+    // Blend pattern vs aktual berdasarkan confidence (makin lama makin percaya aktual)
+    var patternWeight = daysElapsed < 7 ? 1 : daysElapsed <= 21 ? 1 - (daysElapsed-7)/14 : 0;
+    var aktualWeight = 1 - patternWeight;
+
+    var avgHarianPattern = proyeksiSisaPattern / Math.max(1, sisaHari);
+    avgHarian = patternWeight * avgHarianPattern + aktualWeight * avgAktual;
+    blendWeight = aktualWeight;
+    usedFallback = patternWeight > 0;
+    method = 'pattern';
   }
 
   var proyeksiSisa = avgHarian * sisaHari;
@@ -3668,9 +3782,16 @@ function calcActiveProyeksi(activePeriode, kandangObj, cutoffDate) {
   var proyeksiCogs = proyeksiTotalVol * avgCogsSm3;
   var proyeksiOpIncome = proyeksiRev - proyeksiCogs - pl.totalOpex;
   var proyeksiMargin = proyeksiRev > 0 ? proyeksiOpIncome / proyeksiRev * 100 : 0;
+
   return {
-    volAktual: totalVol, avgHarian: avgHarian, sisaHari: sisaHari,
-    daysElapsed: daysElapsed, usedFallback: usedFallback,
+    volAktual: totalVol, avgHarian: avgHarian, avgAktual: avgAktual,
+    avgPrev: cpPrev.length ? cpPrev.reduce(function(s,p){
+      var v=(p.cogsEntries||[]).reduce(function(sv,e){return sv+(e.volume||0);},0);
+      return s+v/Math.max(1,daysBetween(p.startDate,p.cutoffDate));
+    },0)/cpPrev.length : null,
+    blendWeight: blendWeight, method: method,
+    sisaHari: sisaHari, daysElapsed: daysElapsed,
+    usedFallback: usedFallback, histCount: cpPrev.length,
     proyeksiSisaVol: proyeksiSisa, proyeksiTotalVol: proyeksiTotalVol,
     proyeksiRev: proyeksiRev, proyeksiCogs: proyeksiCogs,
     proyeksiOpex: pl.totalOpex, proyeksiOpIncome: proyeksiOpIncome,
@@ -3796,7 +3917,15 @@ function renderPrediksi() {
             '</div>'
           ) : '') +
           '<div style="font-size:11px;color:var(--text3);margin-top:2px">' +
-            (pr.usedFallback ? '<span style="color:var(--yellow)">&#9888; Basis: avg periode lalu (data < 5 hari)</span>' : 'Avg aktual ' + pr.daysElapsed + ' hari berjalan') +
+            (pr.method === 'pattern'
+              ? (pr.usedFallback
+                  ? '<span style="color:var(--accent2)">&#9432; Pattern ' + pr.histCount + ' periode (' + Math.round((1-pr.blendWeight)*100) + '% hist)</span>'
+                  : '<span style="color:var(--green)">&#10003; Pattern ' + pr.histCount + ' periode historis</span>')
+              : pr.method === 'blend'
+                ? (pr.usedFallback && pr.blendWeight === 0
+                    ? '<span style="color:var(--yellow)">&#9888; Basis avg periode lalu (< 7 hari)</span>'
+                    : '<span style="color:var(--accent2)">&#9432; Blend ' + Math.round(pr.blendWeight*100) + '% aktual + ' + Math.round((1-pr.blendWeight)*100) + '% hist</span>')
+                : 'Avg aktual ' + pr.daysElapsed + ' hari') +
           '</div>' +
           '<div style="font-size:11px;color:var(--text3)">Mulai: ' + fmtDate(card.activePeriode.startDate) + (card.activePredCutoff ? ' &middot; Pred. cut-off: ' + fmtDate(card.activePredCutoff) : '') + '</div>' +
         '</div></div>';
@@ -5117,6 +5246,7 @@ function renderPrediksiKalender() {
     });
   }
 
+  window._predKalEventsCache = dateMap; // cache for showPredKalPopupList
   var cells = DAY_HEADERS.map(function(d){ return '<div style="text-align:center;font-size:10px;color:var(--text3);font-weight:600;padding:8px 0;text-transform:uppercase">'+d+'</div>'; }).join('');
   for (var i=0;i<firstDay;i++) cells += '<div></div>';
 
@@ -5240,6 +5370,34 @@ function showPredKalPopup(evDataEncoded) {
     '<div style="padding:16px 20px">' + rows + estNote + '</div>' +
     '</div>';
   popup.style.display = 'flex';
+}
+
+function showPredKalPopupList(dateStr) {
+  // Tampilkan list semua event di tanggal ini
+  var popup = document.getElementById('predkal-popup');
+  if (!popup) return;
+  // Cari semua events di dateStr dari _predKalEvents (window cache)
+  var allEvents = window._predKalEventsCache || {};
+  var evs = allEvents[dateStr] || [];
+  if (!evs.length) return;
+  var rows = evs.map(function(ev) {
+    var evData = encodeURIComponent(JSON.stringify(ev));
+    var isEst = ev.isEstimate;
+    var borderStyle = isEst ? '2px dashed '+ev.color : '3px solid '+ev.color;
+    return '<div data-evdata="'+evData+'" onclick="showPredKalPopup(this.dataset.evdata)" style="display:flex;align-items:center;gap:10px;padding:10px 14px;cursor:pointer;border-left:'+borderStyle+';background:'+ev.color+'10;border-radius:0 8px 8px 0;margin-bottom:6px">'
+      +'<div style="flex:1"><div style="font-size:13px;font-weight:600;color:var(--text)">'+(isEst?'&#128302; ':'')+(ev.client||'')+' &mdash; '+(ev.kandang||'')+'</div>'
+      +'<div style="font-size:11px;color:var(--text3)">'+(ev.label||'')+(ev.deadline?' &middot; Est. '+fmtDate(ev.deadline):'')+'</div></div>'
+      +'<div style="font-size:13px;font-weight:700;color:var(--green)">'+fmt(ev.revenue||0)+'</div>'
+      +'</div>';
+  }).join('');
+  popup.style.display = 'flex';
+  popup.innerHTML = '<div onclick="event.stopPropagation()" style="background:var(--surface);border-radius:16px;padding:20px;max-width:420px;width:90%;max-height:80vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.2)">'
+    +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">'
+      +'<div style="font-weight:700;font-size:15px">Event '+fmtDate(dateStr)+' ('+evs.length+')</div>'
+      +'<button onclick="closePredKalPopup()" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--text3);line-height:1">&times;</button>'
+    +'</div>'
+    + rows
+    +'</div>';
 }
 
 function closePredKalPopup(e) {
@@ -5537,9 +5695,7 @@ function initApp() {
   if (typeof _firestoreState !== 'undefined' && _firestoreState && _firestoreState.clients && _firestoreState.clients.length > 0) {
     state = _firestoreState;
     localStorage.setItem('gastron_tracker', JSON.stringify(state));
-    console.log('Using Firestore data, clients:', state.clients.length);
   } else {
-    console.log('Seeding Firestore with local data, clients:', state.clients.length);
     if (window._saveToFirestore && state.clients.length > 0) {
       window._saveToFirestore(JSON.stringify(state));
     }
