@@ -1897,9 +1897,16 @@ function renderKandangDetail(kandangId) {
     renderSidebar(); return;
   }
 
+  // Sort periodes by startDate ascending (tampilan aja, ga ubah state)
+  const sortedPeriodes = kandang.periodes.slice().sort(function(a, b) {
+    if (!a.startDate) return 1;
+    if (!b.startDate) return -1;
+    return a.startDate.localeCompare(b.startDate);
+  });
+
   // Build volume chart data
-  const chartLabels = kandang.periodes.map(function(p){ return p.label || 'P?'; });
-  const chartVols = kandang.periodes.map(function(p){
+  const chartLabels = sortedPeriodes.map(function(p){ return p.label || 'P?'; });
+  const chartVols = sortedPeriodes.map(function(p){
     return Math.round((p.cogsEntries||[]).reduce(function(s,e){return s+(e.volume||0);},0) * 10) / 10;
   });
   const totalVol = chartVols.reduce(function(s,v){return s+v;},0);
@@ -1947,7 +1954,7 @@ function renderKandangDetail(kandangId) {
           tooltip: {
             callbacks: {
               label: function(ctx) {
-                var p = kandang.periodes[ctx.dataIndex];
+                var p = sortedPeriodes[ctx.dataIndex];
                 return ' ' + ctx.parsed.y.toFixed(1) + ' Sm\u00b3' + (p && !p.isCutoff ? ' \u25cf berjalan' : '');
               }
             }
@@ -1971,7 +1978,7 @@ function renderKandangDetail(kandangId) {
   }, 100);
 
   let html = chartHTML;
-  kandang.periodes.forEach(function(p, pIdx) {
+  sortedPeriodes.forEach(function(p, pIdx) {
     const pl = calcPeriodePL(p, kandang);
     const statusTag = p.isCutoff ?
       '<span style="background:#e8f5e9;color:#1a9e5c;font-size:11px;padding:2px 10px;border-radius:20px;margin-left:8px">✓ Cut-off ' + fmtDate(p.cutoffDate) + '</span>' :
@@ -2970,9 +2977,9 @@ function saveOpex() {
   if (tripId) {
     var trip = state.trips && state.trips.find(function(t){ return t.id === tripId; });
     if (trip) {
-      var allocated = getTripAllocated(tripId);
-      var sisa = trip.volume - allocated;
-      if (pgs > sisa && !confirm('PGS (' + fmtNum(pgs,1) + ') melebihi sisa trip (' + fmtNum(sisa,1) + ' Sm³). Tetap simpan?')) return;
+      var eff = calcTripEffectiveVolume(trip);
+      var sisa = eff.sisa !== undefined ? eff.sisa : (eff.effective - getTripAllocated(tripId));
+      if (pgs > sisa && !confirm('PGS (' + fmtNum(pgs,1) + ') melebihi sisa trip efektif (' + fmtNum(sisa,1) + ' Sm³). Tetap simpan?')) return;
     }
   }
   var found = findKandang(_pendingOpexCtx.kandangId);
@@ -5493,7 +5500,27 @@ function getTripAllocated(tripId) {
   return total;
 }
 
-function renderTripManager() {
+// Hitung effective volume trip = volume asli + carry over sisa dari trip GTM yang sama sebelumnya
+function calcTripEffectiveVolume(trip) {
+  if (!trip.gtmId) return { effective: trip.volume, carryOver: 0 };
+  // Sort semua trip by date asc
+  var sorted = (state.trips||[]).filter(function(t){ return t.gtmId === trip.gtmId; })
+    .slice().sort(function(a,b){ return a.date.localeCompare(b.date) || a.id.localeCompare(b.id); });
+  var carryOver = 0;
+  for (var i = 0; i < sorted.length; i++) {
+    var t = sorted[i];
+    var effVol = t.volume + carryOver;
+    var allocated = getTripAllocated(t.id);
+    var sisa = effVol - allocated;
+    if (t.id === trip.id) {
+      return { effective: effVol, carryOver: carryOver, sisa: sisa, allocated: allocated };
+    }
+    carryOver = Math.max(0, sisa); // carry over ke trip berikutnya
+  }
+  return { effective: trip.volume, carryOver: 0 };
+}
+
+
   var cont = document.getElementById('content-trips');
   ensureTrips();
   if (!state.trips.length) {
@@ -5509,24 +5536,32 @@ function renderTripManager() {
   var totalSisa = totalVol - totalAllocated;
 
   var rows = state.trips.slice().reverse().map(function(t) {
-    var allocated = getTripAllocated(t.id);
-    var sisa = t.volume - allocated;
-    var pct = t.volume > 0 ? (allocated/t.volume*100) : 0;
+    var eff = calcTripEffectiveVolume(t);
+    var allocated = eff.allocated !== undefined ? eff.allocated : getTripAllocated(t.id);
+    var effVol = eff.effective;
+    var sisa = eff.sisa !== undefined ? eff.sisa : (effVol - allocated);
+    var pct = effVol > 0 ? (allocated/effVol*100) : 0;
     var sisaColor = sisa < 0 ? 'var(--red)' : sisa === 0 ? 'var(--green)' : 'var(--yellow)';
     var barColor = pct >= 100 ? 'var(--green)' : pct >= 50 ? 'var(--accent2)' : 'var(--yellow)';
     var gtm = (state.master.gtms||[]).find(function(g){return g.id===t.gtmId;});
     var gtmName = gtm ? gtm.name : (t.notes && t.notes.match(/PGS-\d+/i) ? t.notes.match(/PGS-\d+/i)[0] : '—');
+    var carryBadge = eff.carryOver > 0
+      ? '<span style="font-size:10px;background:#e8f5ee;color:#1a9e5c;padding:1px 6px;border-radius:8px;margin-left:4px">+' + fmtNum(eff.carryOver,2) + ' carry</span>'
+      : '';
+    var volDisplay = eff.carryOver > 0
+      ? fmtNum(t.volume,2) + carryBadge + '<div style="font-size:10px;color:var(--green);margin-top:1px">Efektif: ' + fmtNum(effVol,2) + ' Sm&#179;</div>'
+      : fmtNum(t.volume,2);
     return '<tr>' +
       '<td class="mono">' + fmtDate(t.date) + '</td>' +
       '<td style="font-size:12px;font-weight:600;color:var(--accent2)">' + gtmName + '</td>' +
-      '<td class="mono" style="text-align:right">' + fmtNum(t.volume,2) + '</td>' +
+      '<td class="mono" style="text-align:right">' + volDisplay + '</td>' +
       '<td class="mono" style="text-align:right">' + fmt(t.biaya) + '</td>' +
       '<td>' +
         '<div style="display:flex;align-items:center;gap:8px">' +
         '<div style="flex:1;height:6px;background:var(--surface2);border-radius:4px;overflow:hidden"><div style="width:' + Math.min(100,pct).toFixed(0) + '%;height:100%;background:' + barColor + ';border-radius:4px"></div></div>' +
         '<span class="mono" style="font-size:11px;min-width:35px">' + pct.toFixed(0) + '%</span>' +
         '</div>' +
-        '<div style="font-size:11px;color:var(--text3);margin-top:2px">' + fmtNum(allocated,2) + ' / ' + fmtNum(t.volume,2) + ' Sm&#179;</div>' +
+        '<div style="font-size:11px;color:var(--text3);margin-top:2px">' + fmtNum(allocated,2) + ' / ' + fmtNum(effVol,2) + ' Sm&#179;</div>' +
       '</td>' +
       '<td class="mono" style="text-align:right;color:' + sisaColor + ';font-weight:600">' + fmtNum(sisa,2) + '</td>' +
       '<td style="font-size:12px;color:var(--text2)">' + (t.notes||'-') + '</td>' +
@@ -5580,13 +5615,19 @@ function onSelectTrip() {
   }
   var trip = state.trips.find(function(t){ return t.id === tripId; });
   if (!trip) return;
-  var allocated = getTripAllocated(tripId);
-  var sisa = trip.volume - allocated;
-  // Auto-fill SPBG
-  document.getElementById('input-opex-spbg').value = trip.volume;
+  var eff = calcTripEffectiveVolume(trip);
+  var effVol = eff.effective;
+  var sisa = eff.sisa !== undefined ? eff.sisa : (effVol - getTripAllocated(tripId));
+  var allocated = eff.allocated !== undefined ? eff.allocated : getTripAllocated(tripId);
+  // Auto-fill SPBG dengan effective volume
+  document.getElementById('input-opex-spbg').value = effVol;
   calcOpexPengajuan();
   infoEl.style.display = 'block';
-  infoEl.innerHTML = '&#128665; Trip ' + fmtDate(trip.date) + ' &middot; Volume: <strong>' + fmtNum(trip.volume,2) + ' Sm&#179;</strong> &middot; Sudah dialokasi: <strong>' + fmtNum(allocated,2) + '</strong> &middot; Sisa: <strong style="color:' + (sisa>0?'var(--green)':'var(--red)') + '">' + fmtNum(sisa,2) + ' Sm&#179;</strong>';
+  var carryInfo = eff.carryOver > 0 ? ' &middot; <span style="color:var(--green)">+' + fmtNum(eff.carryOver,2) + ' carry over</span>' : '';
+  infoEl.innerHTML = '&#128665; Trip ' + fmtDate(trip.date) + carryInfo +
+    ' &middot; Vol efektif: <strong>' + fmtNum(effVol,2) + ' Sm&#179;</strong>' +
+    ' &middot; Dialokasi: <strong>' + fmtNum(allocated,2) + '</strong>' +
+    ' &middot; Sisa: <strong style="color:' + (sisa>0?'var(--green)':'var(--red)') + '">' + fmtNum(sisa,2) + ' Sm&#179;</strong>';
 }
 
 function toggleOpexManual() {
