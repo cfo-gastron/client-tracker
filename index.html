@@ -1910,8 +1910,8 @@ function renderKandangDetail(kandangId) {
       '<div style="font-size:12px;color:var(--text3)">Total: <strong>' + fmtNum(totalVol,1) + ' Sm&#179;</strong></div>' +
     '</div>' +
     '<div style="display:flex;gap:12px;font-size:11px;color:var(--text3);margin-bottom:12px">' +
-      '<span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:2px;background:#2a78d6;display:inline-block"></span>Selesai</span>' +
-      '<span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:2px;background:#eda100;display:inline-block"></span>Berjalan</span>' +
+      '<span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:2px;background:#5DCAA5;display:inline-block"></span>Selesai</span>' +
+      '<span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:2px;background:#EF9F27;display:inline-block"></span>Berjalan</span>' +
     '</div>' +
     '<div style="position:relative;width:100%;height:160px"><canvas id="' + chartId + '" role="img" aria-label="Volume Sm3 per periode kandang ' + kandang.name + '">Volume: ' + chartLabels.map(function(l,i){return l+': '+chartVols[i];}).join(', ') + '</canvas></div>' +
     '</div>';
@@ -1920,11 +1920,10 @@ function renderKandangDetail(kandangId) {
     var canvas = document.getElementById(chartId);
     if (!canvas || !window.Chart) return;
     var isDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-    var gridCol = isDark ? '#2c2c2a' : '#e1e0d9';
-    var textMuted = isDark ? '#898781' : '#898781';
-    var bgColors = kandang.periodes.map(function(p){ return p.isCutoff ? '#2a78d6bb' : '#eda100bb'; });
-    var bdColors = kandang.periodes.map(function(p){ return p.isCutoff ? '#2a78d6' : '#eda100'; });
-    // Destroy existing chart if any
+    var gridCol = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.05)';
+    var textCol = isDark ? '#aaa' : '#888';
+    var bgColors = kandang.periodes.map(function(p){ return p.isCutoff ? 'rgba(93,202,165,0.80)' : 'rgba(239,159,39,0.80)'; });
+    var bdColors = kandang.periodes.map(function(p){ return p.isCutoff ? '#5DCAA5' : '#EF9F27'; });
     var existingChart = Chart.getChart(canvas);
     if (existingChart) existingChart.destroy();
     new Chart(canvas, {
@@ -1935,9 +1934,10 @@ function renderKandangDetail(kandangId) {
           data: chartVols,
           backgroundColor: bgColors,
           borderColor: bdColors,
-          borderWidth: 1.5,
+          borderWidth: 1,
           borderRadius: 4,
-          borderSkipped: 'bottom'
+          borderSkipped: 'bottom',
+          maxBarThickness: 60
         }]
       },
       options: {
@@ -1948,14 +1948,23 @@ function renderKandangDetail(kandangId) {
             callbacks: {
               label: function(ctx) {
                 var p = kandang.periodes[ctx.dataIndex];
-                return ' ' + ctx.parsed.y.toFixed(1) + ' Sm\u00b3' + (p && !p.isCutoff ? ' (berjalan)' : '');
+                return ' ' + ctx.parsed.y.toFixed(1) + ' Sm\u00b3' + (p && !p.isCutoff ? ' \u25cf berjalan' : '');
               }
             }
           }
         },
         scales: {
-          x: { ticks: { color: textMuted, font: { size: 12 } }, grid: { display: false } },
-          y: { ticks: { color: textMuted, font: { size: 11 }, callback: function(v){ return v + ' Sm\u00b3'; } }, grid: { color: gridCol }, beginAtZero: true, border: { display: false } }
+          x: {
+            ticks: { color: textCol, font: { size: 11 } },
+            grid: { display: false },
+            border: { display: false }
+          },
+          y: {
+            ticks: { color: textCol, font: { size: 11 }, callback: function(v){ return v + ' Sm\u00b3'; } },
+            grid: { color: gridCol },
+            border: { display: false },
+            beginAtZero: true
+          }
         }
       }
     });
