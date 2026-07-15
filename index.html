@@ -5520,7 +5520,7 @@ function calcTripEffectiveVolume(trip) {
   return { effective: trip.volume, carryOver: 0 };
 }
 
-
+function renderTripManager() {
   var cont = document.getElementById('content-trips');
   ensureTrips();
   if (!state.trips.length) {
