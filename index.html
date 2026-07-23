@@ -5450,10 +5450,21 @@ function openAddTripModal() {
   gtmSel.innerHTML = '<option value="">— Pilih GTM —</option>' +
     gtms.map(function(g){ return '<option value="' + g.id + '">' + g.name + '</option>'; }).join('');
   if (!gtms.length) gtmSel.innerHTML += '<option disabled>Belum ada GTM — tambah di Master Data</option>';
-  // Reset GTM sisa info
+  // Reset GTM sisa info dan baseVol
   var sisaInfo = document.getElementById('trip-gtm-sisa-info');
   if (sisaInfo) sisaInfo.style.display = 'none';
+  var volInput = document.getElementById('trip-volume');
+  if (volInput) delete volInput.dataset.baseVol;
   openModal('modal-add-trip');
+}
+
+function onTripCarryInput(maxSisa) {
+  var carry = parseFloat(document.getElementById('trip-carry-input').value) || 0;
+  carry = Math.min(carry, maxSisa);
+  var volInput = document.getElementById('trip-volume');
+  var baseVol = parseFloat(volInput.dataset.baseVol || volInput.value) || 0;
+  if (!volInput.dataset.baseVol) volInput.dataset.baseVol = volInput.value;
+  volInput.value = (baseVol + carry).toFixed(2);
 }
 
 function onSelectTripGTM() {
@@ -5473,7 +5484,13 @@ function onSelectTripGTM() {
   sisaInfo.innerHTML = '&#9432; Trip terakhir ' + lastTrip.date + ': Vol <strong>' + fmtNum(lastTrip.volume,2) + '</strong>' +
     ' &middot; Terpakai <strong>' + fmtNum(allocated,2) + '</strong>' +
     ' &middot; Sisa: <strong style="color:' + sisaColor + '">' + fmtNum(sisa,2) + ' Sm&#179;</strong>' +
-    (sisa > 0 ? ' &mdash; <span style="color:var(--text3);font-size:11px">masukkan manual ke volume trip baru jika perlu</span>' : '');
+    (sisa > 0
+      ? '<div style="display:flex;align-items:center;gap:8px;margin-top:8px">' +
+        '<span style="font-size:12px;color:var(--text2)">Tambah ke volume:</span>' +
+        '<input type="number" id="trip-carry-input" step="0.01" max="' + sisa.toFixed(2) + '" placeholder="0.00" style="width:100px;padding:4px 8px;border:1px solid var(--border);border-radius:6px;font-size:12px;font-family:DM Mono,monospace" oninput="onTripCarryInput(' + sisa.toFixed(2) + ')">' +
+        '<span style="font-size:11px;color:var(--text3)">maks ' + fmtNum(sisa,2) + ' Sm&#179;</span>' +
+        '</div>'
+      : '');
 }
 
 function saveTrip() {
@@ -5943,7 +5960,7 @@ if (typeof _firestoreReady !== 'undefined' && _firestoreReady) {
     </div>
     <div class="form-row cols-3">
       <div class="form-group"><label>Tanggal Trip</label><input type="date" id="trip-date"></div>
-      <div class="form-group"><label>Volume SPBG (Sm³)</label><input type="number" id="trip-volume" step="0.01" placeholder="e.g. 800" oninput="updateTripSisa()"></div>
+      <div class="form-group"><label>Volume SPBG (Sm³)</label><input type="number" id="trip-volume" step="0.01" placeholder="e.g. 800" oninput="delete this.dataset.baseVol"></div>
       <div class="form-group"><label>Biaya Trip (Rp)</label><input type="number" id="trip-biaya" placeholder="e.g. 1100000"></div>
     </div>
     <div class="form-row cols-2">
