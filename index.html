@@ -2977,9 +2977,9 @@ function saveOpex() {
   if (tripId) {
     var trip = state.trips && state.trips.find(function(t){ return t.id === tripId; });
     if (trip) {
-      var eff = calcTripEffectiveVolume(trip);
-      var sisa = eff.sisa !== undefined ? eff.sisa : (eff.effective - getTripAllocated(tripId));
-      if (pgs > sisa && !confirm('PGS (' + fmtNum(pgs,1) + ') melebihi sisa trip efektif (' + fmtNum(sisa,1) + ' Sm³). Tetap simpan?')) return;
+      var allocated = getTripAllocated(tripId);
+      var sisa = trip.volume - allocated;
+      if (pgs > sisa && !confirm('PGS (' + fmtNum(pgs,1) + ') melebihi sisa trip (' + fmtNum(sisa,1) + ' Sm³). Tetap simpan?')) return;
     }
   }
   var found = findKandang(_pendingOpexCtx.kandangId);
@@ -5450,7 +5450,30 @@ function openAddTripModal() {
   gtmSel.innerHTML = '<option value="">— Pilih GTM —</option>' +
     gtms.map(function(g){ return '<option value="' + g.id + '">' + g.name + '</option>'; }).join('');
   if (!gtms.length) gtmSel.innerHTML += '<option disabled>Belum ada GTM — tambah di Master Data</option>';
+  // Reset GTM sisa info
+  var sisaInfo = document.getElementById('trip-gtm-sisa-info');
+  if (sisaInfo) sisaInfo.style.display = 'none';
   openModal('modal-add-trip');
+}
+
+function onSelectTripGTM() {
+  var gtmId = document.getElementById('trip-gtm').value;
+  var sisaInfo = document.getElementById('trip-gtm-sisa-info');
+  if (!sisaInfo) return;
+  if (!gtmId) { sisaInfo.style.display = 'none'; return; }
+  // Cari trip GTM yang sama, sort by date desc, ambil yang paling baru
+  var gtmTrips = (state.trips||[]).filter(function(t){ return t.gtmId === gtmId; })
+    .sort(function(a,b){ return b.date.localeCompare(a.date) || b.id.localeCompare(a.id); });
+  if (!gtmTrips.length) { sisaInfo.style.display = 'none'; return; }
+  var lastTrip = gtmTrips[0];
+  var allocated = getTripAllocated(lastTrip.id);
+  var sisa = lastTrip.volume - allocated;
+  var sisaColor = sisa > 0 ? 'var(--yellow)' : 'var(--green)';
+  sisaInfo.style.display = 'block';
+  sisaInfo.innerHTML = '&#9432; Trip terakhir ' + lastTrip.date + ': Vol <strong>' + fmtNum(lastTrip.volume,2) + '</strong>' +
+    ' &middot; Terpakai <strong>' + fmtNum(allocated,2) + '</strong>' +
+    ' &middot; Sisa: <strong style="color:' + sisaColor + '">' + fmtNum(sisa,2) + ' Sm&#179;</strong>' +
+    (sisa > 0 ? ' &mdash; <span style="color:var(--text3);font-size:11px">masukkan manual ke volume trip baru jika perlu</span>' : '');
 }
 
 function saveTrip() {
@@ -5536,32 +5559,24 @@ function renderTripManager() {
   var totalSisa = totalVol - totalAllocated;
 
   var rows = state.trips.slice().reverse().map(function(t) {
-    var eff = calcTripEffectiveVolume(t);
-    var allocated = eff.allocated !== undefined ? eff.allocated : getTripAllocated(t.id);
-    var effVol = eff.effective;
-    var sisa = eff.sisa !== undefined ? eff.sisa : (effVol - allocated);
-    var pct = effVol > 0 ? (allocated/effVol*100) : 0;
+    var allocated = getTripAllocated(t.id);
+    var sisa = t.volume - allocated;
+    var pct = t.volume > 0 ? (allocated/t.volume*100) : 0;
     var sisaColor = sisa < 0 ? 'var(--red)' : sisa === 0 ? 'var(--green)' : 'var(--yellow)';
     var barColor = pct >= 100 ? 'var(--green)' : pct >= 50 ? 'var(--accent2)' : 'var(--yellow)';
     var gtm = (state.master.gtms||[]).find(function(g){return g.id===t.gtmId;});
     var gtmName = gtm ? gtm.name : (t.notes && t.notes.match(/PGS-\d+/i) ? t.notes.match(/PGS-\d+/i)[0] : '—');
-    var carryBadge = eff.carryOver > 0
-      ? '<span style="font-size:10px;background:#e8f5ee;color:#1a9e5c;padding:1px 6px;border-radius:8px;margin-left:4px">+' + fmtNum(eff.carryOver,2) + ' carry</span>'
-      : '';
-    var volDisplay = eff.carryOver > 0
-      ? fmtNum(t.volume,2) + carryBadge + '<div style="font-size:10px;color:var(--green);margin-top:1px">Efektif: ' + fmtNum(effVol,2) + ' Sm&#179;</div>'
-      : fmtNum(t.volume,2);
     return '<tr>' +
       '<td class="mono">' + fmtDate(t.date) + '</td>' +
       '<td style="font-size:12px;font-weight:600;color:var(--accent2)">' + gtmName + '</td>' +
-      '<td class="mono" style="text-align:right">' + volDisplay + '</td>' +
+      '<td class="mono" style="text-align:right">' + fmtNum(t.volume,2) + '</td>' +
       '<td class="mono" style="text-align:right">' + fmt(t.biaya) + '</td>' +
       '<td>' +
         '<div style="display:flex;align-items:center;gap:8px">' +
         '<div style="flex:1;height:6px;background:var(--surface2);border-radius:4px;overflow:hidden"><div style="width:' + Math.min(100,pct).toFixed(0) + '%;height:100%;background:' + barColor + ';border-radius:4px"></div></div>' +
         '<span class="mono" style="font-size:11px;min-width:35px">' + pct.toFixed(0) + '%</span>' +
         '</div>' +
-        '<div style="font-size:11px;color:var(--text3);margin-top:2px">' + fmtNum(allocated,2) + ' / ' + fmtNum(effVol,2) + ' Sm&#179;</div>' +
+        '<div style="font-size:11px;color:var(--text3);margin-top:2px">' + fmtNum(allocated,2) + ' / ' + fmtNum(t.volume,2) + ' Sm&#179;</div>' +
       '</td>' +
       '<td class="mono" style="text-align:right;color:' + sisaColor + ';font-weight:600">' + fmtNum(sisa,2) + '</td>' +
       '<td style="font-size:12px;color:var(--text2)">' + (t.notes||'-') + '</td>' +
@@ -5615,19 +5630,12 @@ function onSelectTrip() {
   }
   var trip = state.trips.find(function(t){ return t.id === tripId; });
   if (!trip) return;
-  var eff = calcTripEffectiveVolume(trip);
-  var effVol = eff.effective;
-  var sisa = eff.sisa !== undefined ? eff.sisa : (effVol - getTripAllocated(tripId));
-  var allocated = eff.allocated !== undefined ? eff.allocated : getTripAllocated(tripId);
-  // Auto-fill SPBG dengan effective volume
-  document.getElementById('input-opex-spbg').value = effVol;
+  var allocated = getTripAllocated(tripId);
+  var sisa = trip.volume - allocated;
+  document.getElementById('input-opex-spbg').value = trip.volume;
   calcOpexPengajuan();
   infoEl.style.display = 'block';
-  var carryInfo = eff.carryOver > 0 ? ' &middot; <span style="color:var(--green)">+' + fmtNum(eff.carryOver,2) + ' carry over</span>' : '';
-  infoEl.innerHTML = '&#128665; Trip ' + fmtDate(trip.date) + carryInfo +
-    ' &middot; Vol efektif: <strong>' + fmtNum(effVol,2) + ' Sm&#179;</strong>' +
-    ' &middot; Dialokasi: <strong>' + fmtNum(allocated,2) + '</strong>' +
-    ' &middot; Sisa: <strong style="color:' + (sisa>0?'var(--green)':'var(--red)') + '">' + fmtNum(sisa,2) + ' Sm&#179;</strong>';
+  infoEl.innerHTML = '&#128665; Trip ' + fmtDate(trip.date) + ' &middot; Volume: <strong>' + fmtNum(trip.volume,2) + ' Sm&#179;</strong> &middot; Sudah dialokasi: <strong>' + fmtNum(allocated,2) + '</strong> &middot; Sisa: <strong style="color:' + (sisa>0?'var(--green)':'var(--red)') + '">' + fmtNum(sisa,2) + ' Sm&#179;</strong>';
 }
 
 function toggleOpexManual() {
@@ -5941,10 +5949,11 @@ if (typeof _firestoreReady !== 'undefined' && _firestoreReady) {
     <div class="form-row cols-2">
       <div class="form-group">
         <label>GTM / Kendaraan</label>
-        <select id="trip-gtm" style="font-size:14px;font-weight:600">
+        <select id="trip-gtm" onchange="onSelectTripGTM()" style="font-size:14px;font-weight:600">
           <option value="">— Pilih GTM —</option>
         </select>
       </div>
+      <div id="trip-gtm-sisa-info" style="display:none;background:var(--surface2);border-radius:8px;padding:9px 12px;font-size:12px;color:var(--text2)"></div>
       <div class="form-group"><label>Catatan</label><input type="text" id="trip-notes" placeholder="e.g. E-Money, Solar, Ongkos Driver"></div>
     </div>
     <div style="background:var(--surface2);border-radius:8px;padding:12px 14px;font-size:13px;color:var(--text2);margin-bottom:4px">
