@@ -5580,6 +5580,23 @@ function saveTrip() {
   var gtmId = (document.getElementById('trip-gtm') || {}).value || '';
   if (!date) return alert('Pilih tanggal trip di kalender');
   if (!volume) return alert('Volume wajib diisi');
+
+  // Hitung carry dan losses dari trip GTM sebelumnya
+  var carryInput = parseFloat((document.getElementById('trip-carry-input')||{}).value) || 0;
+  if (carryInput > 0 && gtmId) {
+    var prevTrips = (state.trips||[]).filter(function(t){ return t.gtmId === gtmId; })
+      .sort(function(a,b){ return b.date.localeCompare(a.date); });
+    if (prevTrips.length) {
+      var lastTrip = prevTrips[0];
+      var allocated = getTripAllocated(lastTrip.id);
+      var sisaLama = lastTrip.volume - allocated;
+      var losses = Math.max(0, Math.round((sisaLama - carryInput) * 100) / 100);
+      if (losses > 0) {
+        lastTrip.losses = (lastTrip.losses || 0) + losses;
+      }
+    }
+  }
+
   ensureTrips();
   state.trips.push({ id: uid(), date: date, volume: volume, biaya: biaya, notes: notes, allocated: 0, gtmId: gtmId });
   state.trips.sort(function(a,b){ return a.date.localeCompare(b.date); });
@@ -5748,6 +5765,7 @@ function renderTripManager() {
         '<div style="font-size:11px;color:var(--text3);margin-top:2px">' + fmtNum(allocated,2) + ' / ' + fmtNum(t.volume,2) + ' Sm&#179;</div>' +
       '</td>' +
       '<td class="mono" style="text-align:right;color:' + sisaColor + ';font-weight:600">' + fmtNum(sisa,2) + '</td>' +
+      '<td class="mono" style="text-align:right;color:' + (t.losses > 0 ? 'var(--red)' : 'var(--text3)') + ';font-size:12px">' + (t.losses > 0 ? '(' + fmtNum(t.losses,2) + ')' : '—') + '</td>' +
       '<td style="font-size:12px;color:var(--text2)">' + (t.notes||'-') + '</td>' +
       '<td style="display:flex;gap:4px"><button class="btn btn-secondary btn-sm btn-icon" data-tid="' + t.id + '" onclick="openEditTrip(this.dataset.tid)" title="Edit">&#9998;</button><button class="btn btn-danger btn-sm btn-icon" data-tid="' + t.id + '" onclick="deleteTrip(this.dataset.tid)">&#215;</button></td>' +
     '</tr>';
@@ -5761,7 +5779,7 @@ function renderTripManager() {
     '<div class="stat-card ' + (totalSisa > 0 ? 'yellow' : 'green') + '"><div class="stat-label">Gas Belum Dialokasi</div><div class="stat-value">' + fmtNum(totalSisa,0) + '</div><div class="stat-sub">Sm&#179; nganggur</div></div>' +
     '</div>' +
     '<div class="table-wrap"><div class="table-header"><div class="table-title">Daftar Trip SPBG</div><div style="font-size:12px;color:var(--text2)">' + totalTrips + ' trip</div></div>' +
-    '<table><thead><tr><th>Tanggal</th><th>GTM</th><th style="text-align:right">Volume (Sm&#179;)</th><th style="text-align:right">Biaya Trip</th><th style="text-align:right">Biaya Efektif</th><th>Alokasi ke Kandang</th><th style="text-align:right">Sisa</th><th>Catatan</th><th></th></tr></thead>' +
+    '<table><thead><tr><th>Tanggal</th><th>GTM</th><th style="text-align:right">Volume (Sm&#179;)</th><th style="text-align:right">Biaya Trip</th><th style="text-align:right">Biaya Efektif</th><th>Alokasi ke Kandang</th><th style="text-align:right">Sisa</th><th style="text-align:right">Losses</th><th>Catatan</th><th></th></tr></thead>' +
     '<tbody>' + rows + '</tbody></table>' + buildTripMobileCards(state.trips.slice().reverse()) + '</div>';
 }
 
