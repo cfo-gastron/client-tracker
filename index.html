@@ -5508,6 +5508,39 @@ function saveTrip() {
   renderTripManager();
 }
 
+function onEditTripGTMSelect() {
+  var gtmId = document.getElementById('edit-trip-gtm').value;
+  var currentTripId = document.getElementById('edit-trip-id').value;
+  var sisaInfo = document.getElementById('edit-trip-gtm-sisa-info');
+  if (!sisaInfo || !gtmId) { if (sisaInfo) sisaInfo.style.display = 'none'; return; }
+  // Cari trip GTM yang sama, exclude trip yang lagi diedit, ambil yang paling baru
+  var gtmTrips = (state.trips||[]).filter(function(t){ return t.gtmId === gtmId && t.id !== currentTripId; })
+    .sort(function(a,b){ return b.date.localeCompare(a.date) || b.id.localeCompare(a.id); });
+  if (!gtmTrips.length) { sisaInfo.style.display = 'none'; return; }
+  var lastTrip = gtmTrips[0];
+  var allocated = getTripAllocated(lastTrip.id);
+  var sisa = lastTrip.volume - allocated;
+  var sisaColor = sisa > 0 ? 'var(--yellow)' : 'var(--green)';
+  sisaInfo.style.display = 'block';
+  sisaInfo.innerHTML = '&#9432; Trip terakhir ' + lastTrip.date + ': Vol <strong>' + fmtNum(lastTrip.volume,2) + '</strong>' +
+    ' &middot; Terpakai <strong>' + fmtNum(allocated,2) + '</strong>' +
+    ' &middot; Sisa: <strong style="color:' + sisaColor + '">' + fmtNum(sisa,2) + ' Sm&#179;</strong>' +
+    (sisa > 0
+      ? '<div style="display:flex;align-items:center;gap:8px;margin-top:8px">' +
+        '<span style="font-size:12px;color:var(--text2)">Tambah ke volume:</span>' +
+        '<input type="number" id="edit-trip-carry-input" step="0.01" max="' + sisa.toFixed(2) + '" placeholder="0.00" style="width:100px;padding:4px 8px;border:1px solid var(--border);border-radius:6px;font-size:12px;font-family:DM Mono,monospace" oninput="onEditTripCarryInput(' + sisa.toFixed(2) + ')">' +
+        '<span style="font-size:11px;color:var(--text3)">maks ' + fmtNum(sisa,2) + ' Sm&#179;</span>' +
+        '</div>'
+      : '');
+}
+
+function onEditTripCarryInput(maxSisa) {
+  var carry = Math.min(parseFloat(document.getElementById('edit-trip-carry-input').value) || 0, maxSisa);
+  var volInput = document.getElementById('edit-trip-volume');
+  if (!volInput.dataset.baseVol) volInput.dataset.baseVol = volInput.value;
+  volInput.value = (parseFloat(volInput.dataset.baseVol) + carry).toFixed(2);
+}
+
 function openEditTrip(tripId) {
   var trip = (state.trips||[]).find(function(t){ return t.id === tripId; });
   if (!trip) return;
@@ -5522,6 +5555,7 @@ function openEditTrip(tripId) {
   gtmSel.innerHTML = '<option value="">— Pilih GTM —</option>' +
     gtms.map(function(g){ return '<option value="' + g.id + '"' + (g.id === trip.gtmId ? ' selected' : '') + '>' + g.name + '</option>'; }).join('');
   openModal('modal-edit-trip');
+  setTimeout(onEditTripGTMSelect, 50);
 }
 
 function saveEditTrip() {
@@ -6005,10 +6039,11 @@ if (typeof _firestoreReady !== 'undefined' && _firestoreReady) {
     <div class="form-row cols-2">
       <div class="form-group">
         <label>GTM / Kendaraan</label>
-        <select id="edit-trip-gtm" style="font-size:14px;font-weight:600">
+        <select id="edit-trip-gtm" onchange="onEditTripGTMSelect()" style="font-size:14px;font-weight:600">
           <option value="">— Pilih GTM —</option>
         </select>
       </div>
+      <div id="edit-trip-gtm-sisa-info" style="display:none;background:var(--surface2);border-radius:8px;padding:9px 12px;font-size:12px;color:var(--text2);margin-top:6px"></div>
       <div class="form-group"><label>Catatan</label><input type="text" id="edit-trip-notes" placeholder="e.g. E-Money, Solar, Ongkos Driver"></div>
     </div>
     <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:8px">
