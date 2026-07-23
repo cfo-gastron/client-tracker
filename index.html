@@ -5508,6 +5508,43 @@ function saveTrip() {
   renderTripManager();
 }
 
+function openEditTrip(tripId) {
+  var trip = (state.trips||[]).find(function(t){ return t.id === tripId; });
+  if (!trip) return;
+  document.getElementById('edit-trip-id').value = tripId;
+  document.getElementById('edit-trip-date').value = trip.date || '';
+  document.getElementById('edit-trip-volume').value = trip.volume || '';
+  document.getElementById('edit-trip-biaya').value = trip.biaya || 1100000;
+  document.getElementById('edit-trip-notes').value = trip.notes || '';
+  // Populate GTM dropdown
+  var gtmSel = document.getElementById('edit-trip-gtm');
+  var gtms = state.master.gtms || [];
+  gtmSel.innerHTML = '<option value="">— Pilih GTM —</option>' +
+    gtms.map(function(g){ return '<option value="' + g.id + '"' + (g.id === trip.gtmId ? ' selected' : '') + '>' + g.name + '</option>'; }).join('');
+  openModal('modal-edit-trip');
+}
+
+function saveEditTrip() {
+  var tripId = document.getElementById('edit-trip-id').value;
+  var date = document.getElementById('edit-trip-date').value;
+  var volume = parseFloat(document.getElementById('edit-trip-volume').value) || 0;
+  var biaya = parseFloat(document.getElementById('edit-trip-biaya').value) || 0;
+  var notes = document.getElementById('edit-trip-notes').value.trim();
+  var gtmId = document.getElementById('edit-trip-gtm').value;
+  if (!date || !volume) return alert('Tanggal dan volume wajib diisi');
+  var trip = (state.trips||[]).find(function(t){ return t.id === tripId; });
+  if (!trip) return;
+  trip.date = date;
+  trip.volume = volume;
+  trip.biaya = biaya;
+  trip.notes = notes;
+  trip.gtmId = gtmId;
+  state.trips.sort(function(a,b){ return a.date.localeCompare(b.date); });
+  save();
+  closeModal('modal-edit-trip');
+  renderTripManager();
+}
+
 function deleteTrip(tripId) {
   if (!confirm('Hapus trip ini?')) return;
   ensureTrips();
@@ -5597,7 +5634,7 @@ function renderTripManager() {
       '</td>' +
       '<td class="mono" style="text-align:right;color:' + sisaColor + ';font-weight:600">' + fmtNum(sisa,2) + '</td>' +
       '<td style="font-size:12px;color:var(--text2)">' + (t.notes||'-') + '</td>' +
-      '<td><button class="btn btn-danger btn-sm btn-icon" data-tid="' + t.id + '" onclick="deleteTrip(this.dataset.tid)">&#215;</button></td>' +
+      '<td style="display:flex;gap:4px"><button class="btn btn-secondary btn-sm btn-icon" data-tid="' + t.id + '" onclick="openEditTrip(this.dataset.tid)" title="Edit">&#9998;</button><button class="btn btn-danger btn-sm btn-icon" data-tid="' + t.id + '" onclick="deleteTrip(this.dataset.tid)">&#215;</button></td>' +
     '</tr>';
   }).join('');
 
@@ -5952,7 +5989,36 @@ if (typeof _firestoreReady !== 'undefined' && _firestoreReady) {
   </div>
 </div>
 <!-- Add Trip Modal -->
-<div class="modal-overlay" id="modal-add-trip">
+<!-- Edit Trip Modal -->
+<div class="modal-overlay" id="modal-edit-trip">
+  <div class="modal modal-lg">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px">
+      <h3 style="margin:0;font-size:16px">&#9998; Edit Trip</h3>
+      <button onclick="closeModal('modal-edit-trip')" style="background:none;border:none;font-size:22px;line-height:1;cursor:pointer;color:var(--text3);padding:2px 8px;border-radius:6px;">&#215;</button>
+    </div>
+    <input type="hidden" id="edit-trip-id">
+    <div class="form-row cols-3">
+      <div class="form-group"><label>Tanggal Trip</label><input type="date" id="edit-trip-date"></div>
+      <div class="form-group"><label>Volume SPBG (Sm³)</label><input type="number" id="edit-trip-volume" step="0.01" placeholder="e.g. 800"></div>
+      <div class="form-group"><label>Biaya Trip (Rp)</label><input type="number" id="edit-trip-biaya" placeholder="e.g. 1100000"></div>
+    </div>
+    <div class="form-row cols-2">
+      <div class="form-group">
+        <label>GTM / Kendaraan</label>
+        <select id="edit-trip-gtm" style="font-size:14px;font-weight:600">
+          <option value="">— Pilih GTM —</option>
+        </select>
+      </div>
+      <div class="form-group"><label>Catatan</label><input type="text" id="edit-trip-notes" placeholder="e.g. E-Money, Solar, Ongkos Driver"></div>
+    </div>
+    <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:8px">
+      <button class="btn btn-secondary" onclick="closeModal('modal-edit-trip')">Batal</button>
+      <button class="btn btn-primary" onclick="saveEditTrip()">Simpan</button>
+    </div>
+  </div>
+</div>
+
+<!-- Input Trip Modal -->
   <div class="modal modal-lg">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
       <h3 style="margin:0">&#128665; Input Trip SPBG</h3>
