@@ -5667,6 +5667,7 @@ function renderTripManager() {
         '<div style="font-size:11px;color:var(--text3);margin-top:2px">' + fmtNum(allocated,2) + ' / ' + fmtNum(t.volume,2) + ' Sm&#179;</div>' +
       '</td>' +
       '<td class="mono" style="text-align:right;color:' + sisaColor + ';font-weight:600">' + fmtNum(sisa,2) + '</td>' +
+      '<td class="mono" style="text-align:right;font-size:12px;color:var(--accent2)">' + (t.volume > 0 ? fmt(Math.round((allocated/t.volume)*t.biaya)) : '—') + '</td>' +
       '<td style="font-size:12px;color:var(--text2)">' + (t.notes||'-') + '</td>' +
       '<td style="display:flex;gap:4px"><button class="btn btn-secondary btn-sm btn-icon" data-tid="' + t.id + '" onclick="openEditTrip(this.dataset.tid)" title="Edit">&#9998;</button><button class="btn btn-danger btn-sm btn-icon" data-tid="' + t.id + '" onclick="deleteTrip(this.dataset.tid)">&#215;</button></td>' +
     '</tr>';
@@ -5680,7 +5681,7 @@ function renderTripManager() {
     '<div class="stat-card ' + (totalSisa > 0 ? 'yellow' : 'green') + '"><div class="stat-label">Gas Belum Dialokasi</div><div class="stat-value">' + fmtNum(totalSisa,0) + '</div><div class="stat-sub">Sm&#179; nganggur</div></div>' +
     '</div>' +
     '<div class="table-wrap"><div class="table-header"><div class="table-title">Daftar Trip SPBG</div><div style="font-size:12px;color:var(--text2)">' + totalTrips + ' trip</div></div>' +
-    '<table><thead><tr><th>Tanggal</th><th>GTM</th><th style="text-align:right">Volume (Sm&#179;)</th><th style="text-align:right">Biaya Trip</th><th>Alokasi ke Kandang</th><th style="text-align:right">Sisa</th><th>Catatan</th><th></th></tr></thead>' +
+    '<table><thead><tr><th>Tanggal</th><th>GTM</th><th style="text-align:right">Volume (Sm&#179;)</th><th style="text-align:right">Biaya Trip</th><th>Alokasi ke Kandang</th><th style="text-align:right">Sisa</th><th style="text-align:right">Biaya Efektif</th><th>Catatan</th><th></th></tr></thead>' +
     '<tbody>' + rows + '</tbody></table>' + buildTripMobileCards(state.trips.slice().reverse()) + '</div>';
 }
 
