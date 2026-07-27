@@ -3209,7 +3209,7 @@ function openTMModal(type) {
     '<td colspan="5"></td>' +
     '</tr>';
 
-  body.innerHTML = '<div style="overflow-x:auto"><table style="width:100%;min-width:680px">' +
+  body.innerHTML = '<div style="overflow-x:auto"><table style="width:100%">' +
     '<thead><tr style="background:var(--surface2);font-size:11px">' +
     '<th>Client / Kandang</th>' +
     '<th style="text-align:right">' + titles[type] + '</th>' +
@@ -4314,8 +4314,8 @@ function renderSummarySupply() {
         '<td class="mono" style="text-align:right;color:var(--red)">(' + fmt(kd.opex) + ')</td>' +
         '<td style="text-align:right"><span class="tag tag-gray" style="font-size:10px">' + opexPct.toFixed(1) + '%</span></td>' +
         '<td class="mono" style="text-align:right;font-weight:600;color:' + (opIncome>=0?'var(--green)':'var(--red)') + '">' + fmt(opIncome) + '</td>' +
-        '<td style="text-align:right"><span class="tag tag-' + (margin>=25?'green':margin>=15?'yellow':'red') + '" style="font-size:10px">' + margin.toFixed(1) + '%</span>' + kdStatus + '</td>' +
-        '<td style="text-align:center;color:var(--text3);font-size:11px">&#128269;</td>' +
+        '<td style="text-align:right"><span class="tag tag-' + (margin>=25?'green':margin>=15?'yellow':'red') + '" style="font-size:10px">' + margin.toFixed(1) + '%</span></td>' +
+        '<td style="text-align:center">' + kdStatus + '</td>' +
       '</tr>';
     }).join('');
     var insightHTML =
@@ -4327,7 +4327,7 @@ function renderSummarySupply() {
       '<th>Client</th><th>Kandang</th><th style="text-align:right">Vol (Sm&#179;)</th><th style="text-align:right">Harga/Sm&#179;</th><th style="text-align:right">Revenue</th>' +
       '<th style="text-align:right">COGS</th><th style="text-align:right">%</th>' +
       '<th style="text-align:right">OpEx</th><th style="text-align:right">%</th>' +
-      '<th style="text-align:right">Op. Income</th><th style="text-align:right">Margin</th><th style="text-align:center">Detail</th>' +
+      '<th style="text-align:right">Op. Income</th><th style="text-align:right">Margin</th><th style="text-align:center">Status</th>' +
       '</tr></thead><tbody>' + detailRows + '</tbody></table>' +
       '</div></td></tr>';
     return '<tr style="cursor:pointer" data-iid="' + insightId + '" onclick="toggleInsight(this.dataset.iid)" title="Klik untuk lihat breakdown kandang">' +
@@ -4434,14 +4434,13 @@ function renderSummaryInvoice() {
         '<td class="mono" style="text-align:right">' + fmt(p.harga) + '/Sm&#179;</td>' +
         '<td class="mono" style="text-align:right">' + fmt(p.revenue) + '</td>' +
         '<td style="text-align:right"><span class="tag tag-' + (p.margin>=25?'green':p.margin>=15?'yellow':'red') + '" style="font-size:10px">' + p.margin.toFixed(1) + '%</span></td>' +
-        '<td style="text-align:center;color:var(--text3);font-size:11px">&#128269;</td>' +
       '</tr>';
     }).join('');
     var insightHTML =
       '<tr id="' + insightId + '" style="display:none;background:rgba(42,125,225,0.02)">' +
       '<td colspan="7" style="padding:0 0 12px 0">' +
       '<div style="overflow-x:auto"><table style="margin:0">' +
-      '<thead><tr style="background:var(--surface2)"><th>Client</th><th>Kandang</th><th style="text-align:right">Cut-off</th><th style="text-align:right">Cash In</th><th style="text-align:right">Harga Jual</th><th style="text-align:right">Revenue</th><th style="text-align:right">Margin</th><th style="text-align:center">Detail</th></tr></thead>' +
+      '<thead><tr style="background:var(--surface2)"><th>Client</th><th>Kandang</th><th style="text-align:right">Cut-off</th><th style="text-align:right">Cash In</th><th style="text-align:right">Harga Jual</th><th style="text-align:right">Revenue</th><th style="text-align:right">Margin</th></tr></thead>' +
       '<tbody>' + detailRows2 + '</tbody></table></div></td></tr>';
     var mKey = 'pl_' + m.mIdx + '_' + m.year;
     window._plDetailCache = window._plDetailCache || {};
@@ -6206,13 +6205,13 @@ if (typeof _firestoreReady !== 'undefined' && _firestoreReady) {
 </div>
   <!-- TM Breakdown Modal -->
 <div class="modal-overlay" id="modal-tm-breakdown">
-  <div class="modal modal-xl" style="max-width:860px;width:95vw">
+  <div class="modal modal-xl" style="max-width:1100px;width:96vw;max-height:88vh;display:flex;flex-direction:column">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
       <h3 style="margin:0;font-size:15px;font-family:Plus Jakarta Sans,sans-serif" id="tm-modal-title">Breakdown</h3>
       <button onclick="document.getElementById('modal-tm-breakdown').classList.remove('show')" style="background:none;border:none;font-size:22px;line-height:1;cursor:pointer;color:var(--text3);padding:2px 8px;border-radius:6px;">&#215;</button>
     </div>
-    <div id="tm-modal-body"></div>
-    <div style="margin-top:14px;text-align:right">
+    <div id="tm-modal-body" style="overflow-y:auto;flex:1"></div>
+    <div style="margin-top:14px;text-align:right;flex-shrink:0">
       <button class="btn btn-secondary" onclick="document.getElementById('modal-tm-breakdown').classList.remove('show')">Tutup</button>
     </div>
   </div>
