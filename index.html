@@ -3736,8 +3736,8 @@ function renderGantt() {
 
   cont.innerHTML = dashHTML + yearNav +
     '<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:0">' +
-    '<div style="overflow-x:hidden;width:100%">' +
-    '<svg width="100%" height="'+svgH+'" id="gantt-svg" style="display:block" viewBox="0 0 '+(LABEL_W+TOTAL_W)+' '+svgH+'" preserveAspectRatio="none">' +
+    '<div id="gantt-container" style="overflow-x:auto;width:100%">' +
+    '<svg id="gantt-svg" height="'+svgH+'" style="display:block">' +
     quarterHeaders + monthHeaders + gridLines + weekLines + stripes + labels + bars + todayLine +
     '<rect x="0" y="0" width="'+LABEL_W+'" height="'+HEADER_H+'" fill="var(--surface)"/>' +
     '<line x1="'+LABEL_W+'" y1="0" x2="'+LABEL_W+'" y2="'+HEADER_H+'" stroke="var(--border)" stroke-width="1.5"/>' +
@@ -3748,6 +3748,24 @@ function renderGantt() {
     predListSection;
 
   window._ganttTooltipData = tooltipData;
+
+  // Set SVG width to fill container, scale TOTAL_W proportionally if wider
+  setTimeout(function() {
+    var svgEl = document.getElementById('gantt-svg');
+    var containerEl = document.getElementById('gantt-container');
+    if (!svgEl || !containerEl) return;
+    var contentW = LABEL_W + TOTAL_W;
+    var containerW = containerEl.clientWidth;
+    if (containerW > contentW) {
+      // Scale up to fill container
+      svgEl.setAttribute('width', containerW);
+      svgEl.setAttribute('viewBox', '0 0 ' + contentW + ' ' + svgH);
+      svgEl.setAttribute('preserveAspectRatio', 'xMinYMin meet');
+      // Scale text won't stretch — viewBox+meet preserves aspect ratio
+    } else {
+      svgEl.setAttribute('width', contentW);
+    }
+  }, 0);
 
   // Bar click
   var svg = document.getElementById('gantt-svg');
