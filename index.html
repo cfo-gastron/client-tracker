@@ -3729,8 +3729,8 @@ function renderGantt() {
     [1, 8, 15, 22].forEach(function(d, wi) {
       var dayMs = new Date(yr, mo2p, d).getTime();
       var xW = LABEL_W + Math.round((dayMs - rangeStartMs2) / rangeTotalMs2 * MONTH_W_p);
-      weekLines += '<line x1="'+xW+'" y1="'+HEADER_H2+'" x2="'+xW+'" y2="'+(HEADER_H2+rows.length*ROW_H2)+'" stroke="var(--accent2)" stroke-width="1" stroke-dasharray="4,3" opacity="0.6"/>';
-      weekLines += '<text x="'+(xW+4)+'" y="'+(HEADER_H2+12)+'" font-size="10" font-weight="600" fill="var(--accent2)" opacity="0.8" font-family="Plus Jakarta Sans,sans-serif">W'+(wi+1)+'</text>';
+      weekLines += '<line x1="'+xW+'" y1="'+HEADER_H+'" x2="'+xW+'" y2="'+(HEADER_H+rows.length*ROW_H)+'" stroke="var(--accent2)" stroke-width="1" stroke-dasharray="4,3" opacity="0.6"/>';
+      weekLines += '<text x="'+(xW+4)+'" y="'+(HEADER_H+12)+'" font-size="10" font-weight="600" fill="var(--accent2)" opacity="0.8" font-family="Plus Jakarta Sans,sans-serif">W'+(wi+1)+'</text>';
     });
   }
 
