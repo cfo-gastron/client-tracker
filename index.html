@@ -3568,19 +3568,6 @@ function renderGantt() {
 
   var emptyMsg = rows.length === 0 ? '<div style="text-align:center;padding:40px;color:var(--text3);font-size:13px">Tidak ada data untuk periode ini</div>' : '';
 
-  var html = yearNav +
-    '<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden">' +
-    '<div style="overflow-x:hidden;width:100%">' +
-    '<svg width="100%" height="'+svgH+'" id="gantt-svg" style="display:block" viewBox="0 0 '+(LABEL_W+TOTAL_W)+' '+svgH+'" preserveAspectRatio="none">' +
-    quarterHeaders + monthHeaders + gridLines + weekLines + stripes + labels + bars + todayLine +
-    '<rect x="0" y="0" width="'+LABEL_W+'" height="'+HEADER_H+'" fill="var(--surface)"/>' +
-    '<line x1="'+LABEL_W+'" y1="0" x2="'+LABEL_W+'" y2="'+HEADER_H+'" stroke="var(--border)" stroke-width="1.5"/>' +
-    '<line x1="0" y1="'+HEADER_H+'" x2="'+(LABEL_W+TOTAL_W)+'" y2="'+HEADER_H+'" stroke="var(--border)" stroke-width="1.5"/>' +
-    '</svg>' +
-    emptyMsg +
-    '</div></div>' +
-    '<div id="gantt-detail" style="display:none;margin-top:12px;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px"></div>';
-
   // Dashboard bulan ini
   var nowMonth = today.getMonth();
   var nowYear = today.getFullYear();
@@ -3730,18 +3717,34 @@ function renderGantt() {
     '<div style="font-family:Plus Jakarta Sans,sans-serif;font-weight:700;font-size:13px;margin-bottom:12px;color:var(--text2)">PREDIKSI PER BULAN &mdash; '+yr+'</div>' +
     monthChips + '<div class="tbl-scroll">' + predListHTML + '</div></div>';
 
+  // Week lines for monthly view
+  var weekLines = '';
+  if (window._ganttFilter && window._ganttFilter.startsWith('m')) {
+    var mo2p = parseInt(window._ganttFilter.slice(1));
+    // MONTH_W for monthly view = 560, startMonth = mo2p
+    var MONTH_W_p = 560;
+    var rangeStartMs2 = new Date(yr, mo2p, 1).getTime();
+    var rangeEndMs2 = new Date(yr, mo2p+1, 1).getTime();
+    var rangeTotalMs2 = rangeEndMs2 - rangeStartMs2;
+    [1, 8, 15, 22].forEach(function(d, wi) {
+      var dayMs = new Date(yr, mo2p, d).getTime();
+      var xW = LABEL_W + Math.round((dayMs - rangeStartMs2) / rangeTotalMs2 * MONTH_W_p);
+      weekLines += '<line x1="'+xW+'" y1="'+HEADER_H2+'" x2="'+xW+'" y2="'+(HEADER_H2+rows.length*ROW_H2)+'" stroke="var(--accent2)" stroke-width="1" stroke-dasharray="4,3" opacity="0.6"/>';
+      weekLines += '<text x="'+(xW+4)+'" y="'+(HEADER_H2+12)+'" font-size="10" font-weight="600" fill="var(--accent2)" opacity="0.8" font-family="Plus Jakarta Sans,sans-serif">W'+(wi+1)+'</text>';
+    });
+  }
+
   cont.innerHTML = dashHTML + yearNav +
     '<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:0">' +
-    '<div style="overflow-x:auto">' +
-    '<div style="min-width:'+(LABEL_W+TOTAL_W)+'px">' +
-    '<svg width="'+(LABEL_W+TOTAL_W)+'" height="'+svgH+'" id="gantt-svg" style="display:block">' +
-    quarterHeaders + monthHeaders + gridLines + stripes + labels + bars + todayLine +
+    '<div style="overflow-x:hidden;width:100%">' +
+    '<svg width="100%" height="'+svgH+'" id="gantt-svg" style="display:block" viewBox="0 0 '+(LABEL_W+TOTAL_W)+' '+svgH+'" preserveAspectRatio="none">' +
+    quarterHeaders + monthHeaders + gridLines + weekLines + stripes + labels + bars + todayLine +
     '<rect x="0" y="0" width="'+LABEL_W+'" height="'+HEADER_H+'" fill="var(--surface)"/>' +
     '<line x1="'+LABEL_W+'" y1="0" x2="'+LABEL_W+'" y2="'+HEADER_H+'" stroke="var(--border)" stroke-width="1.5"/>' +
     '<line x1="0" y1="'+HEADER_H+'" x2="'+(LABEL_W+TOTAL_W)+'" y2="'+HEADER_H+'" stroke="var(--border)" stroke-width="1.5"/>' +
     '</svg>' +
     emptyMsg +
-    '</div></div></div>' +
+    '</div></div>' +
     predListSection;
 
   window._ganttTooltipData = tooltipData;
