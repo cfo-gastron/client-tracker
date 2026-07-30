@@ -1448,6 +1448,7 @@ function renderClients() {
         +'<span class="nc-chevron" style="font-size:10px;color:var(--text3);flex-shrink:0;display:inline-block;transition:transform 0.15s">&#9656;</span>'
         +'<span style="font-size:14px;font-weight:700;color:var(--text);flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+cl.name+'</span>'
         +(cl.location?'<span style="font-size:11px;color:var(--text3);flex-shrink:0;background:var(--surface2);padding:2px 8px;border-radius:10px">'+cl.location+'</span>':'')
+        +(cl.inactive?'<span style="font-size:10px;font-weight:600;background:#fdeaea;color:var(--red);padding:2px 8px;border-radius:10px;flex-shrink:0">Inactive</span>':'')
         +'<span style="font-size:11px;color:var(--text3);flex-shrink:0">'+((cl.kandangs||[]).length)+' kandang</span>'
         +(totR>0?'<span style="font-size:12px;font-weight:600;color:var(--text2)">'+(totR>=1e9?(totR/1e9).toFixed(1)+'B':totR>=1e6?(totR/1e6).toFixed(1)+'M':fmt(totR))+'</span>':'')
         +(totR>0?mgPill(clMg):'')
@@ -3200,22 +3201,24 @@ function calcPeriodesForMonth(yr, mo) {
           result.push({ client: cl.name, kandang: k.name, pl: pl, periode: p, proyeksi: proyeksi, revFinal: revFinal, opFinal: opFinal, estCutoff: estCutoff, isFuture: false });
         }
       });
-      // Future periodes
-      var futures = calcFuturePeriodes(k);
-      futures.forEach(function(fp) {
-        var pStart = new Date(fp.startDate);
-        var pEnd = new Date(fp.cutoffDate);
-        var mStart = new Date(yr, mo, 1);
-        var mEnd = new Date(yr, mo+1, 0);
-        if (pStart <= mEnd && pEnd >= mStart) {
-          var fakePL = { revenue: fp.avgRev, totalCogs: fp.avgCogs, totalOpex: fp.avgOpex, opIncome: fp.avgOpIncome, totalVolume: fp.avgVol };
-          result.push({
-            client: cl.name, kandang: k.name, pl: fakePL, periode: fp,
-            proyeksi: null, revFinal: fp.avgRev, opFinal: fp.avgOpIncome,
-            estCutoff: fp.cutoffDate, isFuture: true
-          });
-        }
-      });
+      // Future periodes — skip kalau client inactive
+      if (!cl.inactive) {
+        var futures = calcFuturePeriodes(k);
+        futures.forEach(function(fp) {
+          var pStart = new Date(fp.startDate);
+          var pEnd = new Date(fp.cutoffDate);
+          var mStart = new Date(yr, mo, 1);
+          var mEnd = new Date(yr, mo+1, 0);
+          if (pStart <= mEnd && pEnd >= mStart) {
+            var fakePL = { revenue: fp.avgRev, totalCogs: fp.avgCogs, totalOpex: fp.avgOpex, opIncome: fp.avgOpIncome, totalVolume: fp.avgVol };
+            result.push({
+              client: cl.name, kandang: k.name, pl: fakePL, periode: fp,
+              proyeksi: null, revFinal: fp.avgRev, opFinal: fp.avgOpIncome,
+              estCutoff: fp.cutoffDate, isFuture: true
+            });
+          }
+        });
+      }
     });
   });
   return result;
@@ -3339,6 +3342,19 @@ function renderGantt() {
   var today = new Date(); today.setHours(0,0,0,0);
   var todayStr = today.toISOString().slice(0,10);
   var yr = _ganttYear;
+  if (typeof window._ganttFilter === 'undefined') window._ganttFilter = 'all';
+
+  // Determine month range based on filter
+  var MONTHS_ID = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+  var filterRanges = {
+    'all': {start:0, end:11}, 'q1': {start:0, end:2}, 'q2': {start:3, end:5},
+    'q3': {start:6, end:8}, 'q4': {start:9, end:11}
+  };
+  for (var mi2=0; mi2<12; mi2++) filterRanges['m'+mi2] = {start:mi2, end:mi2};
+  var range = filterRanges[window._ganttFilter] || {start:0, end:11};
+  var startMonth = range.start;
+  var endMonth = range.end;
+  var numMonths = endMonth - startMonth + 1;
 
   // Build rows
   var rows = [];
@@ -3353,7 +3369,7 @@ function renderGantt() {
         var endD = p.cutoffDate || addDays(p.startDate, 30);
         var pl = p.isCutoff ? calcPeriodePL(p, k) : null;
         var proyeksi = null;
-        var predCutoff = p.cutoffDate || null; // pakai yg udah di-set dulu
+        var predCutoff = p.cutoffDate || null;
         if (!p.isCutoff && !p.cutoffDate && cp.length >= 1) {
           var durs0 = cp.map(function(x){ return daysBetween(x.startDate, x.cutoffDate); });
           var avgDur0 = Math.round(durs0.reduce(function(a,b){return a+b;},0)/durs0.length);
@@ -3371,8 +3387,8 @@ function renderGantt() {
         });
       });
 
-      // Prediksi periode berikutnya
-      if (cp.length >= 2) {
+      // Prediksi periode berikutnya (skip if inactive)
+      if (!cl.inactive && cp.length >= 2) {
         var durs = cp.map(function(x){ return daysBetween(x.startDate, x.cutoffDate); });
         var avgDur = Math.round(durs.reduce(function(a,b){return a+b;},0)/durs.length);
         var srt = cp.slice().sort(function(a,b){ return new Date(a.startDate)-new Date(b.startDate); });
@@ -3389,57 +3405,61 @@ function renderGantt() {
         }
       }
 
-      // Only include if has bars touching this year
-      var yearStr = String(yr);
-      var hasBarsThisYear = bars.some(function(b){ return b.startDate.slice(0,4) === yearStr || b.endDate.slice(0,4) === yearStr; });
-      if (hasBarsThisYear) rows.push({ client: cl.name, kandang: k.name, bars: bars });
+      // Only include if has bars touching this year AND the selected month range
+      var rangeStart = yr + '-' + String(startMonth+1).padStart(2,'0') + '-01';
+      var rangeEnd = yr + '-' + String(endMonth+1).padStart(2,'0') + '-31';
+      var hasBars = bars.some(function(b){ return b.startDate <= rangeEnd && b.endDate >= rangeStart; });
+      if (hasBars) rows.push({ client: cl.name, kandang: k.name, bars: bars });
     });
   });
 
   // Layout constants
   var LABEL_W = 155;
-  var MONTH_W = 90; // px per month
-  var TOTAL_W = MONTH_W * 12;
+  var MONTH_W = window._ganttFilter === 'all' ? 90 : (window._ganttFilter.startsWith('q') ? 200 : 560);
+  var TOTAL_W = MONTH_W * numMonths;
   var ROW_H = 40;
-  var HEADER_H1 = 28; // quarter row
-  var HEADER_H2 = 24; // month row
+  var HEADER_H1 = 28;
+  var HEADER_H2 = 24;
   var HEADER_H = HEADER_H1 + HEADER_H2;
-  var MONTHS_ID = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
   var QUARTERS = ['Q1','Q2','Q3','Q4'];
 
-  // Helper: date to x position within the year
+  // Helper: date to x position within the filtered range
   function dateToX(dateStr) {
     var d = new Date(dateStr);
-    var yearStart = new Date(yr, 0, 1);
-    var yearEnd = new Date(yr+1, 0, 1);
-    if (d < yearStart) d = yearStart;
-    if (d > yearEnd) d = yearEnd;
-    var totalDays = (yearEnd - yearStart) / 86400000;
-    var elapsed = (d - yearStart) / 86400000;
+    var rangeStartDate = new Date(yr, startMonth, 1);
+    var rangeEndDate = new Date(yr, endMonth+1, 1);
+    if (d < rangeStartDate) d = rangeStartDate;
+    if (d > rangeEndDate) d = rangeEndDate;
+    var totalDays = (rangeEndDate - rangeStartDate) / 86400000;
+    var elapsed = (d - rangeStartDate) / 86400000;
     return Math.round((elapsed / totalDays) * TOTAL_W);
   }
 
-  // Quarter headers
+  // Quarter headers — only show quarters in range
   var quarterHeaders = '';
   QUARTERS.forEach(function(q, qi) {
-    var x = LABEL_W + qi * MONTH_W * 3;
-    var w = MONTH_W * 3;
+    var qStartM = qi * 3;
+    var qEndM = qi * 3 + 2;
+    if (qEndM < startMonth || qStartM > endMonth) return;
+    var visStart = Math.max(qStartM, startMonth);
+    var visEnd = Math.min(qEndM, endMonth);
+    var x = LABEL_W + (visStart - startMonth) * MONTH_W;
+    var w = (visEnd - visStart + 1) * MONTH_W;
     quarterHeaders += '<rect x="'+x+'" y="0" width="'+w+'" height="'+HEADER_H1+'" fill="'+(qi%2===0?'rgba(42,125,225,0.08)':'rgba(42,125,225,0.04)')+'"/>';
     quarterHeaders += '<text x="'+(x+w/2)+'" y="'+(HEADER_H1-8)+'" text-anchor="middle" font-size="11" font-weight="700" fill="var(--text2)" font-family="Plus Jakarta Sans,sans-serif">'+q+'</text>';
-    // Quarter border
-    quarterHeaders += '<line x1="'+x+'" y1="0" x2="'+x+'" y2="'+(HEADER_H + (rows.length||1)*ROW_H)+'" stroke="var(--border)" stroke-width="1.5"/>';
+    if (visStart === qStartM && visStart > startMonth)
+      quarterHeaders += '<line x1="'+x+'" y1="0" x2="'+x+'" y2="'+(HEADER_H + (rows.length||1)*ROW_H)+'" stroke="var(--border)" stroke-width="1.5"/>';
   });
 
-  // Month headers + grid lines
+  // Month headers + grid lines — only show months in range
   var monthHeaders = '';
   var gridLines = '';
-  MONTHS_ID.forEach(function(m, mi) {
-    var x = LABEL_W + mi * MONTH_W;
-    monthHeaders += '<rect x="'+x+'" y="'+HEADER_H1+'" width="'+MONTH_W+'" height="'+HEADER_H2+'" fill="'+(mi%2===0?'rgba(0,0,0,0.02)':'rgba(0,0,0,0)') +'"/>';
-    monthHeaders += '<text x="'+(x+MONTH_W/2)+'" y="'+(HEADER_H1+HEADER_H2-7)+'" text-anchor="middle" font-size="10" fill="var(--text3)" font-family="Plus Jakarta Sans,sans-serif">'+m+'</text>';
-    // Grid line per month
+  for (var mi = startMonth; mi <= endMonth; mi++) {
+    var x = LABEL_W + (mi - startMonth) * MONTH_W;
+    monthHeaders += '<rect x="'+x+'" y="'+HEADER_H1+'" width="'+MONTH_W+'" height="'+HEADER_H2+'" fill="'+(mi%2===0?'rgba(0,0,0,0.02)':'rgba(0,0,0,0)')+'"/>';
+    monthHeaders += '<text x="'+(x+MONTH_W/2)+'" y="'+(HEADER_H1+HEADER_H2-7)+'" text-anchor="middle" font-size="10" fill="var(--text3)" font-family="Plus Jakarta Sans,sans-serif">'+MONTHS_ID[mi]+'</text>';
     gridLines += '<line x1="'+x+'" y1="'+HEADER_H+'" x2="'+x+'" y2="'+(HEADER_H + rows.length*ROW_H)+'" stroke="var(--border)" stroke-width="0.5" opacity="0.6"/>';
-  });
+  }
   // Right border
   gridLines += '<line x1="'+(LABEL_W+TOTAL_W)+'" y1="0" x2="'+(LABEL_W+TOTAL_W)+'" y2="'+(HEADER_H + rows.length*ROW_H)+'" stroke="var(--border)" stroke-width="1"/>';
 
@@ -3511,10 +3531,21 @@ function renderGantt() {
   var svgH = HEADER_H + Math.max(rows.length, 1) * ROW_H;
 
   // Year nav
+  var filterOptions = [
+    {val:'all',label:'Semua'},
+    {val:'q1',label:'Q1 (Jan–Mar)'},{val:'q2',label:'Q2 (Apr–Jun)'},{val:'q3',label:'Q3 (Jul–Sep)'},{val:'q4',label:'Q4 (Okt–Des)'},
+    {val:'m0',label:'Januari'},{val:'m1',label:'Februari'},{val:'m2',label:'Maret'},
+    {val:'m3',label:'April'},{val:'m4',label:'Mei'},{val:'m5',label:'Juni'},
+    {val:'m6',label:'Juli'},{val:'m7',label:'Agustus'},{val:'m8',label:'September'},
+    {val:'m9',label:'Oktober'},{val:'m10',label:'November'},{val:'m11',label:'Desember'}
+  ];
+  var filterOpts = filterOptions.map(function(o){ return '<option value="'+o.val+'"'+(window._ganttFilter===o.val?' selected':'')+'>'+o.label+'</option>'; }).join('');
+
   var yearNav = '<div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap">' +
     '<button class="btn btn-secondary btn-sm" onclick="_ganttYear--;renderGantt()">&#8592; '+(_ganttYear-1)+'</button>' +
     '<span style="font-size:16px;font-weight:700;font-family:Plus Jakarta Sans,sans-serif;color:var(--text)">'+yr+'</span>' +
     '<button class="btn btn-secondary btn-sm" onclick="_ganttYear++;renderGantt()">'+(yr+1)+' &#8594;</button>' +
+    '<select onchange="window._ganttFilter=this.value;renderGantt()" style="padding:4px 10px;border-radius:7px;border:0.5px solid var(--border);background:var(--surface);font-size:12px;color:var(--text2);cursor:pointer">'+filterOpts+'</select>' +
     '<div style="flex:1"></div>' +
     '<div style="display:flex;gap:10px;font-size:11px;color:var(--text2);align-items:center">' +
     '<span style="display:inline-flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:2px;background:rgba(42,125,225,0.25);border:1.5px solid rgba(42,125,225,0.85);display:inline-block"></span>Berjalan</span>' +
@@ -3619,21 +3650,23 @@ function renderGantt() {
           predListItems.push({ client: cl.name, kandang: k.name, pl: pl, periode: p, startDate: p.startDate, endDate: p.cutoffDate||addDays(p.startDate,30), isFuture: false });
         }
       });
-      // Future periodes
-      var futures = calcFuturePeriodes(k);
-      futures.forEach(function(fp) {
-        var pStart = new Date(fp.startDate);
-        var pEnd = new Date(fp.cutoffDate);
-        var mStart2 = new Date(yr, selectedPredMonth, 1);
-        var mEnd2 = new Date(yr, selectedPredMonth+1, 0);
-        if (pStart <= mEnd2 && pEnd >= mStart2) {
-          predListItems.push({
-            client: cl.name, kandang: k.name,
-            pl: { revenue: fp.avgRev, totalCogs: fp.avgCogs, totalOpex: fp.avgOpex, opIncome: fp.avgOpIncome, totalVolume: fp.avgVol },
-            periode: fp, startDate: fp.startDate, endDate: fp.cutoffDate, isFuture: true
-          });
-        }
-      });
+      // Future periodes — skip kalau client inactive
+      if (!cl.inactive) {
+        var futures = calcFuturePeriodes(k);
+        futures.forEach(function(fp) {
+          var pStart = new Date(fp.startDate);
+          var pEnd = new Date(fp.cutoffDate);
+          var mStart2 = new Date(yr, selectedPredMonth, 1);
+          var mEnd2 = new Date(yr, selectedPredMonth+1, 0);
+          if (pStart <= mEnd2 && pEnd >= mStart2) {
+            predListItems.push({
+              client: cl.name, kandang: k.name,
+              pl: { revenue: fp.avgRev, totalCogs: fp.avgCogs, totalOpex: fp.avgOpex, opIncome: fp.avgOpIncome, totalVolume: fp.avgVol },
+              periode: fp, startDate: fp.startDate, endDate: fp.cutoffDate, isFuture: true
+            });
+          }
+        });
+      }
     });
   });
 
@@ -4283,18 +4316,26 @@ function runJisdorSim() {
 var _editClientCtx = {};
 function openEditClient(btn) {
   _editClientCtx = { cid: btn.dataset.cid };
+  var cl = state.clients.find(function(c){ return c.id === btn.dataset.cid; });
   document.getElementById('edit-client-name').value = btn.dataset.name || '';
   document.getElementById('edit-client-location').value = btn.dataset.loc || '';
+  var isInactive = cl && cl.inactive === true;
+  document.getElementById('edit-client-inactive').checked = isInactive;
+  var lbl = document.getElementById('edit-client-status-label');
+  lbl.textContent = isInactive ? 'Inactive' : 'Aktif';
+  lbl.style.color = isInactive ? 'var(--red)' : 'var(--green)';
   openModal('modal-edit-client');
 }
 function saveEditClient() {
   var name = document.getElementById('edit-client-name').value.trim();
   if (!name) return alert('Nama client wajib diisi');
   var location = document.getElementById('edit-client-location').value.trim();
+  var inactive = document.getElementById('edit-client-inactive').checked;
   var cl = state.clients.find(function(c){ return c.id === _editClientCtx.cid; });
   if (!cl) return;
   cl.name = name;
   cl.location = location;
+  cl.inactive = inactive;
   save();
   closeModal('modal-edit-client');
   renderSidebar();
@@ -6362,6 +6403,16 @@ if (typeof _firestoreReady !== 'undefined' && _firestoreReady) {
     </div>
     <div class="form-row">
       <div class="form-group"><label>Lokasi</label><input type="text" id="edit-client-location" placeholder="e.g. Ciamis, Jabar"></div>
+    </div>
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:var(--surface2);border-radius:8px;margin-bottom:4px">
+      <div>
+        <div style="font-size:13px;font-weight:600">Status Client</div>
+        <div style="font-size:11px;color:var(--text3);margin-top:2px">Inactive = prediksi dimatikan, data historis tetap ada</div>
+      </div>
+      <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+        <span id="edit-client-status-label" style="font-size:12px;color:var(--text2)">Aktif</span>
+        <input type="checkbox" id="edit-client-inactive" onchange="document.getElementById('edit-client-status-label').textContent=this.checked?'Inactive':'Aktif'; document.getElementById('edit-client-status-label').style.color=this.checked?'var(--red)':'var(--green)'">
+      </label>
     </div>
     <div class="modal-actions">
       <button class="btn btn-secondary" onclick="closeModal('modal-edit-client')">Batal</button>
