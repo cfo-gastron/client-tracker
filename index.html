@@ -117,7 +117,7 @@ body{background:var(--bg);color:var(--text);font-family:'Plus Jakarta Sans',sans
 .table-wrap{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;overflow-x:auto;margin-bottom:24px;}
 .table-header{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--border);}
 .table-title{font-family:'Plus Jakarta Sans',sans-serif;font-weight:600;font-size:15px;}
-table{width:100%;border-collapse:collapse;min-width:900px;}
+table{width:100%;border-collapse:collapse;}
 th{padding:10px 16px;text-align:left;font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;border-bottom:1px solid var(--border);font-weight:500;white-space:nowrap;}
 td{padding:12px 16px;border-bottom:1px solid rgba(0,0,0,0.04);font-size:13px;}
 tr:last-child td{border-bottom:none;}
@@ -544,6 +544,10 @@ tr:hover td{background:var(--surface2);}
     <div class="page" id="page-summary">
       <div class="topbar">
         <div class="topbar-left"><button class="topbar-toggle" id="sidebar-toggle-btn" onclick="toggleSidebar()" title="Toggle sidebar"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="1.5" y="2.5" width="15" height="13" rx="2" stroke="currentColor" stroke-width="1.5"/><line x1="6" y1="2.5" x2="6" y2="15.5" stroke="currentColor" stroke-width="1.5"/></svg></button><div class="topbar-title">P&L Summary</div></div>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-secondary btn-sm" onclick="exportPLPDF('bulan')" title="Export bulan tertentu">&#128196; PDF Bulan Ini</button>
+          <button class="btn btn-secondary btn-sm" onclick="exportPLPDF('semua')" title="Export semua bulan">&#128196; PDF Semua</button>
+        </div>
         <div class="tabs" style="margin:0;padding:4px;background:var(--surface2);border-radius:10px;display:flex;gap:4px">
           <div class="tab active" id="stab-supply" onclick="switchSummaryTab('supply')">Bulanan Supply</div>
           <div class="tab" id="stab-invoice" onclick="switchSummaryTab('invoice-month')">Bulanan Invoice</div>
@@ -2707,6 +2711,26 @@ function saveCutoff() {
 // ============= MODALS =============
 function openModal(id) { document.getElementById(id).classList.add('show'); }
 function closeModal(id) { document.getElementById(id).classList.remove('show'); }
+
+// Global ESC handler — tutup semua modal/popup yang sedang terbuka
+document.addEventListener('keydown', function(e) {
+  if (e.key !== 'Escape') return;
+  // Tutup semua modal-overlay yang show
+  document.querySelectorAll('.modal-overlay.show').forEach(function(m) {
+    m.classList.remove('show');
+  });
+  // Tutup TM breakdown modal (pakai show class berbeda)
+  var tmModal = document.getElementById('modal-tm-breakdown');
+  if (tmModal) tmModal.classList.remove('show');
+  // Tutup PL detail modal
+  var plModal = document.getElementById('modal-pl-detail');
+  if (plModal) plModal.classList.remove('show');
+  // Tutup prediksi kalender popup
+  var predKalPopup = document.getElementById('predkal-popup');
+  if (predKalPopup) predKalPopup.style.display = 'none';
+  // Tutup dropdown kebab nc-block
+  _ncCloseDropdowns();
+});
 document.querySelectorAll('.modal-overlay').forEach(function(o) {
   o.addEventListener('click', function(e) { if (e.target === o) o.classList.remove('show'); });
 });
@@ -3145,15 +3169,69 @@ function deleteOpexByData(btn) { deleteOpex(btn.dataset.kid,btn.dataset.pid,btn.
 // ============= GANTT CHART PREDIKSI =============
 var _ganttYear = new Date().getFullYear();
 
+function calcPeriodesForMonth(yr, mo) {
+  var result = [];
+  state.clients.forEach(function(cl) {
+    (cl.kandangs||[]).forEach(function(k) {
+      (k.periodes||[]).forEach(function(p) {
+        if (!p.startDate) return;
+        var cp2 = (k.periodes||[]).filter(function(x){ return x.isCutoff && x.startDate && x.cutoffDate; });
+        var estCutoff = p.cutoffDate;
+        if (!p.isCutoff && !p.cutoffDate && cp2.length >= 1) {
+          var durs3 = cp2.map(function(x){ return daysBetween(x.startDate, x.cutoffDate); });
+          var avgDur3 = Math.round(durs3.reduce(function(a,b){return a+b;},0)/durs3.length);
+          estCutoff = addDays(p.startDate, avgDur3);
+        }
+        var pStart = new Date(p.startDate);
+        var pEnd = new Date(estCutoff || addDays(p.startDate, 30));
+        var mStart = new Date(yr, mo, 1);
+        var mEnd = new Date(yr, mo+1, 0);
+        if (pStart <= mEnd && pEnd >= mStart) {
+          var pl = calcPeriodePL(p, k);
+          var proyeksi = !p.isCutoff ? calcActiveProyeksi(p, k, estCutoff) : null;
+          var revFinal = proyeksi ? Math.round(proyeksi.proyeksiRev) : pl.revenue;
+          var opFinal = proyeksi ? Math.round(proyeksi.proyeksiOpIncome) : pl.opIncome;
+          result.push({ client: cl.name, kandang: k.name, pl: pl, periode: p, proyeksi: proyeksi, revFinal: revFinal, opFinal: opFinal, estCutoff: estCutoff });
+        }
+      });
+    });
+  });
+  return result;
+}
+
+var _tmModalType = 'rev';
+var _tmModalYear = new Date().getFullYear();
+var _tmModalMonth = new Date().getMonth();
+
 function openTMModal(type) {
-  var periodes = window._tmPeriodes || [];
-  var bulan = window._tmBulan || '';
-  var titles = { rev: 'Proj. Revenue', cogs: 'Proj. COGS', opincome: 'Proj. Op. Income' };
+  _tmModalType = type;
+  _tmModalYear = new Date().getFullYear();
+  _tmModalMonth = new Date().getMonth();
   var overlay = document.getElementById('modal-tm-breakdown');
+  overlay.classList.add('show');
+  renderTMModal();
+}
+
+function renderTMModal() {
+  var type = _tmModalType;
+  var yr = _tmModalYear;
+  var mo = _tmModalMonth;
+  var titles = { rev: 'Proj. Revenue', cogs: 'Proj. COGS', opincome: 'Proj. Op. Income' };
   var title = document.getElementById('tm-modal-title');
   var body = document.getElementById('tm-modal-body');
-  title.textContent = titles[type] + ' — ' + bulan;
 
+  // Month picker HTML
+  var prevMo = mo === 0 ? 11 : mo-1; var prevYr = mo === 0 ? yr-1 : yr;
+  var nextMo = mo === 11 ? 0 : mo+1; var nextYr = mo === 11 ? yr+1 : yr;
+  var monthPicker = '<div style="display:flex;align-items:center;gap:8px;margin-bottom:14px">' +
+    '<button onclick="tmModalPrevMonth()" style="background:none;border:0.5px solid var(--border);border-radius:6px;padding:3px 10px;cursor:pointer;font-size:14px;color:var(--text2)">&#8249;</button>' +
+    '<span style="font-size:14px;font-weight:700;min-width:130px;text-align:center">' + MONTHS_FULL2[mo] + ' ' + yr + '</span>' +
+    '<button onclick="tmModalNextMonth()" style="background:none;border:0.5px solid var(--border);border-radius:6px;padding:3px 10px;cursor:pointer;font-size:14px;color:var(--text2)">&#8250;</button>' +
+    '</div>';
+
+  title.textContent = titles[type];
+
+  var periodes = calcPeriodesForMonth(yr, mo);
   var sorted = periodes.slice().sort(function(a, b) {
     var va = type==='rev' ? (a.revFinal||0) : type==='cogs' ? (a.proyeksi?a.proyeksi.proyeksiCogs:a.pl.totalCogs||0) : (a.opFinal||0);
     var vb = type==='rev' ? (b.revFinal||0) : type==='cogs' ? (b.proyeksi?b.proyeksi.proyeksiCogs:b.pl.totalCogs||0) : (b.opFinal||0);
@@ -3209,7 +3287,7 @@ function openTMModal(type) {
     '<td colspan="5"></td>' +
     '</tr>';
 
-  body.innerHTML = '<div style="overflow-x:auto"><table style="width:100%">' +
+  body.innerHTML = monthPicker + '<div style="overflow-x:auto"><table style="width:100%">' +
     '<thead><tr style="background:var(--surface2);font-size:11px">' +
     '<th>Client / Kandang</th>' +
     '<th style="text-align:right">' + titles[type] + '</th>' +
@@ -3219,8 +3297,17 @@ function openTMModal(type) {
     '<th style="text-align:center">Est. Invoice</th>' +
     '<th style="text-align:center">Status</th>' +
     '</tr></thead><tbody>' + rows + totalRow + '</tbody></table></div>';
+}
 
-  overlay.classList.add('show');
+function tmModalPrevMonth() {
+  if (_tmModalMonth === 0) { _tmModalMonth = 11; _tmModalYear--; }
+  else _tmModalMonth--;
+  renderTMModal();
+}
+function tmModalNextMonth() {
+  if (_tmModalMonth === 11) { _tmModalMonth = 0; _tmModalYear++; }
+  else _tmModalMonth++;
+  renderTMModal();
 }
 
 function renderGantt() {
@@ -4182,6 +4269,156 @@ function switchSummaryTab(tab) {
 
 // ============= LAPORAN BULANAN SUPPLY =============
 // Groups COGS entries by calendar month across all kandangs
+function exportPLPDF(mode) {
+  // mode: 'bulan' = pilih bulan tertentu, 'semua' = semua bulan
+  var monthData = {};
+  var MONTH_SHORT2 = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+  // Build full monthData (sama kayak renderSummarySupply tapi tanpa filter client)
+  state.clients.forEach(function(cl) {
+    (cl.kandangs||[]).forEach(function(k) {
+      (k.periodes||[]).forEach(function(p) {
+        var harga = p.hargaJual || 0;
+        (p.cogsEntries||[]).forEach(function(e) {
+          var year = p.startDate ? p.startDate.slice(0,4) : new Date().getFullYear().toString();
+          var mIdx = MONTH_SHORT2.indexOf(e.month);
+          var startMIdx = p.startDate ? parseInt(p.startDate.slice(5,7))-1 : 0;
+          var entryYear = parseInt(year);
+          if (mIdx < startMIdx - 2) entryYear++;
+          var key = e.month + '-' + entryYear;
+          if (!monthData[key]) monthData[key] = { month:e.month, year:entryYear, mIdx:mIdx, volume:0, cogs:0, revenue:0, opex:0, opIncome:0, rows:[] };
+          var cps = calcCostPerSm3(e.month, entryYear, e.supplierId);
+          monthData[key].volume += e.volume;
+          monthData[key].cogs += e.volume * cps;
+          monthData[key].revenue += e.volume * harga;
+          // Per-kandang detail
+          var rk = cl.id+'|'+k.id+'|'+p.id;
+          var row = monthData[key].rows.find(function(r){return r.rk===rk;});
+          if (!row) {
+            row = { rk:rk, client:cl.name, kandang:k.name, label:p.label||'', harga:harga, isCutoff:p.isCutoff||false, vol:0, cogs:0, revenue:0, opex:0 };
+            monthData[key].rows.push(row);
+          }
+          row.vol += e.volume; row.cogs += e.volume*cps; row.revenue += e.volume*harga;
+        });
+        (p.opexEntries||[]).forEach(function(e) {
+          var year = p.startDate ? p.startDate.slice(0,4) : new Date().getFullYear().toString();
+          var mIdx = MONTH_SHORT2.indexOf(e.month);
+          var startMIdx = p.startDate ? parseInt(p.startDate.slice(5,7))-1 : 0;
+          var entryYear = parseInt(year);
+          if (mIdx < startMIdx - 2) entryYear++;
+          var key = e.month + '-' + entryYear;
+          if (monthData[key]) {
+            monthData[key].opex += (e.pengajuan||0);
+            var rk = cl.id+'|'+k.id+'|'+p.id;
+            var row = monthData[key].rows.find(function(r){return r.rk===rk;});
+            if (row) row.opex += (e.pengajuan||0);
+          }
+        });
+      });
+    });
+  });
+
+  // Compute opIncome
+  Object.keys(monthData).forEach(function(k) {
+    var m = monthData[k];
+    m.opIncome = m.revenue - m.cogs - m.opex;
+    m.rows.forEach(function(r){ r.opIncome = r.revenue - r.cogs - r.opex; });
+  });
+
+  // Sort months
+  var sortedKeys = Object.keys(monthData).sort(function(a,b){
+    var ma = monthData[a], mb = monthData[b];
+    return ma.year !== mb.year ? ma.year-mb.year : ma.mIdx-mb.mIdx;
+  });
+
+  if (sortedKeys.length === 0) return alert('Tidak ada data untuk diekspor');
+
+  var selectedKeys = sortedKeys;
+  if (mode === 'bulan') {
+    // Build prompt untuk pilih bulan
+    var options = sortedKeys.map(function(k,i){ return i+': '+monthData[k].month+' '+monthData[k].year; }).join('\n');
+    var input = prompt('Pilih bulan yang ingin diekspor:\n\n' + sortedKeys.map(function(k){ return monthData[k].month+' '+monthData[k].year; }).join('\n') + '\n\nKetik nama bulan (misal: Jul 2026) atau ALL untuk semua:');
+    if (!input) return;
+    if (input.trim().toUpperCase() !== 'ALL') {
+      selectedKeys = sortedKeys.filter(function(k){ return (monthData[k].month+' '+monthData[k].year).toLowerCase().indexOf(input.trim().toLowerCase()) >= 0; });
+      if (selectedKeys.length === 0) return alert('Bulan tidak ditemukan');
+    }
+  }
+
+  // Generate HTML
+  var fmtRp = function(v){ return 'Rp' + Math.abs(Math.round(v)).toLocaleString('id-ID'); };
+  var fmtPct = function(v){ return v.toFixed(1)+'%'; };
+
+  var tableRows = '';
+  selectedKeys.forEach(function(key) {
+    var m = monthData[key];
+    var margin = m.revenue > 0 ? m.opIncome/m.revenue*100 : 0;
+    var rowColor = margin >= 25 ? '#e8f5ee' : margin >= 15 ? '#fff8e0' : '#fdeaea';
+    tableRows += '<tr style="background:#f8f9fa;font-weight:700">' +
+      '<td colspan="2" style="padding:8px 10px;border-bottom:1px solid #ddd"><strong>' + m.month + ' ' + m.year + '</strong></td>' +
+      '<td style="text-align:right;padding:8px 10px;border-bottom:1px solid #ddd">' + fmtNum(m.volume,1) + '</td>' +
+      '<td style="text-align:right;padding:8px 10px;border-bottom:1px solid #ddd">' + fmtRp(m.revenue) + '</td>' +
+      '<td style="text-align:right;padding:8px 10px;border-bottom:1px solid #ddd;color:#c8191e">(' + fmtRp(m.cogs) + ')</td>' +
+      '<td style="text-align:right;padding:8px 10px;border-bottom:1px solid #ddd;color:#c8191e">(' + fmtRp(m.opex) + ')</td>' +
+      '<td style="text-align:right;padding:8px 10px;border-bottom:1px solid #ddd;color:' + (m.opIncome>=0?'#1a9e5c':'#c8191e') + '">' + (m.opIncome<0?'(':'') + fmtRp(m.opIncome) + (m.opIncome<0?')':'') + '</td>' +
+      '<td style="text-align:right;padding:8px 10px;border-bottom:1px solid #ddd"><span style="background:'+rowColor+';padding:2px 8px;border-radius:10px;font-size:12px">' + fmtPct(margin) + '</span></td>' +
+    '</tr>';
+    // Detail rows
+    m.rows.sort(function(a,b){ return b.revenue-a.revenue; }).forEach(function(r) {
+      var rm = r.revenue > 0 ? r.opIncome/r.revenue*100 : 0;
+      tableRows += '<tr>' +
+        '<td style="padding:6px 10px 6px 20px;border-bottom:0.5px solid #eee;font-size:12px;color:#555">' + r.client + '</td>' +
+        '<td style="padding:6px 10px;border-bottom:0.5px solid #eee;font-size:12px;color:#555">' + r.kandang + ' ' + r.label + (r.isCutoff?' ✓':' ●') + '</td>' +
+        '<td style="text-align:right;padding:6px 10px;border-bottom:0.5px solid #eee;font-size:12px">' + fmtNum(r.vol,1) + '</td>' +
+        '<td style="text-align:right;padding:6px 10px;border-bottom:0.5px solid #eee;font-size:12px">' + fmtRp(r.revenue) + '</td>' +
+        '<td style="text-align:right;padding:6px 10px;border-bottom:0.5px solid #eee;font-size:12px;color:#c8191e">(' + fmtRp(r.cogs) + ')</td>' +
+        '<td style="text-align:right;padding:6px 10px;border-bottom:0.5px solid #eee;font-size:12px;color:#c8191e">(' + fmtRp(r.opex) + ')</td>' +
+        '<td style="text-align:right;padding:6px 10px;border-bottom:0.5px solid #eee;font-size:12px;color:' + (r.opIncome>=0?'#1a9e5c':'#c8191e') + '">' + (r.opIncome<0?'(':'') + fmtRp(r.opIncome) + (r.opIncome<0?')':'') + '</td>' +
+        '<td style="text-align:right;padding:6px 10px;border-bottom:0.5px solid #eee;font-size:12px">' + fmtPct(rm) + '</td>' +
+      '</tr>';
+    });
+  });
+
+  // Grand total
+  var gVol=0, gRev=0, gCogs=0, gOpex=0, gOp=0;
+  selectedKeys.forEach(function(k){ var m=monthData[k]; gVol+=m.volume; gRev+=m.revenue; gCogs+=m.cogs; gOpex+=m.opex; gOp+=m.opIncome; });
+  var gMargin = gRev > 0 ? gOp/gRev*100 : 0;
+  tableRows += '<tr style="background:#1a1a1a;color:#fff;font-weight:700">' +
+    '<td colspan="2" style="padding:10px;font-size:13px">TOTAL KESELURUHAN</td>' +
+    '<td style="text-align:right;padding:10px;font-size:13px">' + fmtNum(gVol,1) + '</td>' +
+    '<td style="text-align:right;padding:10px;font-size:13px">' + fmtRp(gRev) + '</td>' +
+    '<td style="text-align:right;padding:10px;font-size:13px">(' + fmtRp(gCogs) + ')</td>' +
+    '<td style="text-align:right;padding:10px;font-size:13px">(' + fmtRp(gOpex) + ')</td>' +
+    '<td style="text-align:right;padding:10px;font-size:13px;color:' + (gOp>=0?'#5dcaa5':'#ff6b6b') + '">' + (gOp<0?'(':'') + fmtRp(gOp) + (gOp<0?')':'') + '</td>' +
+    '<td style="text-align:right;padding:10px;font-size:13px">' + fmtPct(gMargin) + '</td>' +
+  '</tr>';
+
+  var period = selectedKeys.length === 1
+    ? monthData[selectedKeys[0]].month + ' ' + monthData[selectedKeys[0]].year
+    : monthData[selectedKeys[0]].month + ' ' + monthData[selectedKeys[0]].year + ' — ' + monthData[selectedKeys[selectedKeys.length-1]].month + ' ' + monthData[selectedKeys[selectedKeys.length-1]].year;
+
+  var html = '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>P&L Summary Gastron</title>' +
+    '<style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:Arial,sans-serif;font-size:13px;color:#111;padding:20px}' +
+    'h1{font-size:18px;margin-bottom:4px}p.sub{color:#666;font-size:12px;margin-bottom:20px}' +
+    'table{width:100%;border-collapse:collapse}th{background:#111;color:#fff;padding:8px 10px;text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:0.5px}' +
+    'th:not(:first-child):not(:nth-child(2)){text-align:right}' +
+    '@media print{body{padding:10px}@page{margin:15mm;size:A4 landscape}}' +
+    '</style></head><body>' +
+    '<h1>P&L Summary — PT Gastron Indo Energi</h1>' +
+    '<p class="sub">Periode: ' + period + ' &nbsp;·&nbsp; Diekspor: ' + new Date().toLocaleDateString('id-ID',{day:'numeric',month:'long',year:'numeric'}) + '</p>' +
+    '<table><thead><tr>' +
+    '<th>Client</th><th>Kandang / Periode</th><th style="text-align:right">Volume (Sm\u00b3)</th><th style="text-align:right">Revenue</th>' +
+    '<th style="text-align:right">COGS</th><th style="text-align:right">OpEx</th><th style="text-align:right">Op. Income</th><th style="text-align:right">Margin</th>' +
+    '</tr></thead><tbody>' + tableRows + '</tbody></table>' +
+    '<p style="margin-top:16px;font-size:11px;color:#999">Generated from gastron-project.vercel.app</p>' +
+    '<script>window.onload=function(){window.print();}<\/script>' +
+    '</body></html>';
+
+  var w = window.open('', '_blank');
+  w.document.write(html);
+  w.document.close();
+}
+
 function renderSummarySupply() {
   var cont = document.getElementById('content-summary');
   // Filter by client
@@ -4322,7 +4559,7 @@ function renderSummarySupply() {
       '<tr id="' + insightId + '" style="display:none;background:rgba(42,125,225,0.02)">' +
       '<td colspan="6" style="padding:0 0 12px 0">' +
       '<div style="overflow-x:auto">' +
-      '<table style="min-width:900px;margin:0">' +
+      '<table style="margin:0">' +
       '<thead><tr style="background:var(--surface2)">' +
       '<th>Client</th><th>Kandang</th><th style="text-align:right">Vol (Sm&#179;)</th><th style="text-align:right">Harga/Sm&#179;</th><th style="text-align:right">Revenue</th>' +
       '<th style="text-align:right">COGS</th><th style="text-align:right">%</th>' +
