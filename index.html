@@ -3554,19 +3554,15 @@ function renderGantt() {
     '</div></div>';
 
   // Week lines for monthly view
+  // Week lines for monthly view - use dateToX for correct positioning
   var weekLines = '';
   if (window._ganttFilter && window._ganttFilter.startsWith('m')) {
     var mo2 = parseInt(window._ganttFilter.slice(1));
-    var daysInMo = new Date(yr, mo2+1, 0).getDate();
-    var msStart = new Date(yr, mo2, 1).getTime();
-    var msEnd = new Date(yr, mo2+1, 1).getTime();
-    var msTotalRange = msEnd - msStart;
-    // Week labels W1-W4
-    [1,8,15,22].forEach(function(d, wi) {
-      var msD = new Date(yr, mo2, d).getTime();
-      var xW = LABEL_W + Math.round((msD - msStart) / msTotalRange * TOTAL_W);
-      weekLines += '<line x1="'+xW+'" y1="'+HEADER_H+'" x2="'+xW+'" y2="'+(HEADER_H+rows.length*ROW_H)+'" stroke="var(--accent2)" stroke-width="0.8" stroke-dasharray="3,3" opacity="0.5"/>';
-      weekLines += '<text x="'+(xW+4)+'" y="'+(HEADER_H+12)+'" font-size="9" fill="var(--accent2)" opacity="0.7" font-family="Plus Jakarta Sans,sans-serif">W'+(wi+1)+'</text>';
+    [1, 8, 15, 22].forEach(function(d, wi) {
+      var dateStr = yr + '-' + String(mo2+1).padStart(2,'0') + '-' + String(d).padStart(2,'0');
+      var xW = LABEL_W + dateToX(dateStr);
+      weekLines += '<line x1="'+xW+'" y1="'+HEADER_H+'" x2="'+xW+'" y2="'+(HEADER_H+rows.length*ROW_H)+'" stroke="var(--accent2)" stroke-width="1" stroke-dasharray="4,3" opacity="0.6"/>';
+      weekLines += '<text x="'+(xW+4)+'" y="'+(HEADER_H+12)+'" font-size="10" font-weight="600" fill="var(--accent2)" opacity="0.8" font-family="Plus Jakarta Sans,sans-serif">W'+(wi+1)+'</text>';
     });
   }
 
@@ -3574,16 +3570,15 @@ function renderGantt() {
 
   var html = yearNav +
     '<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden">' +
-    '<div style="overflow-x:auto">' +
-    '<div style="width:100%;min-width:'+(LABEL_W+300)+'px">' +
-    '<svg width="100%" viewBox="0 0 '+(LABEL_W+TOTAL_W)+' '+svgH+'" preserveAspectRatio="none" id="gantt-svg" style="display:block;width:100%">' +
+    '<div style="overflow-x:hidden;width:100%">' +
+    '<svg width="100%" height="'+svgH+'" id="gantt-svg" style="display:block" viewBox="0 0 '+(LABEL_W+TOTAL_W)+' '+svgH+'" preserveAspectRatio="none">' +
     quarterHeaders + monthHeaders + gridLines + weekLines + stripes + labels + bars + todayLine +
     '<rect x="0" y="0" width="'+LABEL_W+'" height="'+HEADER_H+'" fill="var(--surface)"/>' +
     '<line x1="'+LABEL_W+'" y1="0" x2="'+LABEL_W+'" y2="'+HEADER_H+'" stroke="var(--border)" stroke-width="1.5"/>' +
     '<line x1="0" y1="'+HEADER_H+'" x2="'+(LABEL_W+TOTAL_W)+'" y2="'+HEADER_H+'" stroke="var(--border)" stroke-width="1.5"/>' +
     '</svg>' +
     emptyMsg +
-    '</div></div></div>' +
+    '</div></div>' +
     '<div id="gantt-detail" style="display:none;margin-top:12px;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px"></div>';
 
   // Dashboard bulan ini
