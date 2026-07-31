@@ -1420,9 +1420,10 @@ function renderClients() {
         ? '<span style="font-size:10px;padding:1px 7px;border-radius:10px;font-weight:600;'+(latestRunning?'background:#fff8e0;color:#cc8800':'background:#e8f5ee;color:#1a9e5c')+'">'+latestLabel+(latestRunning?' &#9679;':' &#10003;')+'</span>'
         : '';
       var capexTotal = getTotalCapex(k);
+      var capexCount = getKandangCapex(k).length;
       var capexRow = '<div style="display:flex;align-items:center;gap:8px;padding:4px 14px 4px 52px;background:var(--surface2);border-bottom:0.5px solid var(--border)">'
         +'<span style="font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:0.5px">Capex</span>'
-        +(capexTotal>0?'<span style="font-size:11px;font-weight:600;color:var(--text2)">'+fmt(capexTotal)+'</span>':'<span style="font-size:11px;color:var(--text3);font-style:italic">Belum ada</span>')
+        +(capexTotal>0?'<span style="font-size:11px;font-weight:600;color:var(--accent2);cursor:pointer;text-decoration:underline;text-underline-offset:2px" data-kid="'+k.id+'" onclick="event.stopPropagation();openCapexDetail(this.dataset.kid)" title="Klik untuk lihat rincian">'+fmt(capexTotal)+' <span style="font-weight:400;color:var(--text3)">('+capexCount+' item)</span></span>':'<span style="font-size:11px;color:var(--text3);font-style:italic">Belum ada</span>')
         +'<button style="margin-left:auto;padding:1px 8px;border-radius:5px;border:0.5px solid var(--border);background:none;font-size:10px;color:var(--text3);cursor:pointer" data-kid="'+k.id+'" onclick="event.stopPropagation();openCapexModal(this.dataset.kid)">+ Input</button>'
         +'</div>';
       kandangRows +=
