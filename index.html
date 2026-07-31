@@ -6466,12 +6466,18 @@ function migrateMasterData() {
 function initApp() {
   if (_appInited) return;
   _appInited = true;
-  if (typeof _firestoreState !== 'undefined' && _firestoreState && _firestoreState.clients && _firestoreState.clients.length > 0) {
-    state = _firestoreState;
-    localStorage.setItem('gastron_tracker', JSON.stringify(state));
-  } else {
-    if (window._saveToFirestore && state.clients.length > 0) {
-      window._saveToFirestore(JSON.stringify(state));
+  // PENTING: hanya boleh nulis balik ke Supabase kalau _firestoreReady BENERAN true
+  // (artinya fetch dari Supabase udah beneran kelar, bukan karena timeout 5 detik duluan).
+  // Kalau timeout duluan (internet lambat), _firestoreReady masih false — JANGAN nulis apa-apa,
+  // cukup render pakai data cache localStorage yang ada. Ini nyegah data asli di Supabase
+  // ketimpa data default/lama yang ke-hardcode di kode gara-gara race condition.
+  if (_firestoreReady) {
+    if (_firestoreState && _firestoreState.clients && _firestoreState.clients.length > 0) {
+      state = _firestoreState;
+      localStorage.setItem('gastron_tracker', JSON.stringify(state));
+    } else if (state.clients.length > 0) {
+      // Genuinely first-time setup: Supabase kosong tapi kita punya data lokal — push sekali
+      if (window._saveToFirestore) window._saveToFirestore(JSON.stringify(state));
     }
   }
   // Always migrate master data structure
@@ -6482,6 +6488,17 @@ function initApp() {
   renderSidebar();
   renderDashboard();
 }
+
+// Kalau Supabase baru selesai fetch SETELAH timeout render duluan (koneksi lambat),
+// sinkronin data asli begitu datang tanpa pernah nulis balik yang salah.
+window.addEventListener('firestoreReady', function() {
+  if (_appInited && _firestoreState && _firestoreState.clients && _firestoreState.clients.length > 0) {
+    state = _firestoreState;
+    localStorage.setItem('gastron_tracker', JSON.stringify(state));
+    renderSidebar();
+    renderDashboard();
+  }
+});
 
 // Wait for Firestore or timeout after 5s
 if (typeof _firestoreReady !== 'undefined' && _firestoreReady) {
