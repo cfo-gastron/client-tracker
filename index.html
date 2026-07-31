@@ -4775,14 +4775,13 @@ function renderSummarySupply() {
   var totV=0,totC=0,totR=0,totI=0;
   sorted.forEach(function(m){totV+=m.volume;totC+=m.cogs;totR+=m.revenue;totI+=m.opIncome;});
   var tM = totR ? totI/totR*100 : 0;
-  var gtBg = 'background:var(--text)';
-  var totalRow = '<tr class="total-row" style="border-top:2px solid var(--accent)"><td style="color:#fff;' + gtBg + '"><strong>TOTAL KESELURUHAN</strong></td>' +
+  var gtBg = 'background:var(--accent2)';
+  var totalRow = '<tr class="total-row" style="border-top:2px solid var(--accent2)"><td style="color:#fff;' + gtBg + '"><strong>TOTAL KESELURUHAN</strong></td>' +
     '<td class="mono" style="text-align:right;color:#fff;' + gtBg + '"><strong>' + fmtNum(totV,2) + '</strong></td>' +
     '<td class="mono" style="text-align:right;color:#fff;' + gtBg + '"><strong>' + fmt(totC) + '</strong></td>' +
     '<td class="mono" style="text-align:right;color:#fff;' + gtBg + '"><strong>' + fmt(totR) + '</strong></td>' +
     '<td class="mono" style="text-align:right;color:#fff;' + gtBg + '"><strong>' + fmt(totI) + '</strong></td>' +
-    '<td style="text-align:right;' + gtBg + '"><span class="tag tag-' + (tM>=25?'green':tM>=15?'yellow':'red') + '">' + tM.toFixed(1) + '%</span></td>' +
-    '<td style="' + gtBg + '"></td></tr>';
+    '<td style="text-align:right;' + gtBg + '"><span class="tag tag-' + (tM>=25?'green':tM>=15?'yellow':'red') + '">' + tM.toFixed(1) + '%</span></td></tr>';
 
   cont.innerHTML =
     '<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px 18px;margin-bottom:14px">' +
@@ -4890,8 +4889,8 @@ function renderSummaryInvoice() {
   var totR=0,totC=0,totI=0,totN=0;
   sorted.forEach(function(m){totR+=m.revenue;totC+=m.cogs;totI+=m.opIncome;totN+=m.count;});
   var tM = totR ? totI/totR*100 : 0;
-  var gtBg2 = 'background:var(--text)';
-  var totalRow = '<tr class="total-row" style="border-top:2px solid var(--accent)"><td style="color:#fff;' + gtBg2 + '"><strong>TOTAL KESELURUHAN</strong></td>' +
+  var gtBg2 = 'background:var(--accent2)';
+  var totalRow = '<tr class="total-row" style="border-top:2px solid var(--accent2)"><td style="color:#fff;' + gtBg2 + '"><strong>TOTAL KESELURUHAN</strong></td>' +
     '<td class="mono" style="text-align:right;color:#fff;' + gtBg2 + '"><strong>' + totN + ' invoice</strong></td>' +
     '<td class="mono" style="text-align:right;color:#fff;' + gtBg2 + '"><strong>' + fmt(totR) + '</strong></td>' +
     '<td class="mono" style="text-align:right;color:#fff;' + gtBg2 + '"><strong>' + fmt(totC) + '</strong></td>' +
