@@ -3296,24 +3296,6 @@ function calcPeriodesForMonth(yr, mo) {
           result.push({ client: cl.name, kandang: k.name, pl: pl, periode: p, proyeksi: proyeksi, revFinal: revFinal, opFinal: opFinal, estCutoff: estCutoff, isFuture: false });
         }
       });
-      // Future periodes — skip kalau client inactive
-      if (!cl.inactive) {
-        var futures = calcFuturePeriodes(k);
-        futures.forEach(function(fp) {
-          var pStart = new Date(fp.startDate);
-          var pEnd = new Date(fp.cutoffDate);
-          var mStart = new Date(yr, mo, 1);
-          var mEnd = new Date(yr, mo+1, 0);
-          if (pStart <= mEnd && pEnd >= mStart) {
-            var fakePL = { revenue: fp.avgRev, totalCogs: fp.avgCogs, totalOpex: fp.avgOpex, opIncome: fp.avgOpIncome, totalVolume: fp.avgVol };
-            result.push({
-              client: cl.name, kandang: k.name, pl: fakePL, periode: fp,
-              proyeksi: null, revFinal: fp.avgRev, opFinal: fp.avgOpIncome,
-              estCutoff: fp.cutoffDate, isFuture: true
-            });
-          }
-        });
-      }
     });
   });
   return result;
