@@ -1846,11 +1846,33 @@ function openCapexDetail(kandangId) {
   var totalCapex = getTotalCapex(kandang);
   document.getElementById('capex-detail-title').textContent = 'CAPEX Instalasi — Kandang ' + kandang.name;
   document.getElementById('capex-detail-add-btn').setAttribute('onclick', "openAddCapexFromDetail('" + kandangId + "')");
-  var html = '';
+
+  // BEP mini dashboard
+  var cumulativeProfit = getKandangCumulativeProfit(kandang);
+  var status = getCapexStatus(totalCapex, cumulativeProfit);
+  var recovered = Math.min(cumulativeProfit, totalCapex);
+  var pctRecovered = totalCapex ? Math.min(100, (recovered/totalCapex*100)) : 0;
+  var payback = getPaybackEstimate(totalCapex, cumulativeProfit, kandang);
+  var statusLabel = {none:'Belum ada CAPEX',done:'BEP Tercapai ✓',near:'Hampir BEP',inprog:'Dalam Proses'}[status];
+  var progressColor = {none:'var(--border)',done:'var(--green)',near:'var(--yellow)',inprog:'var(--accent2)'}[status];
+  var bepHtml = '';
+  if (totalCapex > 0) {
+    bepHtml = '<div class="capex-mini-dashboard" style="margin-bottom:10px">' +
+      '<div class="capex-mini-card c-blue"><div class="capex-mini-label">Total CAPEX</div><div class="capex-mini-value">' + fmt(totalCapex) + '</div><div class="capex-mini-sub">' + entries.length + ' item</div></div>' +
+      '<div class="capex-mini-card ' + (cumulativeProfit >= totalCapex ? 'c-green' : 'c-yellow') + '"><div class="capex-mini-label">Profit Kumulatif</div><div class="capex-mini-value">' + fmt(Math.max(0,cumulativeProfit)) + '</div><div class="capex-mini-sub">dari seluruh periode</div></div>' +
+      '<div class="capex-mini-card ' + (totalCapex - cumulativeProfit <= 0 ? 'c-green' : 'c-red') + '"><div class="capex-mini-label">Sisa Modal</div><div class="capex-mini-value">' + fmt(Math.max(0, totalCapex - cumulativeProfit)) + '</div><div class="capex-mini-sub">' + (payback ? payback : '-') + '</div></div>' +
+      '</div>' +
+      '<div style="margin-bottom:16px"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:2px">' +
+      '<span style="font-size:11px;color:var(--text3)">Recovery: ' + pctRecovered.toFixed(1) + '%</span>' +
+      '<span class="capex-status-badge ' + status + '">' + statusLabel + '</span></div>' +
+      '<div class="capex-progress-bar"><div class="capex-progress-fill" style="width:' + pctRecovered + '%;background:' + progressColor + '"></div></div></div>';
+  }
+
+  var html = bepHtml;
   if (!entries.length) {
-    html = '<div class="empty-state" style="padding:30px 0"><div class="icon" style="font-size:32px">💰</div><p>Belum ada item CAPEX</p></div>';
+    html += '<div class="empty-state" style="padding:30px 0"><div class="icon" style="font-size:32px">💰</div><p>Belum ada item CAPEX</p></div>';
   } else {
-    html = '<div class="table-wrap" style="margin-bottom:16px"><table>' +
+    html += '<div class="table-wrap" style="margin-bottom:16px"><table>' +
       '<thead><tr><th>Tanggal</th><th>Kategori</th><th>Nama Item</th><th>Keterangan</th><th style="text-align:right">Nilai</th><th></th></tr></thead><tbody>';
     entries.forEach(function(e){
       html += '<tr>' +
