@@ -3415,13 +3415,20 @@ function renderGantt() {
 
   // Layout constants
   var LABEL_W = 155;
-  var MONTH_W = window._ganttFilter === 'all' ? 90 : (window._ganttFilter.startsWith('q') ? 200 : 560);
-  var TOTAL_W = MONTH_W * numMonths;
   var ROW_H = 40;
   var HEADER_H1 = 28;
   var HEADER_H2 = 24;
   var HEADER_H = HEADER_H1 + HEADER_H2;
   var QUARTERS = ['Q1','Q2','Q3','Q4'];
+
+  // Calculate TOTAL_W based on actual container width
+  var containerEl = document.getElementById('gantt-container') || document.getElementById('content-prediksi');
+  var containerW = containerEl ? containerEl.clientWidth : 1200;
+  var TOTAL_W = Math.max(containerW - LABEL_W, numMonths * (window._ganttFilter === 'all' ? 90 : (window._ganttFilter.startsWith('q') ? 200 : 560)));
+  // If container not yet rendered (first load), re-render after DOM ready
+  if (!document.getElementById('gantt-container')) {
+    setTimeout(renderGantt, 0);
+  }
 
   // Helper: date to x position within the filtered range
   function dateToX(dateStr) {
@@ -3737,7 +3744,7 @@ function renderGantt() {
   cont.innerHTML = dashHTML + yearNav +
     '<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:0">' +
     '<div id="gantt-container" style="overflow-x:auto;width:100%">' +
-    '<svg id="gantt-svg" height="'+svgH+'" style="display:block">' +
+    '<svg id="gantt-svg" width="'+(LABEL_W+TOTAL_W)+'" height="'+svgH+'" style="display:block">' +
     quarterHeaders + monthHeaders + gridLines + weekLines + stripes + labels + bars + todayLine +
     '<rect x="0" y="0" width="'+LABEL_W+'" height="'+HEADER_H+'" fill="var(--surface)"/>' +
     '<line x1="'+LABEL_W+'" y1="0" x2="'+LABEL_W+'" y2="'+HEADER_H+'" stroke="var(--border)" stroke-width="1.5"/>' +
@@ -3748,26 +3755,6 @@ function renderGantt() {
     predListSection;
 
   window._ganttTooltipData = tooltipData;
-
-  // Set SVG width to fill container, scale uniformly (no stretching)
-  setTimeout(function() {
-    var svgEl = document.getElementById('gantt-svg');
-    var containerEl = document.getElementById('gantt-container');
-    if (!svgEl || !containerEl) return;
-    var contentW = LABEL_W + TOTAL_W;
-    var containerW = containerEl.clientWidth;
-    if (containerW > contentW) {
-      // Scale up uniformly to fill container - height also scales
-      var scale = containerW / contentW;
-      var newH = Math.round(svgH * scale);
-      svgEl.setAttribute('width', containerW);
-      svgEl.setAttribute('height', newH);
-      svgEl.setAttribute('viewBox', '0 0 ' + contentW + ' ' + svgH);
-      svgEl.setAttribute('preserveAspectRatio', 'xMinYMin meet');
-    } else {
-      svgEl.setAttribute('width', contentW);
-    }
-  }, 0);
 
   // Bar click
   var svg = document.getElementById('gantt-svg');
