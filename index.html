@@ -3441,6 +3441,8 @@ function renderGantt() {
   var startMonth = range.start;
   var endMonth = range.end;
   var numMonths = endMonth - startMonth + 1;
+  var rangeStart = yr + '-' + String(startMonth+1).padStart(2,'0') + '-01';
+  var rangeEnd = yr + '-' + String(endMonth+1).padStart(2,'0') + '-31';
 
   // Build rows
   var rows = [];
@@ -3491,9 +3493,7 @@ function renderGantt() {
         }
       }
 
-      // Only include if has bars touching this year AND the selected month range
-      var rangeStart = yr + '-' + String(startMonth+1).padStart(2,'0') + '-01';
-      var rangeEnd = yr + '-' + String(endMonth+1).padStart(2,'0') + '-31';
+      // Only include if has bars touching the selected month range
       var hasBars = bars.some(function(b){ return b.startDate <= rangeEnd && b.endDate >= rangeStart; });
       if (hasBars) rows.push({ client: cl.name, kandang: k.name, bars: bars });
     });
@@ -3581,10 +3581,10 @@ function renderGantt() {
   rows.forEach(function(row, ri) {
     var y = HEADER_H + ri * ROW_H;
     row.bars.forEach(function(bar, bi) {
-      // Clip to year
-      var bStartClamped = bar.startDate < String(yr)+'-01-01' ? String(yr)+'-01-01' : bar.startDate;
-      var bEndClamped   = bar.endDate   > String(yr)+'-12-31' ? String(yr)+'-12-31' : bar.endDate;
-      if (bEndClamped < String(yr)+'-01-01' || bStartClamped > String(yr)+'-12-31') return;
+      // Clip to selected filter range (bukan cuma tahun penuh) — bar di luar range filter di-skip total
+      if (bar.endDate < rangeStart || bar.startDate > rangeEnd) return;
+      var bStartClamped = bar.startDate < rangeStart ? rangeStart : bar.startDate;
+      var bEndClamped   = bar.endDate   > rangeEnd   ? rangeEnd   : bar.endDate;
 
       var x1 = LABEL_W + dateToX(bStartClamped);
       var x2 = LABEL_W + dateToX(bEndClamped);
