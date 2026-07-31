@@ -2022,20 +2022,26 @@ function renderKandangDetail(kandangId) {
     let prediksiHTML = '';
     if (pIdx === kandang.periodes.length - 1) {
       const cp = kandang.periodes.filter(function(x){ return x.isCutoff && x.startDate && x.cutoffDate; });
-      if (cp.length < 2) {
-        prediksiHTML = '<div style="background:#f5f5f7;border:1px dashed #e0e0ea;border-radius:10px;padding:14px;margin-bottom:16px;text-align:center;color:#9999b0;font-size:12px">🔮 Prediksi tersedia setelah 2 periode selesai (cut-off)</div>';
+      if (cp.length < 1) {
+        prediksiHTML = '<div style="background:#f5f5f7;border:1px dashed #e0e0ea;border-radius:10px;padding:14px;margin-bottom:16px;text-align:center;color:#9999b0;font-size:12px">🔮 Prediksi tersedia setelah 1 periode selesai (cut-off)</div>';
       } else {
         const durs = cp.map(function(x){ return daysBetween(x.startDate, x.cutoffDate); });
         const avgDur = Math.round(durs.reduce(function(a,b){return a+b;},0)/durs.length);
         const srt = cp.slice().sort(function(a,b){ return new Date(a.startDate)-new Date(b.startDate); });
         const gaps = [];
         for (let i=1;i<srt.length;i++) gaps.push(daysBetween(srt[i-1].cutoffDate, srt[i].startDate));
-        const avgGap = Math.round(gaps.reduce(function(a,b){return a+b;},0)/gaps.length);
+        const avgGap = gaps.length ? Math.round(gaps.reduce(function(a,b){return a+b;},0)/gaps.length) : 30;
         const avgBudget = Math.round(cp.reduce(function(s,x){return s+(x.budget||0);},0)/cp.length);
         const pls2 = cp.map(function(x){ return calcPeriodePL(x, kandang); });
         const avgRev = Math.round(pls2.reduce(function(s,x){return s+x.revenue;},0)/pls2.length);
         const avgMgn = (pls2.reduce(function(s,x){return s+x.netMargin;},0)/pls2.length).toFixed(1);
-        const lastCO = srt[srt.length-1].cutoffDate;
+        const activeP = kandang.periodes.find(function(x){ return !x.isCutoff; });
+        var baseCO = srt[srt.length-1].cutoffDate;
+        if (activeP) {
+          // Ada periode aktif → proyeksi mulai dari SETELAH periode aktif ini selesai
+          baseCO = activeP.cutoffDate || addDays(activeP.startDate, avgDur);
+        }
+        const lastCO = baseCO;
         const pStart = addDays(lastCO, avgGap);
         const pEnd = addDays(pStart, avgDur);
         prediksiHTML = '<div class="prediksi-card">' +
@@ -2046,7 +2052,7 @@ function renderKandangDetail(kandangId) {
           '<div class="prediksi-item"><div class="pi-label">Prediksi Budget</div><div class="pi-value" style="color:#1a9e5c">' + fmt(avgBudget) + '</div><div class="pi-sub">Avg ' + cp.length + ' periode</div></div>' +
           '<div class="prediksi-item"><div class="pi-label">Prediksi Revenue</div><div class="pi-value" style="color:#1a9e5c">' + fmt(avgRev) + '</div><div class="pi-sub">Avg margin ' + avgMgn + '%</div></div>' +
           '</div>' +
-          '<div style="margin-top:8px;font-size:11px;color:#9999b0">Dari ' + cp.length + ' periode selesai · Last cut-off: ' + fmtDate(lastCO) + '</div>' +
+          '<div style="margin-top:8px;font-size:11px;color:#9999b0">Dari ' + cp.length + ' periode selesai' + (activeP ? ' &middot; Proyeksi setelah periode aktif berakhir' : ' &middot; Last cut-off: ' + fmtDate(lastCO)) + '</div>' +
           '</div>';
       }
     }
@@ -3475,22 +3481,17 @@ function renderGantt() {
         });
       });
 
-      // Prediksi periode berikutnya (skip if inactive)
-      if (!cl.inactive && cp.length >= 2) {
-        var durs = cp.map(function(x){ return daysBetween(x.startDate, x.cutoffDate); });
-        var avgDur = Math.round(durs.reduce(function(a,b){return a+b;},0)/durs.length);
-        var srt = cp.slice().sort(function(a,b){ return new Date(a.startDate)-new Date(b.startDate); });
-        var gaps2 = [];
-        for (var gi=1;gi<srt.length;gi++) gaps2.push(daysBetween(srt[gi-1].cutoffDate, srt[gi].startDate));
-        var avgGap = Math.round(gaps2.reduce(function(a,b){return a+b;},0)/gaps2.length);
-        var avgRev = Math.round(cp.map(function(x){ return calcPeriodePL(x,k).revenue||0; }).reduce(function(a,b){return a+b;},0)/cp.length);
-        var hasActive = periodes.some(function(p){ return !p.isCutoff && p.startDate; });
-        if (!hasActive) {
-          var lastP = srt[srt.length-1];
-          var pStart = addDays(lastP.cutoffDate, avgGap);
-          var pEnd = addDays(pStart, avgDur);
-          bars.push({ startDate: pStart, endDate: pEnd, label: 'Pred', isPred: true, isActive: false, isFuturePred: true, avgRev: avgRev, client: cl.name, kandang: k.name });
-        }
+      // Prediksi periode berikutnya — pakai calcFuturePeriodes (sama kayak Tabel Prediksi per Bulan & Kalender)
+      // biar konsisten: threshold 1 periode selesai, tetep proyeksi walau ada periode aktif berjalan
+      if (!cl.inactive) {
+        var futures = calcFuturePeriodes(k);
+        futures.forEach(function(fp) {
+          bars.push({
+            startDate: fp.startDate, endDate: fp.cutoffDate,
+            label: 'Pred', isPred: true, isActive: false, isFuturePred: true,
+            avgRev: fp.avgRev, client: cl.name, kandang: k.name
+          });
+        });
       }
 
       // Only include if has bars touching the selected month range
@@ -4165,24 +4166,6 @@ function renderPrediksi() {
       var cp = periodes.filter(function(x){ return x.isCutoff && x.startDate && x.cutoffDate; });
       var lastCutoff = cp.length ? cp[cp.length-1].cutoffDate : null;
       var pred = null;
-      if (cp.length >= 2) {
-        var durs = cp.map(function(x){ return daysBetween(x.startDate, x.cutoffDate); });
-        var avgDur = Math.round(durs.reduce(function(a,b){return a+b;},0)/durs.length);
-        var srt = cp.slice().sort(function(a,b){ return new Date(a.startDate)-new Date(b.startDate); });
-        var gaps2 = [];
-        for (var gi=1;gi<srt.length;gi++) gaps2.push(daysBetween(srt[gi-1].cutoffDate, srt[gi].startDate));
-        var avgGap = Math.round(gaps2.reduce(function(a,b){return a+b;},0)/gaps2.length);
-        var avgBudget = Math.round(cp.reduce(function(s,x){return s+(x.budget||0);},0)/cp.length);
-        var avgBuffer = Math.round(cp.reduce(function(s,x){return s+(x.buffer||0);},0)/cp.length);
-        var pls2 = cp.map(function(x){ return calcPeriodePL(x, k); });
-        var avgRev = Math.round(pls2.reduce(function(s,x){return s+x.revenue;},0)/pls2.length);
-        var avgVol = Math.round(pls2.reduce(function(s,x){return s+x.totalVolume;},0)/pls2.length * 100)/100;
-        var avgMgn = (pls2.reduce(function(s,x){return s+x.netMargin;},0)/pls2.length).toFixed(1);
-        var pStart = addDays(srt[srt.length-1].cutoffDate, avgGap);
-        var pEnd = addDays(pStart, avgDur);
-        var revMasuk = addDays(pEnd, 7);
-        pred = { pStart:pStart, pEnd:pEnd, revMasuk:revMasuk, avgDur:avgDur, avgGap:avgGap, avgBudget:avgBudget, avgBuffer:avgBuffer, avgRev:avgRev, avgVol:avgVol, avgMgn:avgMgn, count:cp.length };
-      }
       var activePeriode = periodes.find(function(p){ return !p.isCutoff; });
       var activeRevMasuk = null, activePredCutoff = null, activeProyeksi = null;
       if (activePeriode) {
@@ -4198,6 +4181,26 @@ function renderPrediksi() {
           activeRevMasuk = addDays(activePredCutoff, 7);
         }
         activeProyeksi = calcActiveProyeksi(activePeriode, k, activePredCutoff);
+      }
+      if (cp.length >= 1) {
+        var durs = cp.map(function(x){ return daysBetween(x.startDate, x.cutoffDate); });
+        var avgDur = Math.round(durs.reduce(function(a,b){return a+b;},0)/durs.length);
+        var srt = cp.slice().sort(function(a,b){ return new Date(a.startDate)-new Date(b.startDate); });
+        var gaps2 = [];
+        for (var gi=1;gi<srt.length;gi++) gaps2.push(daysBetween(srt[gi-1].cutoffDate, srt[gi].startDate));
+        var avgGap = gaps2.length ? Math.round(gaps2.reduce(function(a,b){return a+b;},0)/gaps2.length) : 30;
+        var avgBudget = Math.round(cp.reduce(function(s,x){return s+(x.budget||0);},0)/cp.length);
+        var avgBuffer = Math.round(cp.reduce(function(s,x){return s+(x.buffer||0);},0)/cp.length);
+        var pls2 = cp.map(function(x){ return calcPeriodePL(x, k); });
+        var avgRev = Math.round(pls2.reduce(function(s,x){return s+x.revenue;},0)/pls2.length);
+        var avgVol = Math.round(pls2.reduce(function(s,x){return s+x.totalVolume;},0)/pls2.length * 100)/100;
+        var avgMgn = (pls2.reduce(function(s,x){return s+x.netMargin;},0)/pls2.length).toFixed(1);
+        // Kalau ada periode aktif, proyeksi periode SETELAHNYA (bukan dari cutoff terakhir sebelum periode aktif)
+        var baseDate = (activePeriode && activePredCutoff) ? activePredCutoff : srt[srt.length-1].cutoffDate;
+        var pStart = addDays(baseDate, avgGap);
+        var pEnd = addDays(pStart, avgDur);
+        var revMasuk = addDays(pEnd, 7);
+        pred = { pStart:pStart, pEnd:pEnd, revMasuk:revMasuk, avgDur:avgDur, avgGap:avgGap, avgBudget:avgBudget, avgBuffer:avgBuffer, avgRev:avgRev, avgVol:avgVol, avgMgn:avgMgn, count:cp.length };
       }
       cards.push({ client:cl.name, kandang:k.name, kandangId:k.id, kandangObj:k, cp:cp, pred:pred, activePeriode:activePeriode, activeRevMasuk:activeRevMasuk, activePredCutoff:activePredCutoff, activeProyeksi:activeProyeksi, lastCutoff:lastCutoff });
     });
@@ -4303,7 +4306,7 @@ function renderPrediksi() {
   cards.forEach(function(card) {
     var p = card.pred;
     if (!p) {
-      kandangCardsHTML += '<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;opacity:0.6"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px"><span style="font-family:Plus Jakarta Sans,sans-serif;font-weight:700">' + card.client + ' &mdash; ' + card.kandang + '</span><span class="tag tag-gray">Butuh 2 periode</span></div><div style="font-size:12px;color:var(--text3)">' + card.cp.length + ' periode selesai</div></div>';
+      kandangCardsHTML += '<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;opacity:0.6"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px"><span style="font-family:Plus Jakarta Sans,sans-serif;font-weight:700">' + card.client + ' &mdash; ' + card.kandang + '</span><span class="tag tag-gray">Butuh 1 periode selesai</span></div><div style="font-size:12px;color:var(--text3)">' + card.cp.length + ' periode selesai</div></div>';
       return;
     }
     kandangCardsHTML += '<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px">' +
@@ -5743,12 +5746,14 @@ function renderPrediksiKalender() {
       }
 
       // Periode BERIKUTNYA (next pred, setelah periode aktif atau setelah cutoff terakhir)
-      if (cp.length >= 2) {
+      if (cp.length >= 1) {
         var srt = cp.slice().sort(function(a,b){ return new Date(a.startDate)-new Date(b.startDate); });
         var gaps2 = [];
         for (var gi=1;gi<srt.length;gi++) gaps2.push(daysBetween(srt[gi-1].cutoffDate, srt[gi].startDate));
-        var avgGap = Math.round(gaps2.reduce(function(a,b){return a+b;},0)/gaps2.length);
-        var pStart = addDays(srt[srt.length-1].cutoffDate, avgGap);
+        var avgGap = gaps2.length ? Math.round(gaps2.reduce(function(a,b){return a+b;},0)/gaps2.length) : 30;
+        // Kalau ada periode aktif, proyeksi mulai dari SETELAH periode aktif itu selesai (bukan dari cutoff terakhir sebelum periode aktif)
+        var baseCutoff = (activePeriode && activePeriode.startDate) ? addDays(activePeriode.startDate, avgDur) : srt[srt.length-1].cutoffDate;
+        var pStart = addDays(baseCutoff, avgGap);
         var pEnd = addDays(pStart, avgDur);
         var revMasuk = addDays(pEnd, 7);
         var alreadyReal2 = (dateMap[revMasuk]||[]).some(function(e){ return !e.isEstimate && e.kandangId===k.id; });
