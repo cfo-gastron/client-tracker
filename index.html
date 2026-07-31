@@ -1812,7 +1812,7 @@ function openAddCapex(kandangId) {
   document.getElementById('input-capex-name').value = '';
   document.getElementById('input-capex-value').value = '';
   document.getElementById('input-capex-date').value = new Date().toISOString().split('T')[0];
-  document.getElementById('input-capex-category').value = 'Instalasi';
+  populateCapexCategoryOptions('Instalasi');
   document.getElementById('input-capex-desc').value = '';
   openModal('modal-add-capex');
 }
@@ -1904,7 +1904,7 @@ function openEditCapex(btn) {
   document.getElementById('input-capex-name').value = btn.dataset.name;
   document.getElementById('input-capex-value').value = btn.dataset.value;
   document.getElementById('input-capex-date').value = btn.dataset.date;
-  document.getElementById('input-capex-category').value = btn.dataset.category;
+  populateCapexCategoryOptions(btn.dataset.category);
   document.getElementById('input-capex-desc').value = btn.dataset.desc;
   closeModal('modal-capex-detail');
   setTimeout(function(){ openModal('modal-add-capex'); }, 150);
@@ -2567,8 +2567,30 @@ function renderMaster() {
     : '<div style="padding:20px;text-align:center;color:var(--text3);font-size:13px">Belum ada GTM. Klik "+ Tambah GTM" untuk mulai.</div>') +
     '</div>';
 
+  // Build CAPEX Category section
+  ensureCapexCategories();
+  var capexCats = state.master.capexCategories;
+  var capexCatUsage = {};
+  (state.clients||[]).forEach(function(cl){
+    (cl.kandangs||[]).forEach(function(k){
+      (getKandangCapex(k)||[]).forEach(function(e){ capexCatUsage[e.category] = (capexCatUsage[e.category]||0) + 1; });
+    });
+  });
+  var capexCatRows = capexCats.map(function(c) {
+    var n = capexCatUsage[c] || 0;
+    return '<tr>' +
+      '<td style="font-weight:600">' + c + '</td>' +
+      '<td class="mono" style="text-align:right;color:' + (n>0?'var(--green)':'var(--text3)') + '">' + n + ' item</td>' +
+      '<td><button class="btn btn-danger btn-sm btn-icon" data-cat="' + c + '" onclick="deleteCapexCategory(this.dataset.cat)">&#215;</button></td>' +
+    '</tr>';
+  }).join('');
+  var capexCatSection = '<div class="table-wrap" style="margin-bottom:20px"><div class="table-header"><div class="table-title">💰 Kategori CAPEX</div>' +
+    '<button class="btn btn-primary btn-sm" onclick="addCapexCategory()">+ Tambah Kategori</button></div>' +
+    '<table><thead><tr><th>Nama Kategori</th><th style="text-align:right">Dipakai</th><th></th></tr></thead><tbody>' + capexCatRows + '</tbody></table>' +
+    '</div>';
+
   document.getElementById('content-master').innerHTML =
-    gtmSection +
+    gtmSection + capexCatSection +
     '<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:14px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:12px 16px">' +
     '<span style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-right:4px">Supplier:</span>' +
     supplierTabs + '</div>' +
@@ -2627,6 +2649,47 @@ function updateJisdorYear(mo) {
 function switchMasterYear(yr) {
   window._masterYear = yr;
   window._masterJisdorYear = yr;
+  renderMaster();
+}
+
+function ensureCapexCategories() {
+  if (!state.master.capexCategories || !state.master.capexCategories.length) {
+    state.master.capexCategories = ['Instalasi','Peralatan','Material','Transportasi','Lainnya'];
+  }
+}
+function populateCapexCategoryOptions(selectedValue) {
+  ensureCapexCategories();
+  var sel = document.getElementById('input-capex-category');
+  if (!sel) return;
+  sel.innerHTML = state.master.capexCategories.map(function(c){ return '<option value="' + c + '">' + c + '</option>'; }).join('');
+  if (selectedValue) sel.value = selectedValue;
+}
+function addCapexCategory() {
+  ensureCapexCategories();
+  var name = prompt('Nama kategori CAPEX baru:', '');
+  if (!name) return;
+  name = name.trim();
+  if (!name) return;
+  if (state.master.capexCategories.some(function(c){ return c.toLowerCase()===name.toLowerCase(); })) {
+    alert('Kategori ini sudah ada!'); return;
+  }
+  state.master.capexCategories.push(name);
+  save();
+  renderMaster();
+}
+function deleteCapexCategory(name) {
+  ensureCapexCategories();
+  var used = false;
+  (state.clients||[]).forEach(function(cl){
+    (cl.kandangs||[]).forEach(function(k){
+      (getKandangCapex(k)||[]).forEach(function(e){ if (e.category === name) used = true; });
+    });
+  });
+  if (used && !confirm('Kategori "' + name + '" sudah dipakai di beberapa item CAPEX. Tetap hapus dari daftar pilihan?')) return;
+  if (!used && !confirm('Hapus kategori "' + name + '"?')) return;
+  if (state.master.capexCategories.length <= 1) { alert('Minimal harus ada 1 kategori.'); return; }
+  state.master.capexCategories = state.master.capexCategories.filter(function(c){ return c !== name; });
+  save();
   renderMaster();
 }
 
@@ -3636,6 +3699,7 @@ function renderGantt() {
   var tmRev = thisMonthPeriodes.reduce(function(s,x){return s+(x.revFinal||0);},0);
   var tmOp = thisMonthPeriodes.reduce(function(s,x){return s+(x.opFinal||0);},0);
   var tmCogs = thisMonthPeriodes.reduce(function(s,x){return s+(x.proyeksi?Math.round(x.proyeksi.proyeksiCogs):x.pl.totalCogs||0);},0);
+  var tmVol = thisMonthPeriodes.reduce(function(s,x){return s+(x.proyeksi?(x.proyeksi.proyeksiTotalVol||0):(x.pl.totalVolume||0));},0);
   var tmInvoice = thisMonthPeriodes.filter(function(x){return x.periode.isCutoff;}).length;
   var tmAktif = thisMonthPeriodes.filter(function(x){return !x.periode.isCutoff;}).length;
   // Cache for modal
@@ -3645,8 +3709,9 @@ function renderGantt() {
   var dashHTML =
     '<div style="margin-bottom:16px;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px">' +
     '<div style="font-family:Plus Jakarta Sans,sans-serif;font-weight:700;font-size:13px;margin-bottom:12px;color:var(--text2)">BULAN INI &mdash; '+MONTHS_FULL2[nowMonth].toUpperCase()+' '+nowYear+'</div>' +
-    '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px">' +
+    '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px">' +
     '<div class="stat-card blue"><div class="stat-label">Kandang Aktif</div><div class="stat-value mono" style="font-size:22px">'+tmAktif+'</div><div class="stat-sub">periode berjalan</div></div>' +
+    '<div class="stat-card blue"><div class="stat-label">Proj. Volume</div><div class="stat-value mono" style="font-size:18px">'+fmtNum(tmVol,0)+' Sm&#179;</div><div class="stat-sub">proyeksi periode berjalan</div></div>' +
     '<div class="stat-card green" style="cursor:pointer" onclick="openTMModal(\'rev\')" title="Klik untuk detail"><div class="stat-label">Proj. Revenue &#128269;</div><div class="stat-value mono" style="font-size:18px">'+fmt(tmRev)+'</div><div class="stat-sub">proyeksi periode berjalan</div></div>' +
     '<div class="stat-card red" style="cursor:pointer" onclick="openTMModal(\'cogs\')" title="Klik untuk detail"><div class="stat-label">Proj. COGS &#128269;</div><div class="stat-value mono" style="font-size:18px">('+fmt(tmCogs)+')</div><div class="stat-sub">'+(tmRev>0?((tmCogs/tmRev)*100).toFixed(1)+'% dari rev':'&#8212;')+'</div></div>' +
     '<div class="stat-card '+(tmOp>=0?'green':'red')+'" style="cursor:pointer" onclick="openTMModal(\'opincome\')" title="Klik untuk detail"><div class="stat-label">Proj. Op. Income &#128269;</div><div class="stat-value mono" style="font-size:18px">'+fmt(tmOp)+'</div><div class="stat-sub">'+(tmRev>0?((tmOp/tmRev)*100).toFixed(1)+'% margin':'&#8212;')+'</div></div>' +
@@ -3707,6 +3772,7 @@ function renderGantt() {
       '<th style="text-align:left;padding:8px 10px;font-size:10px;text-transform:uppercase;color:var(--text3);border-bottom:1px solid var(--border)">Client</th>' +
       '<th style="text-align:left;padding:8px 10px;font-size:10px;text-transform:uppercase;color:var(--text3);border-bottom:1px solid var(--border)">Kandang</th>' +
       '<th style="text-align:left;padding:8px 10px;font-size:10px;text-transform:uppercase;color:var(--text3);border-bottom:1px solid var(--border)">Periode</th>' +
+      '<th style="text-align:right;padding:8px 10px;font-size:10px;text-transform:uppercase;color:var(--text3);border-bottom:1px solid var(--border)">Volume</th>' +
       '<th style="text-align:right;padding:8px 10px;font-size:10px;text-transform:uppercase;color:var(--text3);border-bottom:1px solid var(--border)">Revenue</th>' +
       '<th style="text-align:right;padding:8px 10px;font-size:10px;text-transform:uppercase;color:var(--text3);border-bottom:1px solid var(--border)">COGS</th>' +
       '<th style="text-align:right;padding:8px 10px;font-size:10px;text-transform:uppercase;color:var(--text3);border-bottom:1px solid var(--border)">OpEx</th>' +
@@ -3722,6 +3788,7 @@ function renderGantt() {
         '<td style="padding:10px;font-size:12px">'+item.client+'</td>' +
         '<td style="padding:10px;font-size:12px;font-weight:600">'+item.kandang+'</td>' +
         '<td style="padding:10px">'+statusTag+'</td>' +
+        '<td style="padding:10px;text-align:right;font-family:DM Mono,monospace;font-size:12px;color:var(--text2)">'+fmtNum(item.pl.totalVolume||0,0)+' Sm&#179;</td>' +
         '<td style="padding:10px;text-align:right;font-family:DM Mono,monospace;font-size:12px;color:var(--green)">'+fmt(item.pl.revenue)+'</td>' +
         '<td style="padding:10px;text-align:right;font-family:DM Mono,monospace;font-size:12px;color:var(--text2)">'+fmt(item.pl.totalCogs)+'</td>' +
         '<td style="padding:10px;text-align:right;font-family:DM Mono,monospace;font-size:12px;color:var(--text2)">'+fmt(item.pl.totalOpex)+'</td>' +
@@ -3729,12 +3796,14 @@ function renderGantt() {
         '</tr>';
     });
     // Total row
+    var totVol2 = predListItems.reduce(function(s,x){return s+(x.pl.totalVolume||0);},0);
     var totRev2 = predListItems.reduce(function(s,x){return s+x.pl.revenue;},0);
     var totCogs2 = predListItems.reduce(function(s,x){return s+x.pl.totalCogs;},0);
     var totOpex2 = predListItems.reduce(function(s,x){return s+x.pl.totalOpex;},0);
     var totOp2 = predListItems.reduce(function(s,x){return s+x.pl.opIncome;},0);
     predListHTML += '<tr style="background:var(--surface2)">' +
       '<td colspan="3" style="padding:10px;font-size:11px;font-weight:700;color:var(--text2)">TOTAL</td>' +
+      '<td style="padding:10px;text-align:right;font-family:DM Mono,monospace;font-size:12px;font-weight:700;color:var(--text2)">'+fmtNum(totVol2,0)+' Sm&#179;</td>' +
       '<td style="padding:10px;text-align:right;font-family:DM Mono,monospace;font-size:12px;font-weight:700;color:var(--green)">'+fmt(totRev2)+'</td>' +
       '<td style="padding:10px;text-align:right;font-family:DM Mono,monospace;font-size:12px;font-weight:700;color:var(--text2)">'+fmt(totCogs2)+'</td>' +
       '<td style="padding:10px;text-align:right;font-family:DM Mono,monospace;font-size:12px;font-weight:700;color:var(--text2)">'+fmt(totOpex2)+'</td>' +
@@ -3747,23 +3816,6 @@ function renderGantt() {
     '<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;margin-top:16px">' +
     '<div style="font-family:Plus Jakarta Sans,sans-serif;font-weight:700;font-size:13px;margin-bottom:12px;color:var(--text2)">PREDIKSI PER BULAN &mdash; '+yr+'</div>' +
     monthChips + '<div class="tbl-scroll">' + predListHTML + '</div></div>';
-
-  // Week lines for monthly view
-  var weekLines = '';
-  if (window._ganttFilter && window._ganttFilter.startsWith('m')) {
-    var mo2p = parseInt(window._ganttFilter.slice(1));
-    // MONTH_W for monthly view = 560, startMonth = mo2p
-    var MONTH_W_p = 560;
-    var rangeStartMs2 = new Date(yr, mo2p, 1).getTime();
-    var rangeEndMs2 = new Date(yr, mo2p+1, 1).getTime();
-    var rangeTotalMs2 = rangeEndMs2 - rangeStartMs2;
-    [1, 8, 15, 22].forEach(function(d, wi) {
-      var dayMs = new Date(yr, mo2p, d).getTime();
-      var xW = LABEL_W + Math.round((dayMs - rangeStartMs2) / rangeTotalMs2 * MONTH_W_p);
-      weekLines += '<line x1="'+xW+'" y1="'+HEADER_H+'" x2="'+xW+'" y2="'+(HEADER_H+rows.length*ROW_H)+'" stroke="var(--accent2)" stroke-width="1" stroke-dasharray="4,3" opacity="0.6"/>';
-      weekLines += '<text x="'+(xW+4)+'" y="'+(HEADER_H+12)+'" font-size="10" font-weight="600" fill="var(--accent2)" opacity="0.8" font-family="Plus Jakarta Sans,sans-serif">W'+(wi+1)+'</text>';
-    });
-  }
 
   cont.innerHTML = dashHTML + yearNav +
     '<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:0">' +
@@ -3844,7 +3896,7 @@ function showGanttDetail(tid) {
   inner += '</div>';
 
   // Stats grid
-  inner += '<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:4px">';
+  inner += '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:4px">';
 
   if (bar.isFuturePred) {
     inner += statBox('Pred. Mulai', fmtDate(bar.startDate), 'var(--accent2)');
@@ -3854,20 +3906,21 @@ function showGanttDetail(tid) {
   } else if (bar.isActive) {
     var pr = bar.proyeksi;
     var mColor2 = pr && pr.proyeksiMargin>=25?'var(--green)':pr && pr.proyeksiMargin>=15?'var(--yellow)':'var(--red)';
+    inner += '</div><div style="font-size:11px;font-weight:700;color:var(--accent2);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px">&#128202; Proyeksi Akhir Periode (estimasi)</div>' +
+      '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:4px">';
     inner += statBox('Mulai', fmtDate(bar.startDate), 'var(--accent2)');
     inner += statBox('Pred. Cut-off', fmtDate(bar.endDate), 'var(--accent2)');
-    inner += statBox('Proj. Revenue', pr ? fmt(Math.round(pr.proyeksiRev)) : fmt(pl.revenue||0), 'var(--green)');
-    inner += statBox('Proj. Op. Income', pr ? fmt(Math.round(pr.proyeksiOpIncome)) : fmt(pl.opIncome||0), pr&&pr.proyeksiOpIncome>=0?'var(--green)':'var(--red)');
-    inner += statBox('Vol Aktual', fmtNum(pr?pr.volAktual:(pl.totalVolume||0),0)+' Sm&#179;', 'var(--text2)');
-    inner += statBox('Proj. Total Vol', pr ? fmtNum(Math.round(pr.proyeksiTotalVol),0)+' Sm&#179;' : '—', 'var(--accent2)');
-    inner += statBox('Avg Harian', pr ? fmtNum(pr.avgHarian,1)+' Sm&#179;/hari' : '—', 'var(--text2)');
     inner += statBox('Sisa Hari', pr ? pr.sisaHari+' hari' : '—', 'var(--text2)');
+    inner += statBox('Avg Harian', pr ? fmtNum(pr.avgHarian,1)+' Sm&#179;/hari' : '—', 'var(--text2)');
+    inner += statBox('Proj. Revenue', pr ? fmt(Math.round(pr.proyeksiRev)) : fmt(pl.revenue||0), 'var(--green)');
     inner += statBox('Proj. COGS', pr ? fmt(Math.round(pr.proyeksiCogs)) : fmt(pl.totalCogs||0), 'var(--red)');
+    inner += statBox('Proj. Op. Income', pr ? fmt(Math.round(pr.proyeksiOpIncome)) : fmt(pl.opIncome||0), pr&&pr.proyeksiOpIncome>=0?'var(--green)':'var(--red)');
     inner += statBox('Proj. Margin', pr ? pr.proyeksiMargin.toFixed(1)+'%' : (pl.netMargin||0).toFixed(1)+'%', mColor2);
+    inner += statBox('Proj. Total Vol', pr ? fmtNum(Math.round(pr.proyeksiTotalVol),0)+' Sm&#179;' : '—', 'var(--accent2)');
     // Progress bar
     if (pr) {
       var prog = Math.min(100, pr.volAktual/(pr.proyeksiTotalVol||1)*100).toFixed(0);
-      inner += '</div><div style="margin-top:8px;margin-bottom:4px">' +
+      inner += '</div><div style="margin-top:8px;margin-bottom:12px">' +
         '<div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text3);margin-bottom:4px">' +
           '<span>Progress Volume: <strong>' + fmtNum(pr.volAktual,0) + '</strong> / <strong>' + fmtNum(Math.round(pr.proyeksiTotalVol),0) + '</strong> Sm&#179;</span>' +
           '<span>' + prog + '%</span>' +
@@ -3875,18 +3928,32 @@ function showGanttDetail(tid) {
         '<div style="height:6px;background:var(--surface2);border-radius:3px;overflow:hidden">' +
           '<div style="width:'+prog+'%;height:100%;background:var(--accent2);border-radius:3px"></div>' +
         '</div>';
-      inner += '<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:10px">';
     } else {
-      inner += '</div><div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:4px">';
+      inner += '</div><div style="margin-top:8px;margin-bottom:12px">';
     }
-    inner += statBox('Mulai', fmtDate(bar.startDate), 'var(--text)');
-    inner += statBox('Cut-off', fmtDate(bar.endDate), 'var(--text)');
+    inner += '<div style="font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px">&#10003; Realisasi s/d Hari Ini (aktual, sudah terinput)</div>' +
+      '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:4px">';
+    inner += statBox('Volume', fmtNum(pl.totalVolume||0,0)+' Sm³', 'var(--text2)');
     inner += statBox('Revenue', fmt(pl.revenue||0), 'var(--green)');
-    inner += statBox('Op. Income', fmt(pl.opIncome||0), (pl.opIncome||0)>=0?'var(--green)':'var(--red)');
     inner += statBox('COGS', fmt(pl.totalCogs||0), 'var(--text2)');
     inner += statBox('OpEx', fmt(pl.totalOpex||0), 'var(--text2)');
-    inner += statBox('Volume', fmtNum(pl.totalVolume||0,0)+' Sm³', 'var(--text2)');
+    inner += statBox('Op. Income', fmt(pl.opIncome||0), (pl.opIncome||0)>=0?'var(--green)':'var(--red)');
     inner += statBox('Net Margin', (pl.netMargin||0).toFixed(1)+'%', (pl.netMargin||0)>=0?'var(--green)':'var(--red)');
+  } else {
+    // Periode sudah selesai/cutoff (Lunas atau Belum Dibayar)
+    var mColor3 = (pl.netMargin||0)>=25?'var(--green)':(pl.netMargin||0)>=15?'var(--yellow)':'var(--red)';
+    inner += statBox('Mulai', fmtDate(bar.startDate), 'var(--text)');
+    inner += statBox('Cut-off', fmtDate(bar.endDate), 'var(--text)');
+    inner += statBox('Volume', fmtNum(pl.totalVolume||0,0)+' Sm³', 'var(--text2)');
+    inner += statBox('Harga Jual', fmt(pl.hargaJual||0)+'/Sm&#179;', 'var(--text2)');
+    inner += statBox('Revenue', fmt(pl.revenue||0), 'var(--green)');
+    inner += statBox('COGS', fmt(pl.totalCogs||0), 'var(--red)');
+    inner += statBox('OpEx', fmt(pl.totalOpex||0), 'var(--red)');
+    inner += statBox('Op. Income', fmt(pl.opIncome||0), (pl.opIncome||0)>=0?'var(--green)':'var(--red)');
+    inner += statBox('Net Margin', (pl.netMargin||0).toFixed(1)+'%', mColor3);
+    if (bar.periode && bar.periode.paidDate) {
+      inner += statBox('Tgl Bayar', fmtDate(bar.periode.paidDate), 'var(--green)');
+    }
   }
   inner += '</div>';
 
@@ -3894,7 +3961,7 @@ function showGanttDetail(tid) {
   var overlay = document.createElement('div');
   overlay.id = 'gantt-modal-overlay';
   overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px';
-  overlay.innerHTML = '<div style="background:var(--surface);border-radius:16px;padding:24px;max-width:520px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,0.3);border:1px solid var(--border)">' + inner + '</div>';
+  overlay.innerHTML = '<div style="background:var(--surface);border-radius:16px;padding:24px;max-width:760px;width:100%;max-height:88vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.3);border:1px solid var(--border)">' + inner + '</div>';
   overlay.addEventListener('click', function(e){ if(e.target===overlay) overlay.remove(); });
   document.body.appendChild(overlay);
   var closeBtn = document.getElementById('gantt-modal-close');
