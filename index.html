@@ -2802,6 +2802,9 @@ function saveCutoff() {
   var found = findKandang(_cutoffCtx.kandangId);
   var p = found && found.kandang.periodes.find(function(x){ return x.id === _cutoffCtx.periodeId; });
   if (!p) return;
+  if (p.startDate && dateStr < p.startDate) {
+    return alert('Tanggal cut-off (' + fmtDate(dateStr) + ') tidak boleh sebelum tanggal mulai periode (' + fmtDate(p.startDate) + ')');
+  }
   p.isCutoff = true; p.cutoffDate = dateStr; p.endDate = dateStr;
   save(); closeModal('modal-cutoff'); renderKandangDetail(_cutoffCtx.kandangId);
 }
@@ -3461,7 +3464,7 @@ function renderGantt() {
       periodes.forEach(function(p) {
         if (!p.startDate) return;
         var endD = p.cutoffDate || addDays(p.startDate, 30);
-        var pl = p.isCutoff ? calcPeriodePL(p, k) : null;
+        var pl = calcPeriodePL(p, k);
         var proyeksi = null;
         var predCutoff = p.cutoffDate || null;
         if (!p.isCutoff && !p.cutoffDate && cp.length >= 1) {
@@ -3729,7 +3732,7 @@ function renderGantt() {
   });
   monthChips += '</div>';
 
-  // Build list for selected month - include future periodes
+  // Build list for selected month - data real aja (sama kayak card Bulan Ini)
   var predListItems = [];
   state.clients.forEach(function(cl) {
     (cl.kandangs||[]).forEach(function(k) {
@@ -3745,23 +3748,6 @@ function renderGantt() {
           predListItems.push({ client: cl.name, kandang: k.name, pl: pl, periode: p, startDate: p.startDate, endDate: p.cutoffDate||addDays(p.startDate,30), isFuture: false });
         }
       });
-      // Future periodes — skip kalau client inactive
-      if (!cl.inactive) {
-        var futures = calcFuturePeriodes(k);
-        futures.forEach(function(fp) {
-          var pStart = new Date(fp.startDate);
-          var pEnd = new Date(fp.cutoffDate);
-          var mStart2 = new Date(yr, selectedPredMonth, 1);
-          var mEnd2 = new Date(yr, selectedPredMonth+1, 0);
-          if (pStart <= mEnd2 && pEnd >= mStart2) {
-            predListItems.push({
-              client: cl.name, kandang: k.name,
-              pl: { revenue: fp.avgRev, totalCogs: fp.avgCogs, totalOpex: fp.avgOpex, opIncome: fp.avgOpIncome, totalVolume: fp.avgVol },
-              periode: fp, startDate: fp.startDate, endDate: fp.cutoffDate, isFuture: true
-            });
-          }
-        });
-      }
     });
   });
 
