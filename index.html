@@ -3425,6 +3425,7 @@ function renderGantt() {
   var containerEl = document.getElementById('gantt-container') || document.getElementById('content-prediksi');
   var containerW = containerEl ? containerEl.clientWidth : 1200;
   var TOTAL_W = Math.max(containerW - LABEL_W, numMonths * (window._ganttFilter === 'all' ? 90 : (window._ganttFilter.startsWith('q') ? 200 : 560)));
+  var MONTH_W = Math.round(TOTAL_W / numMonths);
   // If container not yet rendered (first load), re-render after DOM ready
   if (!document.getElementById('gantt-container')) {
     setTimeout(renderGantt, 0);
