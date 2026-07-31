@@ -973,7 +973,7 @@ function calcPeriodePL(periode, kandang) {
       var entryYear = periode.startDate ? parseInt(periode.startDate.slice(0,4)) : new Date().getFullYear();
       var mIdx = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'].indexOf(e.month);
       var startMIdx = periode.startDate ? parseInt(periode.startDate.slice(5,7))-1 : 0;
-      if (mIdx < startMIdx - 6) entryYear++;
+      if (mIdx < startMIdx - 2) entryYear++;
       var cps = calcCostPerSm3(e.month, entryYear, e.supplierId);
       totalCogs += (e.volume || 0) * cps;
     }
@@ -1962,8 +1962,8 @@ function renderKandangDetail(kandangId) {
     var isDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
     var gridCol = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.05)';
     var textCol = isDark ? '#aaa' : '#888';
-    var bgColors = kandang.periodes.map(function(p){ return p.isCutoff ? 'rgba(93,202,165,0.80)' : 'rgba(239,159,39,0.80)'; });
-    var bdColors = kandang.periodes.map(function(p){ return p.isCutoff ? '#5DCAA5' : '#EF9F27'; });
+    var bgColors = sortedPeriodes.map(function(p){ return p.isCutoff ? 'rgba(93,202,165,0.80)' : 'rgba(239,159,39,0.80)'; });
+    var bdColors = sortedPeriodes.map(function(p){ return p.isCutoff ? '#5DCAA5' : '#EF9F27'; });
     var existingChart = Chart.getChart(canvas);
     if (existingChart) existingChart.destroy();
     new Chart(canvas, {
@@ -2058,7 +2058,7 @@ function renderKandangDetail(kandangId) {
         var entryYearR = p.startDate ? parseInt(p.startDate.slice(0,4)) : new Date().getFullYear();
         var mIdxR = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'].indexOf(e.month);
         var startMIdxR = p.startDate ? parseInt(p.startDate.slice(5,7))-1 : 0;
-        if (mIdxR < startMIdxR - 6) entryYearR++;
+        if (mIdxR < startMIdxR - 2) entryYearR++;
         if (e.isManual) {
           // Manual COGS entry
           cogsRows += '<tr style="background:rgba(42,125,225,0.04)"><td>' + e.month + '</td><td class="mono">' + e.day + '</td>' +
@@ -4708,7 +4708,7 @@ function renderSummarySupply() {
           var entryYearD = p.startDate ? parseInt(p.startDate.slice(0,4)) : new Date().getFullYear();
           var mIdxD = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'].indexOf(e.month);
           var startMIdxD = p.startDate ? parseInt(p.startDate.slice(5,7))-1 : 0;
-          if (mIdxD < startMIdxD - 6) entryYearD++;
+          if (mIdxD < startMIdxD - 2) entryYearD++;
           var cps = calcCostPerSm3(e.month, entryYearD, e.supplierId);
           var jisdorVal = (state.master.jisdorByYear && state.master.jisdorByYear[entryYearD] && state.master.jisdorByYear[entryYearD][e.month]) || (state.master.jisdor && state.master.jisdor[e.month]) || 0;
           monthData[key].volume += e.volume;
@@ -6076,11 +6076,12 @@ function onSelectTripGTM() {
   // Show sisa info
   if (!gtmTrips.length) { sisaInfo.style.display = 'none'; renderTripCalendar(); return; }
   var lastTrip = gtmTrips[0];
+  var lastTripEff = calcTripEffectiveVolume(lastTrip);
   var allocated = getTripAllocated(lastTrip.id);
-  var sisa = lastTrip.volume - allocated;
+  var sisa = lastTripEff.effective - allocated;
   var sisaColor = sisa > 0 ? 'var(--yellow)' : 'var(--green)';
   sisaInfo.style.display = 'block';
-  sisaInfo.innerHTML = '&#9432; Trip terakhir ' + lastTrip.date + ': Vol <strong>' + fmtNum(lastTrip.volume,2) + '</strong>' +
+  sisaInfo.innerHTML = '&#9432; Trip terakhir ' + lastTrip.date + ': Vol Efektif <strong>' + fmtNum(lastTripEff.effective,2) + '</strong>' +
     ' &middot; Terpakai <strong>' + fmtNum(allocated,2) + '</strong>' +
     ' &middot; Sisa: <strong style="color:' + sisaColor + '">' + fmtNum(sisa,2) + ' Sm&#179;</strong>' +
     (sisa > 0
@@ -6109,8 +6110,9 @@ function saveTrip() {
       .sort(function(a,b){ return b.date.localeCompare(a.date); });
     if (prevTrips.length) {
       var lastTrip = prevTrips[0];
+      var lastTripEff = calcTripEffectiveVolume(lastTrip);
       var allocated = getTripAllocated(lastTrip.id);
-      var sisaLama = lastTrip.volume - allocated;
+      var sisaLama = lastTripEff.effective - allocated;
       var losses = Math.max(0, Math.round((sisaLama - carryInput) * 100) / 100);
       if (losses > 0) {
         lastTrip.losses = (lastTrip.losses || 0) + losses;
@@ -6136,11 +6138,12 @@ function onEditTripGTMSelect() {
     .sort(function(a,b){ return b.date.localeCompare(a.date) || b.id.localeCompare(a.id); });
   if (!gtmTrips.length) { sisaInfo.style.display = 'none'; return; }
   var lastTrip = gtmTrips[0];
+  var lastTripEff = calcTripEffectiveVolume(lastTrip);
   var allocated = getTripAllocated(lastTrip.id);
-  var sisa = lastTrip.volume - allocated;
+  var sisa = lastTripEff.effective - allocated;
   var sisaColor = sisa > 0 ? 'var(--yellow)' : 'var(--green)';
   sisaInfo.style.display = 'block';
-  sisaInfo.innerHTML = '&#9432; Trip terakhir ' + lastTrip.date + ': Vol <strong>' + fmtNum(lastTrip.volume,2) + '</strong>' +
+  sisaInfo.innerHTML = '&#9432; Trip terakhir ' + lastTrip.date + ': Vol Efektif <strong>' + fmtNum(lastTripEff.effective,2) + '</strong>' +
     ' &middot; Terpakai <strong>' + fmtNum(allocated,2) + '</strong>' +
     ' &middot; Sisa: <strong style="color:' + sisaColor + '">' + fmtNum(sisa,2) + ' Sm&#179;</strong>' +
     (sisa > 0
