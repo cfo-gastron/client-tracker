@@ -1419,7 +1419,7 @@ function renderClients() {
       var statusBadge = latestLabel
         ? '<span style="font-size:10px;padding:1px 7px;border-radius:10px;font-weight:600;'+(latestRunning?'background:#fff8e0;color:#cc8800':'background:#e8f5ee;color:#1a9e5c')+'">'+latestLabel+(latestRunning?' &#9679;':' &#10003;')+'</span>'
         : '';
-      var capexTotal = (k.capex||[]).reduce(function(s,c){return s+(c.amount||0);},0);
+      var capexTotal = getTotalCapex(k);
       var capexRow = '<div style="display:flex;align-items:center;gap:8px;padding:4px 14px 4px 52px;background:var(--surface2);border-bottom:0.5px solid var(--border)">'
         +'<span style="font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:0.5px">Capex</span>'
         +(capexTotal>0?'<span style="font-size:11px;font-weight:600;color:var(--text2)">'+fmt(capexTotal)+'</span>':'<span style="font-size:11px;color:var(--text3);font-style:italic">Belum ada</span>')
