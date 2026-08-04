@@ -22,12 +22,16 @@
   var _supa = supabase.createClient(_SUPA_URL, _SUPA_KEY);
   var _firestoreReady = false;
   var _firestoreState = null;
+  var _firestoreParseError = false;
 
   // Load state dari Supabase tabel app_state
   _supa.from('app_state').select('state').eq('id', 1).single()
     .then(function(res) {
       if (res.data && res.data.state) {
-        try { _firestoreState = JSON.parse(res.data.state); } catch(e) {}
+        try { _firestoreState = JSON.parse(res.data.state); } catch(e) {
+          console.error('Supabase state JSON.parse gagal — data mungkin korup:', e);
+          _firestoreParseError = true;
+        }
       }
       _firestoreReady = true;
       window.dispatchEvent(new Event('firestoreReady'));
@@ -4842,7 +4846,7 @@ function renderSummarySupply() {
     '<td class="mono" style="text-align:right;color:#fff;' + gtBg + '"><strong>' + fmt(totC) + '</strong></td>' +
     '<td class="mono" style="text-align:right;color:#fff;' + gtBg + '"><strong>' + fmt(totR) + '</strong></td>' +
     '<td class="mono" style="text-align:right;color:#fff;' + gtBg + '"><strong>' + fmt(totI) + '</strong></td>' +
-    '<td style="text-align:right;' + gtBg + '"><span class="tag tag-' + (tM>=25?'green':tM>=15?'yellow':'red') + '">' + tM.toFixed(1) + '%</span></td></tr>';
+    '<td style="text-align:right;' + gtBg + '"><span style="background:#fff;color:' + (tM>=25?'var(--green)':tM>=15?'#a06800':'var(--red)') + ';font-weight:700;font-size:11px;padding:2px 8px;border-radius:10px">' + tM.toFixed(1) + '%</span></td></tr>';
 
   cont.innerHTML =
     '<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px 18px;margin-bottom:14px">' +
@@ -4956,7 +4960,7 @@ function renderSummaryInvoice() {
     '<td class="mono" style="text-align:right;color:#fff;' + gtBg2 + '"><strong>' + fmt(totR) + '</strong></td>' +
     '<td class="mono" style="text-align:right;color:#fff;' + gtBg2 + '"><strong>' + fmt(totC) + '</strong></td>' +
     '<td class="mono" style="text-align:right;color:#fff;' + gtBg2 + '"><strong>' + fmt(totI) + '</strong></td>' +
-    '<td style="text-align:right;' + gtBg2 + '"><span class="tag tag-' + (tM>=25?'green':tM>=15?'yellow':'red') + '">' + tM.toFixed(1) + '%</span></td></tr>';
+    '<td style="text-align:right;' + gtBg2 + '"><span style="background:#fff;color:' + (tM>=25?'var(--green)':tM>=15?'#a06800':'var(--red)') + ';font-weight:700;font-size:11px;padding:2px 8px;border-radius:10px">' + tM.toFixed(1) + '%</span></td></tr>';
 
   cont.innerHTML =
     '<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px 18px;margin-bottom:14px">' +
@@ -6021,8 +6025,19 @@ function openAddTripModal() {
 }
 
 function onTripCarryInput(maxSisa) {
-  var carry = parseFloat(document.getElementById('trip-carry-input').value) || 0;
-  carry = Math.min(carry, maxSisa);
+  var carryInputEl = document.getElementById('trip-carry-input');
+  var rawCarry = parseFloat(carryInputEl.value) || 0;
+  var carry = Math.min(rawCarry, maxSisa);
+  if (rawCarry > maxSisa) {
+    // Kasih tau user kalau inputnya kepotong ke maksimal
+    carryInputEl.value = maxSisa.toFixed(2);
+    carryInputEl.style.borderColor = 'var(--red)';
+    carryInputEl.title = 'Nilai dipotong ke maksimal ' + maxSisa.toFixed(2) + ' Sm³ (sisa yang tersedia)';
+    setTimeout(function(){ carryInputEl.style.borderColor = ''; }, 1200);
+  } else {
+    carryInputEl.style.borderColor = '';
+    carryInputEl.title = '';
+  }
   var volInput = document.getElementById('trip-volume');
   var baseVol = parseFloat(volInput.dataset.baseVol || volInput.value) || 0;
   if (!volInput.dataset.baseVol) volInput.dataset.baseVol = volInput.value;
@@ -6129,7 +6144,18 @@ function onEditTripGTMSelect() {
 }
 
 function onEditTripCarryInput(maxSisa) {
-  var carry = Math.min(parseFloat(document.getElementById('edit-trip-carry-input').value) || 0, maxSisa);
+  var carryInputEl = document.getElementById('edit-trip-carry-input');
+  var rawCarry = parseFloat(carryInputEl.value) || 0;
+  var carry = Math.min(rawCarry, maxSisa);
+  if (rawCarry > maxSisa) {
+    carryInputEl.value = maxSisa.toFixed(2);
+    carryInputEl.style.borderColor = 'var(--red)';
+    carryInputEl.title = 'Nilai dipotong ke maksimal ' + maxSisa.toFixed(2) + ' Sm³ (sisa yang tersedia)';
+    setTimeout(function(){ carryInputEl.style.borderColor = ''; }, 1200);
+  } else {
+    carryInputEl.style.borderColor = '';
+    carryInputEl.title = '';
+  }
   var volInput = document.getElementById('edit-trip-volume');
   if (!volInput.dataset.baseVol) volInput.dataset.baseVol = volInput.value;
   volInput.value = (parseFloat(volInput.dataset.baseVol) + carry).toFixed(2);
@@ -6443,8 +6469,13 @@ function initApp() {
     if (_firestoreState && _firestoreState.clients && _firestoreState.clients.length > 0) {
       state = _firestoreState;
       localStorage.setItem('gastron_tracker', JSON.stringify(state));
+    } else if (_firestoreParseError) {
+      // Data di Supabase ADA tapi korup/gagal di-parse — JANGAN nulis apapun,
+      // ini bukan "database kosong". Pakai cache localStorage apa adanya, dan kasih peringatan.
+      console.warn('Data Supabase gagal di-parse, pakai cache lokal sementara. Cek kolom "state" di tabel app_state.');
+      alert('⚠️ Data di server sepertinya bermasalah (gagal dibaca). App jalan pakai data cache sementara — JANGAN input data baru sampai ini dicek, biar ga ada yang ketimpa. Hubungi developer.');
     } else if (state.clients.length > 0) {
-      // Genuinely first-time setup: Supabase kosong tapi kita punya data lokal — push sekali
+      // Genuinely first-time setup: Supabase kosong (bukan error) tapi kita punya data lokal — push sekali
       if (window._saveToFirestore) window._saveToFirestore(JSON.stringify(state));
     }
   }
