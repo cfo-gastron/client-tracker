@@ -1403,6 +1403,8 @@ function mgPill(mg) {
 }
 function renderClients() {
   var cont = document.getElementById('content-clients');
+  // Bersihin dropdown kebab yang kemarin dipindah ke body (biar ga numpuk/duplikat ID pas render ulang)
+  document.querySelectorAll('body > [id^="dd-"]').forEach(function(el){ el.remove(); });
   if (!state.clients.length) {
     cont.innerHTML = '<div class="empty-state"><div class="icon">&#9670;</div><p>Belum ada client terdaftar</p><button class="btn btn-primary" onclick="openModal(\'modal-add-client\')">+ Tambah Client Pertama</button></div>';
     return;
@@ -1482,7 +1484,20 @@ function ncShowMenu(btn){
   var dd=document.getElementById('dd-'+btn.dataset.cid);
   if(!dd)return;
   var isHidden=dd.style.display==='none'||dd.style.display==='';
-  dd.style.display=isHidden?'block':'none';
+  if (isHidden) {
+    // Pindahin dropdown ke document.body biar ga ke-clip sama overflow:hidden parent (.nc-block)
+    if (dd.parentNode !== document.body) {
+      document.body.appendChild(dd);
+    }
+    var rect = btn.getBoundingClientRect();
+    dd.style.position = 'fixed';
+    dd.style.top = (rect.bottom + 4) + 'px';
+    dd.style.left = 'auto';
+    dd.style.right = (window.innerWidth - rect.right) + 'px';
+    dd.style.display = 'block';
+  } else {
+    dd.style.display = 'none';
+  }
 }
 
 function openCapexModal(kandangId){openAddCapex(kandangId);}
