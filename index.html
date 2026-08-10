@@ -2022,9 +2022,9 @@ function renderKandangDetail(kandangId) {
       '<span style="background:#fff3e0;color:#cc8800;font-size:11px;padding:2px 10px;border-radius:20px;margin-left:8px">● Berjalan</span>';
     const daysInfo = p.isCutoff && p.startDate && p.cutoffDate ? ' (' + daysBetween(p.startDate, p.cutoffDate) + ' hari)' : '';
 
-    // Prediksi section — only on last periode card
+    // Prediksi section — only on last periode card, skip kalau client inactive
     let prediksiHTML = '';
-    if (pIdx === kandang.periodes.length - 1) {
+    if (pIdx === kandang.periodes.length - 1 && !client.inactive) {
       const cp = kandang.periodes.filter(function(x){ return x.isCutoff && x.startDate && x.cutoffDate; });
       if (cp.length < 1) {
         prediksiHTML = '<div style="background:#f5f5f7;border:1px dashed #e0e0ea;border-radius:10px;padding:14px;margin-bottom:16px;text-align:center;color:#9999b0;font-size:12px">🔮 Prediksi tersedia setelah 1 periode selesai (cut-off)</div>';
@@ -4140,6 +4140,7 @@ function renderPrediksi() {
   var cont = document.getElementById('content-prediksi');
   var cards = [];
   state.clients.forEach(function(cl) {
+    if (cl.inactive) return; // client inactive → ga usah ikut prediksi sama sekali
     (cl.kandangs||[]).forEach(function(k) {
       var periodes = k.periodes || [];
       var cp = periodes.filter(function(x){ return x.isCutoff && x.startDate && x.cutoffDate; });
@@ -5063,9 +5064,42 @@ function openKandangDetailModal(pKey) {
 }
 
 // ============= INVOICE TRACKER =============
+// ============= CCC & PAYMENT BEHAVIOR SEGMENTATION =============
+var PAYMENT_CATEGORY_META = {
+  reliable: { label: 'Reliable', color: 'var(--green)', bg: 'rgba(26,158,92,0.12)', icon: '&#10003;' },
+  slow:     { label: 'Slow Payer', color: 'var(--yellow)', bg: 'rgba(204,136,0,0.12)', icon: '&#8987;' },
+  risk:     { label: 'Risk', color: 'var(--red)', bg: 'rgba(200,25,30,0.12)', icon: '&#9888;' }
+};
+
+// Hitung CCC (rata-rata hari dari cut-off sampai tanggal bayar aktual) per klien
+function getClientCCC(clientId) {
+  var days = [];
+  var cl = state.clients.find(function(c){ return c.id === clientId; });
+  if (!cl) return null;
+  (cl.kandangs||[]).forEach(function(k) {
+    (k.periodes||[]).forEach(function(p) {
+      if (p.isCutoff && p.cutoffDate && p.paidDate) {
+        days.push(daysBetween(p.cutoffDate, p.paidDate));
+      }
+    });
+  });
+  if (!days.length) return null;
+  var avg = days.reduce(function(a,b){return a+b;},0) / days.length;
+  return { avgDays: Math.round(avg*10)/10, count: days.length };
+}
+
+function setClientPaymentCategory(clientId, val) {
+  var cl = state.clients.find(function(c){ return c.id === clientId; });
+  if (!cl) return;
+  cl.paymentCategory = val || null;
+  save();
+  renderInvoiceTracker();
+}
+
 function buildInvoiceList() {
   var invoices = [];
   state.clients.forEach(function(cl) {
+    var ccc = getClientCCC(cl.id);
     (cl.kandangs||[]).forEach(function(k) {
       (k.periodes||[]).forEach(function(p) {
         if (!p.isCutoff || !p.cutoffDate) return;
@@ -5075,6 +5109,13 @@ function buildInvoiceList() {
         var payStatus = p.paidDate ? 'lunas' : (today > deadline ? 'overdue' : 'belum');
         var wasLate = p.paidDate && p.paidDate > deadline;
         var daysLate = p.paidDate ? Math.max(0, daysBetween(deadline, p.paidDate)) : (today > deadline ? daysBetween(deadline, today) : 0);
+        // Proyeksi tanggal cair berdasarkan CCC historis klien (bukan generic +7), kalau datanya cukup (min 2 histori)
+        var projectedPayDate = deadline;
+        var projectedFromHistory = false;
+        if (!p.paidDate && ccc && ccc.count >= 2) {
+          projectedPayDate = addDays(p.cutoffDate, Math.round(ccc.avgDays));
+          projectedFromHistory = true;
+        }
         invoices.push({
           id: p.id, clientId: cl.id, client: cl.name, kandang: k.name,
           label: p.label, cutoffDate: p.cutoffDate, deadline: deadline,
@@ -5083,7 +5124,9 @@ function buildInvoiceList() {
           buktiLink: p.buktiLink || null, invoiceNotes: p.invoiceNotes || null,
           payStatus: payStatus, wasLate: wasLate, daysLate: daysLate,
           kandangId: k.id, periodeId: p.id,
-          cashMonth: p.paidDate ? p.paidDate.slice(0,7) : deadline.slice(0,7)
+          cashMonth: p.paidDate ? p.paidDate.slice(0,7) : deadline.slice(0,7),
+          paymentCategory: cl.paymentCategory || null, ccc: ccc,
+          projectedPayDate: projectedPayDate, projectedFromHistory: projectedFromHistory
         });
       });
     });
@@ -5093,6 +5136,7 @@ function buildInvoiceList() {
 
 var _invoiceKandangFilter = "";
 var _invoiceStatusFilter = "";
+var _invoiceCategoryFilter = "";
 
 function setInvoiceStatusFilter(val) {
   _invoiceStatusFilter = val;
@@ -5101,6 +5145,11 @@ function setInvoiceStatusFilter(val) {
 
 function setInvoiceKandangFilter(val) {
   _invoiceKandangFilter = val;
+  renderInvoiceTracker();
+}
+
+function setInvoiceCategoryFilter(val) {
+  _invoiceCategoryFilter = val;
   renderInvoiceTracker();
 }
 
@@ -5135,12 +5184,81 @@ function renderInvoiceTracker() {
   var nWasLate = allInvoices.filter(function(i){return i.wasLate;}).length;
   var pctLunas = nTotal ? Math.round(nLunas/nTotal*100) : 0;
 
+  // CCC overall (dari semua invoice lunas, terlepas klien)
+  var lunasInvoices = allInvoices.filter(function(i){return i.payStatus==='lunas';});
+  var cccDaysAll = lunasInvoices.map(function(i){ return daysBetween(i.deadline, i.paidDate) + 7; }); // dari cutoff, bukan deadline
+  var cccOverall = cccDaysAll.length ? Math.round((cccDaysAll.reduce(function(a,b){return a+b;},0)/cccDaysAll.length)*10)/10 : null;
+
+  // Breakdown CCC per kategori
+  var catBreakdown = { reliable: [], slow: [], risk: [], untagged: [] };
+  lunasInvoices.forEach(function(i){
+    var cat = i.paymentCategory || 'untagged';
+    catBreakdown[cat].push(daysBetween(i.cutoffDate, i.paidDate));
+  });
+  function avgOf(arr) { return arr.length ? Math.round((arr.reduce(function(a,b){return a+b;},0)/arr.length)*10)/10 : null; }
+
+  // Exposure (outstanding value) per kategori
+  var exposureByCat = { reliable: 0, slow: 0, risk: 0, untagged: 0 };
+  allInvoices.filter(function(i){return i.payStatus!=='lunas';}).forEach(function(i){
+    var cat = i.paymentCategory || 'untagged';
+    exposureByCat[cat] += i.revenue;
+  });
+
   var summaryBar =
-    '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px">' +
+    '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:16px">' +
       '<div class="stat-card blue"><div class="stat-label">Total Invoice</div><div class="stat-value mono" style="font-size:22px">'+nTotal+'</div><div class="stat-sub">seluruh periode</div></div>' +
       '<div class="stat-card green"><div class="stat-label">Sudah Lunas</div><div class="stat-value mono" style="font-size:22px">'+nLunas+'</div><div class="stat-sub">'+fmt(totalMasuk)+' diterima</div></div>' +
       '<div class="stat-card '+(nOverdue>0?'red':'yellow')+'"><div class="stat-label">'+(nOverdue>0?'Overdue':'Menunggu')+'</div><div class="stat-value mono" style="font-size:22px">'+(nOverdue||nBelum)+'</div><div class="stat-sub">'+fmt(totalOutstanding)+' outstanding</div></div>' +
       '<div class="stat-card '+(nWasLate>0?'yellow':'green')+'"><div class="stat-label">Collection Rate</div><div class="stat-value mono" style="font-size:22px">'+pctLunas+'%</div><div class="stat-sub">'+(nWasLate>0?nWasLate+' invoice terlambat':'Semua on time 👌')+'</div></div>' +
+      '<div class="stat-card blue"><div class="stat-label">Rata-rata Hari Collection</div><div class="stat-value mono" style="font-size:22px">'+(cccOverall!==null?cccOverall+' hari':'—')+'</div><div class="stat-sub">'+(cccOverall!==null?'dari cut-off s/d bayar ('+lunasInvoices.length+' invoice)':'belum ada data lunas')+'</div></div>' +
+    '</div>';
+
+  // ===== Payment Behavior per Klien table =====
+  var clientRows = [];
+  var clientSeen = {};
+  allInvoices.forEach(function(inv) {
+    if (clientSeen[inv.clientId]) return;
+    clientSeen[inv.clientId] = true;
+    var cl = state.clients.find(function(c){ return c.id === inv.clientId; });
+    var ccc = getClientCCC(inv.clientId);
+    var outstandingVal = allInvoices.filter(function(i){ return i.clientId===inv.clientId && i.payStatus!=='lunas'; }).reduce(function(s,i){return s+i.revenue;},0);
+    var nBelumThisClient = allInvoices.filter(function(i){ return i.clientId===inv.clientId && i.payStatus!=='lunas'; }).length;
+    clientRows.push({ clientId: inv.clientId, client: inv.client, ccc: ccc, category: (cl&&cl.paymentCategory)||'', outstandingVal: outstandingVal, nBelum: nBelumThisClient });
+  });
+  clientRows.sort(function(a,b){ return b.outstandingVal - a.outstandingVal; });
+
+  var behaviorRows = clientRows.map(function(r) {
+    var catMeta = r.category ? PAYMENT_CATEGORY_META[r.category] : null;
+    return '<tr>' +
+      '<td style="font-weight:600">' + r.client + '</td>' +
+      '<td class="mono" style="text-align:center">' + (r.ccc ? r.ccc.avgDays+' hari' : '<span style="color:var(--text3)">—</span>') + '</td>' +
+      '<td class="mono" style="text-align:center;color:var(--text3);font-size:11px">' + (r.ccc ? r.ccc.count+' invoice' : '-') + '</td>' +
+      '<td>' +
+        '<select data-cid="'+r.clientId+'" onchange="setClientPaymentCategory(this.dataset.cid,this.value)" style="font-size:11px;padding:4px 8px;border-radius:6px;border:1px solid var(--border);background:'+(catMeta?catMeta.bg:'var(--surface2)')+';color:'+(catMeta?catMeta.color:'var(--text2)')+';font-weight:600;cursor:pointer">' +
+          '<option value=""'+(!r.category?' selected':'')+'>Belum ditag</option>' +
+          '<option value="reliable"'+(r.category==='reliable'?' selected':'')+'>&#10003; Reliable</option>' +
+          '<option value="slow"'+(r.category==='slow'?' selected':'')+'>&#8987; Slow Payer</option>' +
+          '<option value="risk"'+(r.category==='risk'?' selected':'')+'>&#9888; Risk</option>' +
+        '</select>' +
+      '</td>' +
+      '<td class="mono" style="text-align:right">' + fmt(r.outstandingVal) + '</td>' +
+      '<td class="mono" style="text-align:center">' + r.nBelum + '</td>' +
+    '</tr>';
+  }).join('');
+
+  var behaviorSection = '<div class="table-wrap" style="margin-bottom:16px"><div class="table-header">' +
+    '<div class="table-title">Payment Behavior per Klien</div>' +
+    '<span style="font-size:11px;color:var(--text3)">CCC = rata-rata hari dari cut-off s/d tanggal bayar aktual. Kategori bisa diubah manual di dropdown.</span>' +
+    '</div>' +
+    '<table><thead><tr><th>Client</th><th style="text-align:center">CCC Rata-rata</th><th style="text-align:center">Histori</th><th>Kategori</th><th style="text-align:right">Outstanding</th><th style="text-align:center">Belum Lunas</th></tr></thead>' +
+    '<tbody>' + behaviorRows + '</tbody></table></div>';
+
+  // ===== Exposure per kategori =====
+  var exposureSection = '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:16px">' +
+    '<div class="stat-card green"><div class="stat-label">&#10003; Reliable</div><div class="stat-value mono" style="font-size:16px">'+fmt(exposureByCat.reliable)+'</div><div class="stat-sub">outstanding aman'+(avgOf(catBreakdown.reliable)!==null?' &middot; avg '+avgOf(catBreakdown.reliable)+' hari':'')+'</div></div>' +
+    '<div class="stat-card yellow"><div class="stat-label">&#8987; Slow Payer</div><div class="stat-value mono" style="font-size:16px">'+fmt(exposureByCat.slow)+'</div><div class="stat-sub">outstanding lambat'+(avgOf(catBreakdown.slow)!==null?' &middot; avg '+avgOf(catBreakdown.slow)+' hari':'')+'</div></div>' +
+    '<div class="stat-card red"><div class="stat-label">&#9888; Risk</div><div class="stat-value mono" style="font-size:16px">'+fmt(exposureByCat.risk)+'</div><div class="stat-sub">outstanding rawan'+(avgOf(catBreakdown.risk)!==null?' &middot; avg '+avgOf(catBreakdown.risk)+' hari':'')+'</div></div>' +
+    '<div class="stat-card blue"><div class="stat-label">Belum Ditag</div><div class="stat-value mono" style="font-size:16px">'+fmt(exposureByCat.untagged)+'</div><div class="stat-sub">klien belum dikategoriin</div></div>' +
     '</div>';
 
   // Apply filters untuk table
@@ -5149,6 +5267,9 @@ function renderInvoiceTracker() {
   }
   if (_invoiceStatusFilter) {
     invoices = invoices.filter(function(inv){ return inv.payStatus === _invoiceStatusFilter; });
+  }
+  if (_invoiceCategoryFilter) {
+    invoices = invoices.filter(function(inv){ return (inv.paymentCategory||'untagged') === _invoiceCategoryFilter; });
   }
 
   var nFiltered = invoices.length;
@@ -5163,6 +5284,8 @@ function renderInvoiceTracker() {
   };
 
   var tableRows = invoices.map(function(inv) {
+    var catMeta = inv.paymentCategory ? PAYMENT_CATEGORY_META[inv.paymentCategory] : null;
+    var clientCell = inv.client + (catMeta ? ' <span style="font-size:9px;padding:1px 6px;border-radius:8px;background:'+catMeta.bg+';color:'+catMeta.color+';font-weight:600">'+catMeta.icon+' '+catMeta.label+'</span>' : '');
     var tglBayarCell = '';
     if (inv.paidDate) {
       tglBayarCell = '<div style="font-size:12px">' +
@@ -5172,14 +5295,21 @@ function renderInvoiceTracker() {
         (inv.invoiceNotes ? '<div style="font-size:11px;color:var(--text3);margin-top:2px;font-style:italic">'+inv.invoiceNotes+'</div>' : '') +
         '</div>';
     } else {
+      var projLine = '';
+      if (inv.projectedFromHistory) {
+        var pColor = inv.paymentCategory==='reliable' ? 'var(--green)' : (inv.paymentCategory==='risk' ? 'var(--red)' : 'var(--yellow)');
+        var pLabel = inv.paymentCategory==='reliable' ? 'Proyeksi (confirmed)' : (inv.paymentCategory==='risk' ? 'Proyeksi (excluded dari confirmed)' : 'Proyeksi (estimasi mundur)');
+        projLine = '<div style="font-size:10px;color:'+pColor+';margin-top:3px" title="'+pLabel+', berdasarkan CCC historis klien">&#128337; Est. cair: <strong>'+fmtDate(inv.projectedPayDate)+'</strong></div>';
+      }
       tglBayarCell = '<div>' +
         '<button class="btn btn-secondary btn-sm" style="font-size:11px" data-kid="'+inv.kandangId+'" data-pid="'+inv.periodeId+'" onclick="openInvoiceModal(this.dataset.kid,this.dataset.pid)">Tandai Lunas</button>' +
         (inv.payStatus==='overdue' ? '<div style="font-size:11px;color:var(--red);margin-top:3px">'+inv.daysLate+' hari lewat deadline</div>' : '') +
+        projLine +
         (inv.invoiceNotes ? '<div style="font-size:11px;color:var(--text3);margin-top:3px;font-style:italic">'+inv.invoiceNotes+'</div>' : '') +
         '</div>';
     }
     return '<tr>' +
-      '<td>' + inv.client + '</td>' +
+      '<td>' + clientCell + '</td>' +
       '<td><span class="tag tag-blue">' + inv.kandang + '</span></td>' +
       '<td class="mono">' + inv.label + '</td>' +
       '<td class="mono">' + fmtDate(inv.cutoffDate) + '</td>' +
@@ -5207,15 +5337,25 @@ function renderInvoiceTracker() {
     '<option value="overdue"'+(_invoiceStatusFilter==='overdue'?' selected':'')+'>Overdue</option>' +
     '<option value="lunas"'+(_invoiceStatusFilter==='lunas'?' selected':'')+'>Lunas</option>';
 
+  var categoryOptions =
+    '<option value=""'  +(!_invoiceCategoryFilter?' selected':'')+'>Semua Kategori</option>' +
+    '<option value="reliable"'+(_invoiceCategoryFilter==='reliable'?' selected':'')+'>&#10003; Reliable</option>' +
+    '<option value="slow"'+(_invoiceCategoryFilter==='slow'?' selected':'')+'>&#8987; Slow Payer</option>' +
+    '<option value="risk"'+(_invoiceCategoryFilter==='risk'?' selected':'')+'>&#9888; Risk</option>' +
+    '<option value="untagged"'+(_invoiceCategoryFilter==='untagged'?' selected':'')+'>Belum Ditag</option>';
+
   var dropdownStyle = 'font-size:12px;padding:5px 8px;border:1px solid var(--border);border-radius:7px;background:var(--surface);color:var(--text);cursor:pointer;';
 
   cont.innerHTML =
     summaryBar +
+    behaviorSection +
+    exposureSection +
     '<div class="table-wrap"><div class="table-header">' +
     '<div class="table-title">Semua Invoice</div>' +
     '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">' +
     '<select onchange="setInvoiceKandangFilter(this.value)" style="'+dropdownStyle+'min-width:160px"><option value="">Semua Kandang</option>' + kandangList.map(function(k){ return '<option value="'+k.id+'"'+(k.id===_invoiceKandangFilter?' selected':'')+'>'+k.name+'</option>'; }).join('') + '</select>' +
     '<select onchange="setInvoiceStatusFilter(this.value)" style="'+dropdownStyle+'min-width:120px">' + statusOptions + '</select>' +
+    '<select onchange="setInvoiceCategoryFilter(this.value)" style="'+dropdownStyle+'min-width:140px">' + categoryOptions + '</select>' +
     '<span style="font-size:11px;color:var(--text3)">' + nFiltered + ' invoice &middot; ' + nFilteredLunas + ' lunas &middot; ' + nFilteredOverdue + ' overdue &middot; ' + nFilteredBelum + ' belum</span>' +
     '</div></div>' +
     '<table><thead><tr><th>Client</th><th>Kandang</th><th>Periode</th><th>Cut-off</th><th>Deadline Bayar</th><th>Status</th><th>Invoice</th><th>Tgl Bayar Aktual</th><th style="text-align:right">Nilai</th></tr></thead>' +
@@ -5725,7 +5865,8 @@ function renderPrediksiKalender() {
       }
 
       // Periode BERIKUTNYA (next pred, setelah periode aktif atau setelah cutoff terakhir)
-      if (cp.length >= 1) {
+      // Skip kalau client inactive — ga usah proyeksiin periode yang belum tentu bakal ada
+      if (cp.length >= 1 && !cl.inactive) {
         var srt = cp.slice().sort(function(a,b){ return new Date(a.startDate)-new Date(b.startDate); });
         var gaps2 = [];
         for (var gi=1;gi<srt.length;gi++) gaps2.push(daysBetween(srt[gi-1].cutoffDate, srt[gi].startDate));
