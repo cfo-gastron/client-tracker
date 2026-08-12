@@ -549,8 +549,8 @@ tr:hover td{background:var(--surface2);}
       <div class="topbar">
         <div class="topbar-left"><button class="topbar-toggle" id="sidebar-toggle-btn" onclick="toggleSidebar()" title="Toggle sidebar"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="1.5" y="2.5" width="15" height="13" rx="2" stroke="currentColor" stroke-width="1.5"/><line x1="6" y1="2.5" x2="6" y2="15.5" stroke="currentColor" stroke-width="1.5"/></svg></button><div class="topbar-title">P&L Summary</div></div>
         <div style="display:flex;gap:8px">
-          <button class="btn btn-secondary btn-sm" onclick="exportPLPDF('bulan')" title="Export bulan tertentu">&#128196; PDF Bulan Ini</button>
-          <button class="btn btn-secondary btn-sm" onclick="exportPLPDF('semua')" title="Export semua bulan">&#128196; PDF Semua</button>
+          <button class="btn btn-secondary btn-sm" onclick="exportPLPDF('bulan')" title="Export bulan tertentu">PDF Bulan Ini</button>
+          <button class="btn btn-secondary btn-sm" onclick="exportPLPDF('semua')" title="Export semua bulan">PDF Semua</button>
         </div>
         <div class="tabs" style="margin:0;padding:4px;background:var(--surface2);border-radius:10px;display:flex;gap:4px">
           <div class="tab active" id="stab-supply" onclick="switchSummaryTab('supply')">Bulanan Supply</div>
@@ -671,7 +671,7 @@ tr:hover td{background:var(--surface2);}
 <div class="modal-overlay" id="modal-add-periode">
   <div class="modal modal-lg">
     <h3>Tambah Periode Baru</h3>
-    <div class="info-box">💡 Periode bisa lintas bulan — COGS dihitung otomatis pakai Jisdor per bulan. Tanggal selesai dikunci saat Cut-off.</div>
+    <div class="info-box">Periode bisa lintas bulan — COGS dihitung otomatis pakai Jisdor per bulan. Tanggal selesai dikunci saat Cut-off.</div>
     <div class="form-row cols-2">
       <div class="form-group"><label>Periode Label</label><input type="text" id="input-periode-label" placeholder="e.g. P1, P2"></div>
       <div class="form-group"><label>Tanggal Mulai</label><input type="date" id="input-periode-start"></div>
@@ -723,7 +723,7 @@ tr:hover td{background:var(--surface2);}
           <input type="number" id="input-cogs-volume" step="0.01" placeholder="0.00" oninput="updateCogsFormula()">
         </div>
         <div id="cogs-formula-preview" style="background:var(--surface2);border-radius:8px;padding:10px 12px;font-size:12px;color:var(--text2);display:none"></div>
-        <div id="cogs-existing-note" style="font-size:12px;color:var(--yellow);display:none">⚠ Tanggal ini sudah ada data. Akan menimpa.</div>
+        <div id="cogs-existing-note" style="font-size:12px;color:var(--yellow);display:none">Tanggal ini sudah ada data. Akan menimpa.</div>
       </div>
     </div>
     <!-- hidden fields -->
@@ -743,7 +743,7 @@ tr:hover td{background:var(--surface2);}
       <button onclick="closeModal('modal-add-cogs-manual')" style="background:none;border:none;font-size:22px;line-height:1;cursor:pointer;color:var(--text3)">×</button>
     </div>
     <div style="background:rgba(42,125,225,0.06);border:1px solid rgba(42,125,225,0.2);border-radius:8px;padding:10px 14px;margin-bottom:16px;font-size:12px;color:var(--text2)">
-      💡 Input nominal COGS langsung tanpa formula. Gunakan untuk biaya gas yang dihitung sendiri.
+      Input nominal COGS langsung tanpa formula. Gunakan untuk biaya gas yang dihitung sendiri.
     </div>
     <div class="form-row cols-3">
       <div class="form-group"><label>Bulan</label>
@@ -1462,7 +1462,7 @@ function renderClients() {
         +'<div style="position:relative;display:flex;align-items:center">'
           +'<button style="padding:4px 9px;border:none;background:none;cursor:pointer;color:var(--text3);font-size:20px;line-height:1;border-radius:6px" data-cid="'+cl.id+'" onclick="event.stopPropagation();ncShowMenu(this)">&#8943;</button>'
           +'<div id="dd-'+cl.id+'" style="display:none;position:absolute;right:0;top:calc(100% + 4px);background:var(--surface);border:1px solid var(--border);border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,0.1);z-index:500;min-width:170px;overflow:hidden">'
-            +'<div style="padding:10px 16px;font-size:13px;color:var(--text);cursor:pointer" onmouseover="this.style.background=\'var(--surface2)\'" onmouseout="this.style.background=\'\'" data-cid="'+cl.id+'" onclick="viewClientSummary(this.dataset.cid)">&#128202; P&amp;L Summary</div>'
+            +'<div style="padding:10px 16px;font-size:13px;color:var(--text);cursor:pointer" onmouseover="this.style.background=\'var(--surface2)\'" onmouseout="this.style.background=\'\'" data-cid="'+cl.id+'" onclick="viewClientSummary(this.dataset.cid)">P&amp;L Summary</div>'
             +'<div style="padding:10px 16px;font-size:13px;color:var(--text);cursor:pointer" onmouseover="this.style.background=\'var(--surface2)\'" onmouseout="this.style.background=\'\'" data-cid="'+cl.id+'" data-name="'+cl.name+'" data-loc="'+(cl.location||'')+'" onclick="openEditClient(this)">&#9998; Edit client</div>'
             +'<div style="padding:10px 16px;font-size:13px;color:var(--text);cursor:pointer" onmouseover="this.style.background=\'var(--surface2)\'" onmouseout="this.style.background=\'\'" data-cid="'+cl.id+'" onclick="openAddKandangModal(this.dataset.cid)">+ Tambah kandang</div>'
             +'<div style="height:0.5px;background:var(--border)"></div>'
@@ -1635,7 +1635,7 @@ function buildInvoiceTrackerMobileCards(invoices) {
         +'<div class="m-kpi"><div class="m-kpi-label">Bayar</div><div class="m-kpi-value">'+(inv.paidDate?fmtDate(inv.paidDate):'&mdash;')+'</div></div>'
       +'</div>'
       +'<div class="m-card-actions">'
-        +(inv.invoiceLink ? '<a href="'+inv.invoiceLink+'" target="_blank" class="btn btn-secondary btn-sm" style="text-decoration:none">&#128203; Invoice</a>' : '')
+        +(inv.invoiceLink ? '<a href="'+inv.invoiceLink+'" target="_blank" class="btn btn-secondary btn-sm" style="text-decoration:none">Invoice</a>' : '')
         +'<button class="btn btn-secondary btn-sm" data-kid="'+inv.kandangId+'" data-pid="'+inv.periodeId+'" onclick="openInvoiceModal(this.dataset.kid,this.dataset.pid)">&#9998; Edit</button>'
       +'</div>'
     +'</div>';
@@ -1817,7 +1817,7 @@ function renderCapexSection(kandang) {
   }
   return '<div class="capex-section">' +
     '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">' +
-    '<div style="font-size:12px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:1px">💰 CAPEX Instalasi</div>' +
+    '<div style="font-size:12px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:1px">CAPEX Instalasi</div>' +
     '<div style="display:flex;gap:6px">' +
     (totalCapex > 0 ? '<button class="btn btn-secondary btn-sm" data-kid="' + kandang.id + '" onclick="openCapexDetail(this.dataset.kid)">Lihat Detail →</button>' : '') +
     '<button class="btn btn-secondary btn-sm" data-kid="' + kandang.id + '" onclick="openAddCapex(this.dataset.kid)">+ Input CAPEX</button>' +
@@ -1889,7 +1889,7 @@ function openCapexDetail(kandangId) {
 
   var html = bepHtml;
   if (!entries.length) {
-    html += '<div class="empty-state" style="padding:30px 0"><div class="icon" style="font-size:32px">💰</div><p>Belum ada item CAPEX</p></div>';
+    html += '<div class="empty-state" style="padding:30px 0"><div class="icon" style="font-size:32px"></div><p>Belum ada item CAPEX</p></div>';
   } else {
     html += '<div class="table-wrap" style="margin-bottom:16px"><table>' +
       '<thead><tr><th>Tanggal</th><th>Kategori</th><th>Nama Item</th><th>Keterangan</th><th style="text-align:right">Nilai</th><th></th></tr></thead><tbody>';
@@ -2042,7 +2042,7 @@ function renderKandangDetail(kandangId) {
     if (pIdx === kandang.periodes.length - 1 && !client.inactive) {
       const cp = kandang.periodes.filter(function(x){ return x.isCutoff && x.startDate && x.cutoffDate; });
       if (cp.length < 1) {
-        prediksiHTML = '<div style="background:#f5f5f7;border:1px dashed #e0e0ea;border-radius:10px;padding:14px;margin-bottom:16px;text-align:center;color:#9999b0;font-size:12px">🔮 Prediksi tersedia setelah 1 periode selesai (cut-off)</div>';
+        prediksiHTML = '<div style="background:#f5f5f7;border:1px dashed #e0e0ea;border-radius:10px;padding:14px;margin-bottom:16px;text-align:center;color:#9999b0;font-size:12px">Prediksi tersedia setelah 1 periode selesai (cut-off)</div>';
       } else {
         const durs = cp.map(function(x){ return daysBetween(x.startDate, x.cutoffDate); });
         const avgDur = Math.round(durs.reduce(function(a,b){return a+b;},0)/durs.length);
@@ -2064,7 +2064,7 @@ function renderKandangDetail(kandangId) {
         const pStart = addDays(lastCO, avgGap);
         const pEnd = addDays(pStart, avgDur);
         prediksiHTML = '<div class="prediksi-card">' +
-          '<div style="font-family:Plus Jakarta Sans,sans-serif;font-weight:700;font-size:14px;color:#1a1a2e">🔮 Prediksi Periode Berikutnya</div>' +
+          '<div style="font-family:Plus Jakarta Sans,sans-serif;font-weight:700;font-size:14px;color:#1a1a2e">Prediksi Periode Berikutnya</div>' +
           '<div class="prediksi-grid">' +
           '<div class="prediksi-item"><div class="pi-label">Prediksi Mulai</div><div class="pi-value" style="color:#2a7de1">' + fmtDate(pStart) + '</div><div class="pi-sub">Gap rata-rata: ' + avgGap + ' hari</div></div>' +
           '<div class="prediksi-item"><div class="pi-label">Prediksi Selesai</div><div class="pi-value" style="color:#2a7de1">' + fmtDate(pEnd) + '</div><div class="pi-sub">Durasi ~' + avgDur + ' hari</div></div>' +
@@ -2117,7 +2117,7 @@ function renderKandangDetail(kandangId) {
           '<td class="mono" style="text-align:right">' + fmt(e.pengajuan) + '</td>' +
           '<td style="font-size:12px">' + e.divisi + '</td>' +
           '<td style="font-size:12px;color:var(--text2)">' + (e.desc||'-') + '</td>' +
-          '<td>' + (e.files&&e.files.length ? '<span class="tag tag-gray" style="font-size:10px">📎 '+e.files.length+'</span>' : '-') + '</td>' +
+          '<td>' + (e.files&&e.files.length ? '<span class="tag tag-gray" style="font-size:10px">'+e.files.length+'</span>' : '-') + '</td>' +
           '<td style="display:flex;gap:4px"><button class="btn btn-secondary btn-sm btn-icon" data-kid="' + kandangId + '" data-pid="' + p.id + '" data-eid="' + e.id + '" data-spbg="' + (e.spbg||0) + '" data-pgs="' + (e.pgs||0) + '" data-pengajuan="' + (e.pengajuan||0) + '" data-desc="' + (e.desc||'') + '" onclick="openEditOpex(this)" title="Edit">&#9998;</button><button class="btn btn-danger btn-sm btn-icon" data-kid="' + kandangId + '" data-pid="' + p.id + '" data-eid="' + e.id + '" onclick="deleteOpexByData(this)">&#215;</button></td></tr>';
       });
     } else {
@@ -2136,7 +2136,7 @@ function renderKandangDetail(kandangId) {
           '<td><span class="tag tag-yellow" style="font-size:10px">' + e.category + '</span></td>' +
           '<td style="font-size:12px;color:var(--text2)">' + (e.desc||'-') + '</td>' +
           '<td class="mono" style="text-align:right;color:var(--red)">' + fmt(e.nominal) + '</td>' +
-          '<td>' + (e.files&&e.files.length ? '<span class="tag tag-gray" style="font-size:10px">📎 '+e.files.length+'</span>' : '-') + '</td>' +
+          '<td>' + (e.files&&e.files.length ? '<span class="tag tag-gray" style="font-size:10px">'+e.files.length+'</span>' : '-') + '</td>' +
           '<td><button class="btn btn-danger btn-sm btn-icon" onclick="deleteOps(\'' + kandangId + '\',\'' + p.id + '\',\'' + e.id + '\')">×</button></td></tr>';
       });
     } else {
@@ -2146,7 +2146,7 @@ function renderKandangDetail(kandangId) {
     const cutoffBtn = !p.isCutoff
       ? '<button class="btn btn-sm" style="border:1px solid #1a9e5c;color:#1a9e5c;background:rgba(26,158,92,0.06)" data-kid="' + kandangId + '" data-pid="' + p.id + '" onclick="doCutoff(this.dataset.kid,this.dataset.pid)">✂ Cut-off</button>'
       : '<button class="btn btn-secondary btn-sm" data-kid="' + kandangId + '" data-pid="' + p.id + '" data-cutoff="' + (p.cutoffDate||'') + '" onclick="doEditCutoff(this.dataset.kid,this.dataset.pid,this.dataset.cutoff)">✏ Edit Cut-off</button>' +
-      '<button class="btn btn-sm" style="background:rgba(42,125,225,0.08);color:var(--accent2);border:1px solid rgba(42,125,225,0.25)" data-kid="' + kandangId + '" data-pid="' + p.id + '" onclick="openInvoiceModal(this.dataset.kid,this.dataset.pid)">' + (p.invoiceLink ? '&#128203; &#10003; Invoice' : '&#128203; Invoice') + '</button>';
+      '<button class="btn btn-sm" style="background:rgba(42,125,225,0.08);color:var(--accent2);border:1px solid rgba(42,125,225,0.25)" data-kid="' + kandangId + '" data-pid="' + p.id + '" onclick="openInvoiceModal(this.dataset.kid,this.dataset.pid)">' + (p.invoiceLink ? '&#10003; Invoice' : 'Invoice') + '</button>';
 
     if (typeof window._periodeOpen === 'undefined') window._periodeOpen = {};
     var pbid = 'pbody-' + p.id;
@@ -2305,7 +2305,7 @@ function renderSummary(presetClient) {
 
   window._pnlRows = [];
   cont.innerHTML =
-    '<div style="background:rgba(42,125,225,0.06);border:1px solid rgba(42,125,225,0.2);border-radius:10px;padding:10px 14px;margin-bottom:12px;font-size:12px;color:var(--text2)">💡 <strong>Info:</strong> OpEx hanya tercatat pada periode tempat transaksi diinput. Jika OpEx = 0 pada periode cut-off, kemungkinan transaksi diinput di periode aktif yang berbeda. Cek di <strong>OpEx Tracker</strong> per kandang.</div>' +
+    '<div style="background:rgba(42,125,225,0.06);border:1px solid rgba(42,125,225,0.2);border-radius:10px;padding:10px 14px;margin-bottom:12px;font-size:12px;color:var(--text2)"><strong>Info:</strong> OpEx hanya tercatat pada periode tempat transaksi diinput. Jika OpEx = 0 pada periode cut-off, kemungkinan transaksi diinput di periode aktif yang berbeda. Cek di <strong>OpEx Tracker</strong> per kandang.</div>' +
     '<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px 20px;margin-bottom:16px">' + +
     '<div style="display:flex;gap:6px;flex-wrap:wrap">' + clientChips + '</div></div>' +
     '<div><div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Filter Bulan</div>' +
@@ -2609,7 +2609,7 @@ function renderMaster() {
       '<td><button class="btn btn-danger btn-sm btn-icon" data-cat="' + c + '" onclick="deleteCapexCategory(this.dataset.cat)">&#215;</button></td>' +
     '</tr>';
   }).join('');
-  var capexCatSection = '<div class="table-wrap" style="margin-bottom:20px"><div class="table-header"><div class="table-title">💰 Kategori CAPEX</div>' +
+  var capexCatSection = '<div class="table-wrap" style="margin-bottom:20px"><div class="table-header"><div class="table-title">Kategori CAPEX</div>' +
     '<button class="btn btn-primary btn-sm" onclick="addCapexCategory()">+ Tambah Kategori</button></div>' +
     '<table><thead><tr><th>Nama Kategori</th><th style="text-align:right">Dipakai</th><th></th></tr></thead><tbody>' + capexCatRows + '</tbody></table>' +
     '</div>';
@@ -2956,9 +2956,9 @@ function updateCogsFormula() {
   var jisdorOk = jis > 0;
   preview.style.display = 'block';
   var html = '<div style="display:flex;flex-direction:column;gap:6px">';
-  html += '<div>&#128200; Formula: (' + hg + ' / ' + mn + ') &times; ' + (jisdorOk ? jis.toLocaleString('id-ID') : '<span style="color:var(--yellow)">? (Jisdor ' + monthKey + ' ' + yr + ' belum diisi)</span>') + ' = <strong style="color:var(--text)">' + (jisdorOk ? 'Rp' + Math.round(cps).toLocaleString('id-ID') + '/Sm&#179;' : '—') + '</strong></div>';
+  html += '<div>Formula: (' + hg + ' / ' + mn + ') &times; ' + (jisdorOk ? jis.toLocaleString('id-ID') : '<span style="color:var(--yellow)">? (Jisdor ' + monthKey + ' ' + yr + ' belum diisi)</span>') + ' = <strong style="color:var(--text)">' + (jisdorOk ? 'Rp' + Math.round(cps).toLocaleString('id-ID') + '/Sm&#179;' : '—') + '</strong></div>';
   if (jisdorOk && vol > 0) {
-    html += '<div style="border-top:1px solid var(--border);padding-top:6px;margin-top:2px">&#128181; Total Cost: ' + vol.toLocaleString('id-ID', {maximumFractionDigits:2}) + ' &times; Rp' + Math.round(cps).toLocaleString('id-ID') + ' = <strong style="color:var(--accent);font-size:13px">Rp' + Math.round(totalCost).toLocaleString('id-ID') + '</strong></div>';
+    html += '<div style="border-top:1px solid var(--border);padding-top:6px;margin-top:2px">Total Cost: ' + vol.toLocaleString('id-ID', {maximumFractionDigits:2}) + ' &times; Rp' + Math.round(cps).toLocaleString('id-ID') + ' = <strong style="color:var(--accent);font-size:13px">Rp' + Math.round(totalCost).toLocaleString('id-ID') + '</strong></div>';
   } else if (jisdorOk && vol === 0) {
     html += '<div style="color:var(--text3);font-size:11px;padding-top:4px">Masukkan volume untuk lihat Total Cost</div>';
   }
@@ -3104,7 +3104,7 @@ function openAddOpexModal(kandangId, periodeId) {
 document.getElementById('input-opex-file').addEventListener('change', function() {
   pendingOpexFiles = Array.from(this.files).map(function(f){ return {name:f.name,size:f.size}; });
   document.getElementById('opex-file-list').innerHTML = pendingOpexFiles.map(function(f){
-    return '<div class="file-item"><span class="file-name">📎 '+f.name+'</span><span style="font-size:10px;color:var(--text3)">'+(f.size/1024).toFixed(1)+'KB</span></div>';
+    return '<div class="file-item"><span class="file-name">'+f.name+'</span><span style="font-size:10px;color:var(--text3)">'+(f.size/1024).toFixed(1)+'KB</span></div>';
   }).join('');
 });
 function saveOpex() {
@@ -3158,7 +3158,7 @@ function openAddOpsModal(kandangId, periodeId) {
 document.getElementById('input-ops-file').addEventListener('change', function() {
   pendingOpsFiles = Array.from(this.files).map(function(f){ return {name:f.name,size:f.size}; });
   document.getElementById('ops-file-list').innerHTML = pendingOpsFiles.map(function(f){
-    return '<div class="file-item"><span class="file-name">📎 '+f.name+'</span><span style="font-size:10px;color:var(--text3)">'+(f.size/1024).toFixed(1)+'KB</span></div>';
+    return '<div class="file-item"><span class="file-name">'+f.name+'</span><span style="font-size:10px;color:var(--text3)">'+(f.size/1024).toFixed(1)+'KB</span></div>';
   }).join('');
 });
 function saveOps() {
@@ -3721,9 +3721,9 @@ function renderGantt() {
     '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px">' +
     '<div class="stat-card blue"><div class="stat-label">Kandang Aktif</div><div class="stat-value mono" style="font-size:22px">'+tmAktif+'</div><div class="stat-sub">periode berjalan</div></div>' +
     '<div class="stat-card blue"><div class="stat-label">Proj. Volume</div><div class="stat-value mono" style="font-size:18px">'+fmtNum(tmVol,0)+' Sm&#179;</div><div class="stat-sub">proyeksi periode berjalan</div></div>' +
-    '<div class="stat-card green" style="cursor:pointer" onclick="openTMModal(\'rev\')" title="Klik untuk detail"><div class="stat-label">Proj. Revenue &#128269;</div><div class="stat-value mono" style="font-size:18px">'+fmt(tmRev)+'</div><div class="stat-sub">proyeksi periode berjalan</div></div>' +
-    '<div class="stat-card red" style="cursor:pointer" onclick="openTMModal(\'cogs\')" title="Klik untuk detail"><div class="stat-label">Proj. COGS &#128269;</div><div class="stat-value mono" style="font-size:18px">('+fmt(tmCogs)+')</div><div class="stat-sub">'+(tmRev>0?((tmCogs/tmRev)*100).toFixed(1)+'% dari rev':'&#8212;')+'</div></div>' +
-    '<div class="stat-card '+(tmOp>=0?'green':'red')+'" style="cursor:pointer" onclick="openTMModal(\'opincome\')" title="Klik untuk detail"><div class="stat-label">Proj. Op. Income &#128269;</div><div class="stat-value mono" style="font-size:18px">'+fmt(tmOp)+'</div><div class="stat-sub">'+(tmRev>0?((tmOp/tmRev)*100).toFixed(1)+'% margin':'&#8212;')+'</div></div>' +
+    '<div class="stat-card green" style="cursor:pointer" onclick="openTMModal(\'rev\')" title="Klik untuk detail"><div class="stat-label">Proj. Revenue </div><div class="stat-value mono" style="font-size:18px">'+fmt(tmRev)+'</div><div class="stat-sub">proyeksi periode berjalan</div></div>' +
+    '<div class="stat-card red" style="cursor:pointer" onclick="openTMModal(\'cogs\')" title="Klik untuk detail"><div class="stat-label">Proj. COGS </div><div class="stat-value mono" style="font-size:18px">('+fmt(tmCogs)+')</div><div class="stat-sub">'+(tmRev>0?((tmCogs/tmRev)*100).toFixed(1)+'% dari rev':'&#8212;')+'</div></div>' +
+    '<div class="stat-card '+(tmOp>=0?'green':'red')+'" style="cursor:pointer" onclick="openTMModal(\'opincome\')" title="Klik untuk detail"><div class="stat-label">Proj. Op. Income </div><div class="stat-value mono" style="font-size:18px">'+fmt(tmOp)+'</div><div class="stat-sub">'+(tmRev>0?((tmOp/tmRev)*100).toFixed(1)+'% margin':'&#8212;')+'</div></div>' +
     '</div></div>';
 
   // Monthly prediction list
@@ -3901,7 +3901,7 @@ function showGanttDetail(tid) {
   } else if (bar.isActive) {
     var pr = bar.proyeksi;
     var mColor2 = pr && pr.proyeksiMargin>=25?'var(--green)':pr && pr.proyeksiMargin>=15?'var(--yellow)':'var(--red)';
-    inner += '</div><div style="font-size:11px;font-weight:700;color:var(--accent2);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px">&#128202; Proyeksi Akhir Periode (estimasi)</div>' +
+    inner += '</div><div style="font-size:11px;font-weight:700;color:var(--accent2);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px">Proyeksi Akhir Periode (estimasi)</div>' +
       '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:4px">';
     inner += statBox('Mulai', fmtDate(bar.startDate), 'var(--accent2)');
     inner += statBox('Pred. Cut-off', fmtDate(bar.endDate), 'var(--accent2)');
@@ -4201,7 +4201,7 @@ function renderPrediksi() {
     });
   });
 
-  if (!cards.length) { cont.innerHTML = '<div class="empty-state"><div class="icon">&#128302;</div><p>Belum ada data</p></div>'; return; }
+  if (!cards.length) { cont.innerHTML = '<div class="empty-state"><div class="icon"></div><p>Belum ada data</p></div>'; return; }
 
   var totalPredRev = 0;
   cards.forEach(function(c){ if(c.pred) totalPredRev += c.pred.avgRev; });
@@ -4342,10 +4342,10 @@ function renderPrediksi() {
     '<div id="sim-results" style="margin-top:12px"></div>' +
     '</div>' +
     '<div style="display:grid;grid-template-columns:1fr 1.5fr;gap:20px">' +
-    '<div><div style="font-family:Plus Jakarta Sans,sans-serif;font-weight:700;font-size:15px;margin-bottom:14px">&#128197; Timeline Pendapatan</div>' +
+    '<div><div style="font-family:Plus Jakarta Sans,sans-serif;font-weight:700;font-size:15px;margin-bottom:14px">Timeline Pendapatan</div>' +
     (timelineHTML || '<div style="color:var(--text3);font-size:13px;padding:20px 0;text-align:center">Belum ada data prediksi</div>') +
     '</div>' +
-    '<div><div style="font-family:Plus Jakarta Sans,sans-serif;font-weight:700;font-size:15px;margin-bottom:14px">&#128202; Prediksi per Kandang</div>' +
+    '<div><div style="font-family:Plus Jakarta Sans,sans-serif;font-weight:700;font-size:15px;margin-bottom:14px">Prediksi per Kandang</div>' +
     '<div style="display:flex;flex-direction:column;gap:10px">' + kandangCardsHTML + '</div>' +
     '</div></div>';
   setTimeout(runJisdorSim, 50);
@@ -4778,7 +4778,7 @@ function renderSummarySupply() {
       '<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px 18px;margin-bottom:14px">' +
       '<div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Filter Client</div>' +
       '<div style="display:flex;gap:6px;flex-wrap:wrap">' + clientChips + '</div></div>' +
-      '<div class="empty-state"><div class="icon">&#128197;</div><p>Belum ada data COGS untuk client ini</p></div>';
+      '<div class="empty-state"><div class="icon"></div><p>Belum ada data COGS untuk client ini</p></div>';
     return;
   }
 
@@ -4921,7 +4921,7 @@ function renderSummaryInvoice() {
       '<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px 18px;margin-bottom:14px">' +
       '<div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Filter Client</div>' +
       '<div style="display:flex;gap:6px;flex-wrap:wrap">' + clientChips + '</div></div>' +
-      '<div class="empty-state"><div class="icon">&#128197;</div><p>Belum ada periode cut-off untuk client ini</p></div>';
+      '<div class="empty-state"><div class="icon"></div><p>Belum ada periode cut-off untuk client ini</p></div>';
     return;
   }
 
@@ -4989,7 +4989,7 @@ function renderSummaryInvoice() {
     '<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px 18px;margin-bottom:14px">' +
     '<div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Filter Client</div>' +
     '<div style="display:flex;gap:6px;flex-wrap:wrap">' + clientChips + '</div></div>' +
-    '<div class="info-box" style="margin-bottom:14px">&#128181; Revenue dicatat pada bulan cash masuk = H+7 setelah cut-off date</div>' +
+    '<div class="info-box" style="margin-bottom:14px">Revenue dicatat pada bulan cash masuk = H+7 setelah cut-off date</div>' +
     '<div class="table-wrap"><div class="table-header"><div class="table-title">Laporan Bulanan — Cash In (H+7 Cut-off)</div><div style="font-size:12px;color:var(--text2)">' + sorted.length + ' bulan · klik baris untuk detail invoice</div></div>' +
     '<table><thead><tr><th>Bulan Cash Masuk</th><th style="text-align:right">Jumlah Invoice</th><th style="text-align:right">Revenue</th><th style="text-align:right">COGS</th><th style="text-align:right">Op. Income</th><th style="text-align:right">Margin</th></tr></thead>' +
     '<tbody>' + tableRows + totalRow + '</tbody></table>' + buildInvoiceSummaryMobileCards(sorted) + '</div>';
@@ -5152,26 +5152,47 @@ function buildInvoiceList() {
 var _invoiceKandangFilter = "";
 var _invoiceStatusFilter = "";
 var _invoiceCategoryFilter = "";
+var _invoiceBehaviorOpen = false;
+var _invoicePage = 1;
+var INVOICE_PAGE_SIZE = 15;
+
+function toggleInvoiceBehaviorSection() {
+  _invoiceBehaviorOpen = !_invoiceBehaviorOpen;
+  var body = document.getElementById('invoice-behavior-body');
+  var chevron = document.getElementById('invoice-behavior-chevron');
+  if (body) body.style.display = _invoiceBehaviorOpen ? 'block' : 'none';
+  if (chevron) chevron.style.transform = _invoiceBehaviorOpen ? 'rotate(90deg)' : 'rotate(0deg)';
+}
+
+function setInvoicePage(p) {
+  _invoicePage = p;
+  renderInvoiceTracker();
+  var wrap = document.getElementById('invoice-table-wrap');
+  if (wrap) wrap.scrollIntoView({behavior:'smooth', block:'start'});
+}
 
 function setInvoiceStatusFilter(val) {
   _invoiceStatusFilter = val;
+  _invoicePage = 1;
   renderInvoiceTracker();
 }
 
 function setInvoiceKandangFilter(val) {
   _invoiceKandangFilter = val;
+  _invoicePage = 1;
   renderInvoiceTracker();
 }
 
 function setInvoiceCategoryFilter(val) {
   _invoiceCategoryFilter = val;
+  _invoicePage = 1;
   renderInvoiceTracker();
 }
 
 function renderInvoiceTracker() {
   var cont = document.getElementById('content-invoice');
   var invoices = buildInvoiceList();
-  if (!invoices.length) { cont.innerHTML = '<div class="empty-state"><div class="icon">&#128203;</div><p>Belum ada periode cut-off</p></div>'; return; }
+  if (!invoices.length) { cont.innerHTML = '<div class="empty-state"><div class="icon"></div><p>Belum ada periode cut-off</p></div>'; return; }
 
   var order = {overdue:0, belum:1, lunas:2};
   invoices.sort(function(a,b){ return (order[a.payStatus]||0)-(order[b.payStatus]||0) || a.deadline.localeCompare(b.deadline); });
@@ -5186,7 +5207,7 @@ function renderInvoiceTracker() {
       kandangList.push({ id: inv.kandangId, name: inv.kandang, client: inv.client });
     }
   });
-  kandangList.sort(function(a,b){ return a.name.localeCompare(b.name); });
+  kandangList.sort(function(a,b){ return a.client.localeCompare(b.client) || a.name.localeCompare(b.name); });
 
   // Hitung summary dari semua invoice (sebelum filter)
   var allInvoices = invoices.slice();
@@ -5224,7 +5245,7 @@ function renderInvoiceTracker() {
       '<div class="stat-card blue"><div class="stat-label">Total Invoice</div><div class="stat-value mono" style="font-size:22px">'+nTotal+'</div><div class="stat-sub">seluruh periode</div></div>' +
       '<div class="stat-card green"><div class="stat-label">Sudah Lunas</div><div class="stat-value mono" style="font-size:22px">'+nLunas+'</div><div class="stat-sub">'+fmt(totalMasuk)+' diterima</div></div>' +
       '<div class="stat-card '+(nOverdue>0?'red':'yellow')+'"><div class="stat-label">'+(nOverdue>0?'Overdue':'Menunggu')+'</div><div class="stat-value mono" style="font-size:22px">'+(nOverdue||nBelum)+'</div><div class="stat-sub">'+fmt(totalOutstanding)+' outstanding</div></div>' +
-      '<div class="stat-card '+(nWasLate>0?'yellow':'green')+'"><div class="stat-label">Collection Rate</div><div class="stat-value mono" style="font-size:22px">'+pctLunas+'%</div><div class="stat-sub">'+(nWasLate>0?nWasLate+' invoice terlambat':'Semua on time 👌')+'</div></div>' +
+      '<div class="stat-card '+(nWasLate>0?'yellow':'green')+'"><div class="stat-label">Collection Rate</div><div class="stat-value mono" style="font-size:22px">'+pctLunas+'%</div><div class="stat-sub">'+(nWasLate>0?nWasLate+' invoice terlambat':'Semua on time ')+'</div></div>' +
       '<div class="stat-card blue"><div class="stat-label">Rata-rata Hari Collection</div><div class="stat-value mono" style="font-size:22px">'+(cccOverall!==null?cccOverall+' hari':'—')+'</div><div class="stat-sub">'+(cccOverall!==null?'dari cut-off s/d bayar ('+lunasInvoices.length+' invoice)':'belum ada data lunas')+'</div></div>' +
     '</div>';
 
@@ -5261,12 +5282,19 @@ function renderInvoiceTracker() {
     '</tr>';
   }).join('');
 
-  var behaviorSection = '<div class="table-wrap" style="margin-bottom:16px"><div class="table-header">' +
-    '<div class="table-title">Payment Behavior per Klien</div>' +
+  var behaviorSection = '<div class="table-wrap" style="margin-bottom:16px">' +
+    '<div class="table-header" style="cursor:pointer" onclick="toggleInvoiceBehaviorSection()">' +
+    '<div class="table-title" style="display:flex;align-items:center;gap:8px">' +
+    '<span id="invoice-behavior-chevron" style="display:inline-block;transition:transform 0.15s;transform:rotate('+(_invoiceBehaviorOpen?'90deg':'0deg')+')">&#9656;</span>' +
+    'Payment Behavior per Klien' +
+    '<span style="font-size:11px;font-weight:400;color:var(--text3)">('+clientRows.length+' klien)</span>' +
+    '</div>' +
     '<span style="font-size:11px;color:var(--text3)">CCC = rata-rata hari dari cut-off s/d tanggal bayar aktual. Kategori bisa diubah manual di dropdown.</span>' +
     '</div>' +
+    '<div id="invoice-behavior-body" style="display:'+(_invoiceBehaviorOpen?'block':'none')+'">' +
     '<table><thead><tr><th>Client</th><th style="text-align:center">CCC Rata-rata</th><th style="text-align:center">Histori</th><th>Kategori</th><th style="text-align:right">Outstanding</th><th style="text-align:center">Belum Lunas</th></tr></thead>' +
-    '<tbody>' + behaviorRows + '</tbody></table></div>';
+    '<tbody>' + behaviorRows + '</tbody></table>' +
+    '</div></div>';
 
   // ===== Exposure per kategori =====
   var exposureSection = '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:16px">' +
@@ -5298,9 +5326,17 @@ function renderInvoiceTracker() {
     belum: '<span class="tag tag-gray">&#9711; Belum</span>'
   };
 
-  var tableRows = invoices.map(function(inv) {
+  // Pagination: potong invoices (yang sudah difilter) ke halaman aktif
+  var totalPages = Math.max(1, Math.ceil(nFiltered / INVOICE_PAGE_SIZE));
+  if (_invoicePage > totalPages) _invoicePage = totalPages;
+  if (_invoicePage < 1) _invoicePage = 1;
+  var pageStart = (_invoicePage - 1) * INVOICE_PAGE_SIZE;
+  var invoicesPage = invoices.slice(pageStart, pageStart + INVOICE_PAGE_SIZE);
+
+  var tableRows = invoicesPage.map(function(inv) {
     var catMeta = inv.paymentCategory ? PAYMENT_CATEGORY_META[inv.paymentCategory] : null;
-    var clientCell = inv.client + (catMeta ? ' <span style="font-size:9px;padding:1px 6px;border-radius:8px;background:'+catMeta.bg+';color:'+catMeta.color+';font-weight:600">'+catMeta.icon+' '+catMeta.label+'</span>' : '');
+    var clientCell = inv.client;
+    var categoryCell = catMeta ? '<span style="font-size:10px;padding:2px 8px;border-radius:8px;background:'+catMeta.bg+';color:'+catMeta.color+';font-weight:600;white-space:nowrap">'+catMeta.icon+' '+catMeta.label+'</span>' : '<span style="font-size:11px;color:var(--text3)">—</span>';
     var tglBayarCell = '';
     if (inv.paidDate) {
       tglBayarCell = '<div style="font-size:12px">' +
@@ -5314,7 +5350,7 @@ function renderInvoiceTracker() {
       if (inv.projectedFromHistory) {
         var pColor = inv.paymentCategory==='reliable' ? 'var(--green)' : (inv.paymentCategory==='risk' ? 'var(--red)' : 'var(--yellow)');
         var pLabel = inv.paymentCategory==='reliable' ? 'Proyeksi (confirmed)' : (inv.paymentCategory==='risk' ? 'Proyeksi (excluded dari confirmed)' : 'Proyeksi (estimasi mundur)');
-        projLine = '<div style="font-size:10px;color:'+pColor+';margin-top:3px" title="'+pLabel+', berdasarkan CCC historis klien">&#128337; Est. cair: <strong>'+fmtDate(inv.projectedPayDate)+'</strong></div>';
+        projLine = '<div style="font-size:10px;color:'+pColor+';margin-top:3px" title="'+pLabel+', berdasarkan CCC historis klien">Est. cair: <strong>'+fmtDate(inv.projectedPayDate)+'</strong></div>';
       }
       tglBayarCell = '<div>' +
         '<button class="btn btn-secondary btn-sm" style="font-size:11px" data-kid="'+inv.kandangId+'" data-pid="'+inv.periodeId+'" onclick="openInvoiceModal(this.dataset.kid,this.dataset.pid)">Tandai Lunas</button>' +
@@ -5324,7 +5360,8 @@ function renderInvoiceTracker() {
         '</div>';
     }
     return '<tr>' +
-      '<td>' + clientCell + '</td>' +
+      '<td style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="' + inv.client + '">' + clientCell + '</td>' +
+      '<td>' + categoryCell + '</td>' +
       '<td><span class="tag tag-blue">' + inv.kandang + '</span></td>' +
       '<td class="mono">' + inv.label + '</td>' +
       '<td class="mono">' + fmtDate(inv.cutoffDate) + '</td>' +
@@ -5332,7 +5369,7 @@ function renderInvoiceTracker() {
       '<td>' + statusTag[inv.payStatus] + '</td>' +
       '<td>' +
         '<div style="display:flex;gap:4px;align-items:center">' +
-        (inv.invoiceLink ? '<a href="'+inv.invoiceLink+'" target="_blank" class="btn btn-secondary btn-sm" style="text-decoration:none;font-size:11px">&#128203; Invoice</a>' : '<span style="font-size:11px;color:var(--text3)">—</span>') +
+        (inv.invoiceLink ? '<a href="'+inv.invoiceLink+'" target="_blank" class="btn btn-secondary btn-sm" style="text-decoration:none;font-size:11px">Invoice</a>' : '<span style="font-size:11px;color:var(--text3)">—</span>') +
         ' <button class="btn btn-secondary btn-sm btn-icon" style="font-size:11px" data-kid="'+inv.kandangId+'" data-pid="'+inv.periodeId+'" onclick="openInvoiceModal(this.dataset.kid,this.dataset.pid)">&#9998;</button>' +
         '</div>' +
       '</td>' +
@@ -5340,11 +5377,6 @@ function renderInvoiceTracker() {
       '<td class="mono" style="text-align:right">' + fmt(inv.revenue) + '</td>' +
     '</tr>';
   }).join('');
-
-  var kandangOptions = '<option value="">Semua Kandang</option>' +
-    kandangList.map(function(k){
-      return '<option value="'+k.id+'"'+(k.id===_invoiceKandangFilter?' selected':'')+'>'+k.name+' — '+k.client+'</option>';
-    }).join('');
 
   var statusOptions =
     '<option value=""'  +(!_invoiceStatusFilter?' selected':'')+'>Semua Status</option>' +
@@ -5361,20 +5393,44 @@ function renderInvoiceTracker() {
 
   var dropdownStyle = 'font-size:12px;padding:5px 8px;border:1px solid var(--border);border-radius:7px;background:var(--surface);color:var(--text);cursor:pointer;';
 
+  var paginationHTML = '';
+  if (totalPages > 1) {
+    var pageBtns = '';
+    for (var pn = 1; pn <= totalPages; pn++) {
+      // Tampilin max 7 nomor halaman biar ga kepanjangan kalau halamannya banyak
+      if (totalPages > 7 && pn !== 1 && pn !== totalPages && Math.abs(pn - _invoicePage) > 1) {
+        if (pn === 2 || pn === totalPages - 1) pageBtns += '<span style="padding:0 4px;color:var(--text3)">&#8230;</span>';
+        continue;
+      }
+      pageBtns += '<button onclick="setInvoicePage('+pn+')" style="min-width:30px;padding:5px 8px;border-radius:6px;border:1px solid var(--border);background:'+(pn===_invoicePage?'var(--accent2)':'var(--surface)')+';color:'+(pn===_invoicePage?'#fff':'var(--text2)')+';font-size:12px;font-weight:600;cursor:pointer">'+pn+'</button>';
+    }
+    paginationHTML = '<div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-top:1px solid var(--border)">' +
+      '<span style="font-size:11px;color:var(--text3)">Menampilkan '+(pageStart+1)+'&#8211;'+Math.min(pageStart+INVOICE_PAGE_SIZE,nFiltered)+' dari '+nFiltered+' invoice</span>' +
+      '<div style="display:flex;gap:4px;align-items:center">' +
+      '<button onclick="setInvoicePage('+Math.max(1,_invoicePage-1)+')" '+(_invoicePage===1?'disabled':'')+' style="padding:5px 10px;border-radius:6px;border:1px solid var(--border);background:var(--surface);color:var(--text2);font-size:12px;cursor:pointer;opacity:'+(_invoicePage===1?'0.4':'1')+'">&#8249; Prev</button>' +
+      pageBtns +
+      '<button onclick="setInvoicePage('+Math.min(totalPages,_invoicePage+1)+')" '+(_invoicePage===totalPages?'disabled':'')+' style="padding:5px 10px;border-radius:6px;border:1px solid var(--border);background:var(--surface);color:var(--text2);font-size:12px;cursor:pointer;opacity:'+(_invoicePage===totalPages?'0.4':'1')+'">Next &#8250;</button>' +
+      '</div></div>';
+  }
+
   cont.innerHTML =
     summaryBar +
     behaviorSection +
     exposureSection +
-    '<div class="table-wrap"><div class="table-header">' +
+    '<div class="table-wrap" id="invoice-table-wrap"><div class="table-header">' +
     '<div class="table-title">Semua Invoice</div>' +
     '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">' +
-    '<select onchange="setInvoiceKandangFilter(this.value)" style="'+dropdownStyle+'min-width:160px"><option value="">Semua Kandang</option>' + kandangList.map(function(k){ return '<option value="'+k.id+'"'+(k.id===_invoiceKandangFilter?' selected':'')+'>'+k.name+'</option>'; }).join('') + '</select>' +
+    '<select onchange="setInvoiceKandangFilter(this.value)" style="'+dropdownStyle+'min-width:200px"><option value="">Semua Kandang</option>' + kandangList.map(function(k){ return '<option value="'+k.id+'"'+(k.id===_invoiceKandangFilter?' selected':'')+'>'+k.client+' — '+k.name+'</option>'; }).join('') + '</select>' +
     '<select onchange="setInvoiceStatusFilter(this.value)" style="'+dropdownStyle+'min-width:120px">' + statusOptions + '</select>' +
     '<select onchange="setInvoiceCategoryFilter(this.value)" style="'+dropdownStyle+'min-width:140px">' + categoryOptions + '</select>' +
     '<span style="font-size:11px;color:var(--text3)">' + nFiltered + ' invoice &middot; ' + nFilteredLunas + ' lunas &middot; ' + nFilteredOverdue + ' overdue &middot; ' + nFilteredBelum + ' belum</span>' +
     '</div></div>' +
-    '<table><thead><tr><th>Client</th><th>Kandang</th><th>Periode</th><th>Cut-off</th><th>Deadline Bayar</th><th>Status</th><th>Invoice</th><th>Tgl Bayar Aktual</th><th style="text-align:right">Nilai</th></tr></thead>' +
-    '<tbody>' + tableRows + '</tbody></table>' + buildInvoiceTrackerMobileCards(invoices) + '</div>';
+    '<table style="table-layout:fixed"><colgroup>' +
+      '<col style="width:14%"><col style="width:9%"><col style="width:11%"><col style="width:7%">' +
+      '<col style="width:10%"><col style="width:10%"><col style="width:9%"><col style="width:9%">' +
+      '<col style="width:13%"><col style="width:8%">' +
+    '</colgroup><thead><tr><th>Client</th><th>Kategori</th><th>Kandang</th><th>Periode</th><th>Cut-off</th><th>Deadline Bayar</th><th>Status</th><th>Invoice</th><th>Tgl Bayar Aktual</th><th style="text-align:right">Nilai</th></tr></thead>' +
+    '<tbody>' + tableRows + '</tbody></table>' + paginationHTML + buildInvoiceTrackerMobileCards(invoicesPage) + '</div>';
 }
 
 // ============= MARK INVOICE PAID =============
@@ -5458,7 +5514,7 @@ function renderInvoiceBulanan() {
   var MONTH_SHORT = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
 
   var invoices = buildInvoiceList();
-  if (!invoices.length) { cont.innerHTML = '<div class="empty-state"><div class="icon">&#128203;</div><p>Belum ada invoice</p></div>'; return; }
+  if (!invoices.length) { cont.innerHTML = '<div class="empty-state"><div class="icon"></div><p>Belum ada invoice</p></div>'; return; }
 
   var yearSet = {};
   invoices.forEach(function(inv){ yearSet[inv.cashMonth.slice(0,4)] = 1; });
@@ -5490,7 +5546,7 @@ function renderInvoiceBulanan() {
     if (!byMonth[inv.cashMonth]) byMonth[inv.cashMonth] = [];
     byMonth[inv.cashMonth].push(inv);
   });
-  var months = Object.keys(byMonth).sort();
+  var months = Object.keys(byMonth).sort().reverse();
 
   var statusTag = {
     lunas: '<span class="tag tag-green" style="font-size:10px">&#10003; Lunas</span>',
@@ -5544,14 +5600,14 @@ function renderInvoiceBulanan() {
         : '<button class="btn btn-secondary btn-sm" style="font-size:11px" data-kid="'+inv.kandangId+'" data-pid="'+inv.periodeId+'" onclick="openInvoiceModal(this.dataset.kid,this.dataset.pid)">Tandai Lunas</button>' +
           (inv.payStatus==='overdue'?'<div style="font-size:11px;color:var(--red);margin-top:2px">'+inv.daysLate+' hr overdue</div>':'');
       return '<tr>' +
-        '<td>' + inv.client + '</td>' +
+        '<td style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="'+inv.client+'">' + inv.client + '</td>' +
         '<td><span class="tag tag-blue">' + inv.kandang + '</span></td>' +
         '<td class="mono">' + inv.label + '</td>' +
         '<td class="mono">' + fmtDate(inv.cutoffDate) + '</td>' +
         '<td class="mono"><strong>' + fmtDate(inv.deadline) + '</strong></td>' +
         '<td>' + statusTag[inv.payStatus] + '</td>' +
         '<td><div style="display:flex;gap:4px;align-items:center">' +
-          (inv.invoiceLink?'<a href="'+inv.invoiceLink+'" target="_blank" class="btn btn-secondary btn-sm" style="text-decoration:none;font-size:11px">&#128203;</a>':'<span style="font-size:11px;color:var(--text3)">—</span>') +
+          (inv.invoiceLink?'<a href="'+inv.invoiceLink+'" target="_blank" class="btn btn-secondary btn-sm" style="text-decoration:none;font-size:11px"></a>':'<span style="font-size:11px;color:var(--text3)">—</span>') +
           ' <button class="btn btn-secondary btn-sm btn-icon" data-kid="'+inv.kandangId+'" data-pid="'+inv.periodeId+'" onclick="openInvoiceModal(this.dataset.kid,this.dataset.pid)" style="font-size:11px">&#9998;</button>' +
           '</div></td>' +
         '<td>' + tglBayarCell + '</td>' +
@@ -5573,7 +5629,10 @@ function renderInvoiceBulanan() {
         '<div class="mono" style="font-weight:700;color:var(--green)">'+fmt(totMasuk)+'</div>' +
         (totMasuk < totRev?'<div style="font-size:11px;color:var(--text3)">dari '+fmt(totRev)+'</div>':'') +
       '</div></div>' +
-      '<table><thead><tr><th>Client</th><th>Kandang</th><th>Periode</th><th>Cut-off</th><th>Deadline</th><th>Status</th><th>Invoice</th><th>Tgl Bayar</th><th style="text-align:right">Nilai</th></tr></thead>' +
+      '<table style="table-layout:fixed"><colgroup>' +
+        '<col style="width:16%"><col style="width:12%"><col style="width:8%"><col style="width:11%">' +
+        '<col style="width:11%"><col style="width:10%"><col style="width:9%"><col style="width:14%"><col style="width:9%">' +
+      '</colgroup><thead><tr><th>Client</th><th>Kandang</th><th>Periode</th><th>Cut-off</th><th>Deadline</th><th>Status</th><th>Invoice</th><th>Tgl Bayar</th><th style="text-align:right">Nilai</th></tr></thead>' +
       '<tbody>' + rows + '</tbody></table></div>';
   });
 
@@ -5662,7 +5721,7 @@ function renderInvoiceKalender() {
         kandangId:inv.kandangId, periodeId:inv.periodeId, date:dateStr
       }));
       return '<div onclick="showInvKalPopup(\''+evData+'\')" style="cursor:pointer;width:100%;font-size:10px;padding:2px 4px;border-radius:3px;margin-top:2px;background:'+sc+'20;color:'+sc+';white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border-left:2px solid '+sc+';transition:opacity .15s" onmouseover="this.style.opacity=.7" onmouseout="this.style.opacity=1">' +
-        inv.client.split(' ')[0]+' '+inv.kandang+(inv.wasLate?' ⚡':'')+'</div>';
+        inv.client.split(' ')[0]+' '+inv.kandang+(inv.wasLate?' ':'')+'</div>';
     }).join('');
     if (dayInvs.length > 3) dots += '<div style="font-size:10px;color:var(--accent2);cursor:pointer;padding:1px 0">+' + (dayInvs.length-3) + ' lagi</div>';
 
@@ -5715,7 +5774,7 @@ function showInvKalPopup(evDataEncoded) {
   var statusBadge = inv.payStatus==='lunas'
     ? '<span class="tag tag-green">✓ Lunas'+(inv.wasLate?' <span style="color:var(--yellow);font-size:10px">(+'+inv.daysLate+' hari)</span>':'')+'</span>'
     : inv.payStatus==='overdue'
-      ? '<span class="tag tag-red">⚠ Overdue · '+inv.daysLate+' hari</span>'
+      ? '<span class="tag tag-red">Overdue · '+inv.daysLate+' hari</span>'
       : '<span class="tag tag-yellow">○ Belum Dibayar</span>';
 
   var rows = [
@@ -5739,7 +5798,7 @@ function showInvKalPopup(evDataEncoded) {
     : '<button class="btn btn-secondary btn-sm" style="width:100%;margin-top:4px" data-kid="'+inv.kandangId+'" data-pid="'+inv.periodeId+'" onclick="openInvoiceModal(this.dataset.kid,this.dataset.pid);closeInvKalPopup()">✎ Edit Invoice</button>';
 
   var invLinkBtn = inv.invoiceLink
-    ? '<a href="'+inv.invoiceLink+'" target="_blank" class="btn btn-secondary btn-sm" style="width:100%;text-decoration:none;text-align:center;margin-top:6px;display:block">📄 Buka Invoice</a>'
+    ? '<a href="'+inv.invoiceLink+'" target="_blank" class="btn btn-secondary btn-sm" style="width:100%;text-decoration:none;text-align:center;margin-top:6px;display:block">Buka Invoice</a>'
     : '';
 
   popup.innerHTML = '<div onclick="event.stopPropagation()" style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:0;width:420px;max-width:95vw;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.2)">' +
@@ -5947,7 +6006,7 @@ function renderPrediksiKalender() {
       }));
       var borderStyle = ev.isEstimate ? '1px dashed '+ev.color : '2px solid '+ev.color;
       var bg = ev.isEstimate ? ev.color+'12' : ev.color+'22';
-      var prefix = ev.isEstimate ? '🔮 ' : '';
+      var prefix = ev.isEstimate ? '' : '';
       return '<div onclick="showPredKalPopup(\''+evData+'\')" style="cursor:pointer;font-size:10px;padding:2px 4px;border-radius:3px;margin-top:2px;background:'+bg+';color:'+ev.color+';white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border-left:'+borderStyle+';transition:opacity .15s" onmouseover="this.style.opacity=.75" onmouseout="this.style.opacity=1">' +
         prefix + ev.client.split(' ')[0]+' '+ev.kandang+'</div>';
     }).join('');
@@ -5958,7 +6017,7 @@ function renderPrediksiKalender() {
       '<span style="font-size:12px;font-weight:'+(isToday?'700':'400')+';color:'+(isToday?'var(--accent2)':'var(--text)')+'">'+d+'</span>' +
       (totRev?'<span style="font-size:10px;font-family:DM Mono,monospace;color:'+(totRevReal>0?'var(--green)':'var(--accent2)')+'">'+
         (totRev>=1e6?(totRev/1e6).toFixed(1)+'M':fmt(totRev))+
-        (totRevEst>0&&totRevReal===0?' 🔮':totRevEst>0?' +🔮':'')+
+        (totRevEst>0&&totRevReal===0?' ':totRevEst>0?' +':'')+
       '</span>':'') +
       '</div>'+dots+'</div>';
   }
@@ -5979,7 +6038,7 @@ function renderPrediksiKalender() {
   if (monthEvReal || monthEvEst) {
     summaryLine = (monthEvReal?'<span style="color:var(--green)">' + monthEvReal + ' invoice · ' + (monthRevReal>=1e6?(monthRevReal/1e6).toFixed(1)+'M':fmt(monthRevReal)) + '</span>':'') +
       (monthEvReal&&monthEvEst?' &nbsp;·&nbsp; ':'') +
-      (monthEvEst?'<span style="color:var(--accent2)">🔮 ' + monthEvEst + ' estimasi · ' + (monthRevEst>=1e6?(monthRevEst/1e6).toFixed(1)+'M':fmt(monthRevEst)) + '</span>':'');
+      (monthEvEst?'<span style="color:var(--accent2)">' + monthEvEst + ' estimasi · ' + (monthRevEst>=1e6?(monthRevEst/1e6).toFixed(1)+'M':fmt(monthRevEst)) + '</span>':'');
   }
 
   cont.innerHTML =
@@ -6011,16 +6070,16 @@ function showPredKalPopup(evDataEncoded) {
   var headerBorder = isEst ? 'rgba(42,125,225,0.25)' : (ev.type==='lunas'?'rgba(26,158,92,0.25)':ev.type==='overdue'?'rgba(200,25,30,0.25)':'rgba(204,136,0,0.25)');
   var statusBadge = isEst
     ? (ev.type==='active-pred'
-        ? '<span class="tag tag-blue" style="font-size:11px">🔮 Estimasi — Periode Berjalan</span>'
-        : '<span class="tag tag-gray" style="font-size:11px">🔮 Estimasi — Periode Berikutnya</span>')
+        ? '<span class="tag tag-blue" style="font-size:11px">Estimasi — Periode Berjalan</span>'
+        : '<span class="tag tag-gray" style="font-size:11px">Estimasi — Periode Berikutnya</span>')
     : (ev.type==='lunas'
         ? '<span class="tag tag-green" style="font-size:11px">✓ Lunas</span>'
         : ev.type==='overdue'
-          ? '<span class="tag tag-red" style="font-size:11px">⚠ Overdue</span>'
+          ? '<span class="tag tag-red" style="font-size:11px">Overdue</span>'
           : '<span class="tag tag-yellow" style="font-size:11px">○ Belum Dibayar</span>');
 
   var estNote = isEst
-    ? '<div style="margin-top:12px;padding:10px 12px;background:rgba(42,125,225,0.06);border:1px dashed rgba(42,125,225,0.3);border-radius:8px;font-size:11px;color:var(--accent2)">🔮 Ini adalah <strong>estimasi</strong> berdasarkan rata-rata ' + (ev.avgDur||'?') + ' hari durasi periode. Akan otomatis terupdate ketika periode ini di-cut-off.</div>'
+    ? '<div style="margin-top:12px;padding:10px 12px;background:rgba(42,125,225,0.06);border:1px dashed rgba(42,125,225,0.3);border-radius:8px;font-size:11px;color:var(--accent2)">Ini adalah <strong>estimasi</strong> berdasarkan rata-rata ' + (ev.avgDur||'?') + ' hari durasi periode. Akan otomatis terupdate ketika periode ini di-cut-off.</div>'
     : '';
 
   var rows = [
@@ -6062,7 +6121,7 @@ function showPredKalPopupList(dateStr) {
     var isEst = ev.isEstimate;
     var borderStyle = isEst ? '2px dashed '+ev.color : '3px solid '+ev.color;
     return '<div data-evdata="'+evData+'" onclick="showPredKalPopup(this.dataset.evdata)" style="display:flex;align-items:center;gap:10px;padding:10px 14px;cursor:pointer;border-left:'+borderStyle+';background:'+ev.color+'10;border-radius:0 8px 8px 0;margin-bottom:6px">'
-      +'<div style="flex:1"><div style="font-size:13px;font-weight:600;color:var(--text)">'+(isEst?'&#128302; ':'')+(ev.client||'')+' &mdash; '+(ev.kandang||'')+'</div>'
+      +'<div style="flex:1"><div style="font-size:13px;font-weight:600;color:var(--text)">'+(isEst?'':'')+(ev.client||'')+' &mdash; '+(ev.kandang||'')+'</div>'
       +'<div style="font-size:11px;color:var(--text3)">'+(ev.label||'')+(ev.deadline?' &middot; Est. '+fmtDate(ev.deadline):'')+'</div></div>'
       +'<div style="font-size:13px;font-weight:700;color:var(--green)">'+fmt(ev.revenue||0)+'</div>'
       +'</div>';
@@ -6418,7 +6477,7 @@ function renderTripManager() {
   var cont = document.getElementById('content-trips');
   ensureTrips();
   if (!state.trips.length) {
-    cont.innerHTML = '<div class="empty-state"><div class="icon">&#128665;</div><p>Belum ada trip</p><button class="btn btn-primary" onclick="openAddTripModal()">+ Input Trip Pertama</button></div>';
+    cont.innerHTML = '<div class="empty-state"><div class="icon"></div><p>Belum ada trip</p><button class="btn btn-primary" onclick="openAddTripModal()">+ Input Trip Pertama</button></div>';
     return;
   }
 
@@ -6452,7 +6511,7 @@ function renderTripManager() {
       '</td>' +
       '<td class="mono" style="text-align:right;color:' + sisaColor + ';font-weight:600">' + fmtNum(sisa,2) + '</td>' +
       '<td class="mono" style="text-align:right;color:' + (t.losses > 0 ? 'var(--red)' : 'var(--text3)') + ';font-size:12px">' + (t.losses > 0 ? '(' + fmtNum(t.losses,2) + ')' : '—') + '</td>' +
-      '<td style="font-size:12px;color:var(--text2)">' + (t.notes||'-') + '</td>' +
+      '<td style="font-size:12px;color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="' + (t.notes||'') + '">' + (t.notes||'-') + '</td>' +
       '<td style="display:flex;gap:4px"><button class="btn btn-secondary btn-sm btn-icon" data-tid="' + t.id + '" onclick="openEditTrip(this.dataset.tid)" title="Edit">&#9998;</button><button class="btn btn-danger btn-sm btn-icon" data-tid="' + t.id + '" onclick="deleteTrip(this.dataset.tid)">&#215;</button></td>' +
     '</tr>';
   }).join('');
@@ -6465,7 +6524,11 @@ function renderTripManager() {
     '<div class="stat-card ' + (totalSisa > 0 ? 'yellow' : 'green') + '"><div class="stat-label">Gas Belum Dialokasi</div><div class="stat-value">' + fmtNum(totalSisa,0) + '</div><div class="stat-sub">Sm&#179; nganggur</div></div>' +
     '</div>' +
     '<div class="table-wrap"><div class="table-header"><div class="table-title">Daftar Trip SPBG</div><div style="font-size:12px;color:var(--text2)">' + totalTrips + ' trip</div></div>' +
-    '<table><thead><tr><th>Tanggal</th><th>GTM</th><th style="text-align:right">Volume (Sm&#179;)</th><th style="text-align:right">Biaya Trip</th><th style="text-align:right">Biaya Efektif</th><th>Alokasi ke Kandang</th><th style="text-align:right">Sisa</th><th style="text-align:right">Losses</th><th>Catatan</th><th></th></tr></thead>' +
+    '<table style="table-layout:fixed"><colgroup>' +
+      '<col style="width:9%"><col style="width:7%"><col style="width:9%"><col style="width:8%">' +
+      '<col style="width:9%"><col style="width:21%"><col style="width:7%"><col style="width:6%">' +
+      '<col style="width:14%"><col style="width:10%">' +
+    '</colgroup><thead><tr><th>Tanggal</th><th>GTM</th><th style="text-align:right">Volume (Sm&#179;)</th><th style="text-align:right">Biaya Trip</th><th style="text-align:right">Biaya Efektif</th><th>Alokasi ke Kandang</th><th style="text-align:right">Sisa</th><th style="text-align:right">Losses</th><th>Catatan</th><th></th></tr></thead>' +
     '<tbody>' + rows + '</tbody></table>' + buildTripMobileCards(state.trips.slice().reverse()) + '</div>';
 }
 
@@ -6508,7 +6571,7 @@ function onSelectTrip() {
   document.getElementById('input-opex-spbg').value = trip.volume;
   calcOpexPengajuan();
   infoEl.style.display = 'block';
-  infoEl.innerHTML = '&#128665; Trip ' + fmtDate(trip.date) + ' &middot; Volume: <strong>' + fmtNum(trip.volume,2) + ' Sm&#179;</strong> &middot; Sudah dialokasi: <strong>' + fmtNum(allocated,2) + '</strong> &middot; Sisa: <strong style="color:' + (sisa>0?'var(--green)':'var(--red)') + '">' + fmtNum(sisa,2) + ' Sm&#179;</strong>';
+  infoEl.innerHTML = 'Trip ' + fmtDate(trip.date) + ' &middot; Volume: <strong>' + fmtNum(trip.volume,2) + ' Sm&#179;</strong> &middot; Sudah dialokasi: <strong>' + fmtNum(allocated,2) + '</strong> &middot; Sisa: <strong style="color:' + (sisa>0?'var(--green)':'var(--red)') + '">' + fmtNum(sisa,2) + ' Sm&#179;</strong>';
 }
 
 function toggleOpexManual() {
@@ -6636,7 +6699,7 @@ function initApp() {
       // Data di Supabase ADA tapi korup/gagal di-parse — JANGAN nulis apapun,
       // ini bukan "database kosong". Pakai cache localStorage apa adanya, dan kasih peringatan.
       console.warn('Data Supabase gagal di-parse, pakai cache lokal sementara. Cek kolom "state" di tabel app_state.');
-      alert('⚠️ Data di server sepertinya bermasalah (gagal dibaca). App jalan pakai data cache sementara — JANGAN input data baru sampai ini dicek, biar ga ada yang ketimpa. Hubungi developer.');
+      alert('Data di server sepertinya bermasalah (gagal dibaca). App jalan pakai data cache sementara — JANGAN input data baru sampai ini dicek, biar ga ada yang ketimpa. Hubungi developer.');
     } else if (state.clients.length > 0) {
       // Genuinely first-time setup: Supabase kosong (bukan error) tapi kita punya data lokal — push sekali
       if (window._saveToFirestore) window._saveToFirestore(JSON.stringify(state));
@@ -6747,7 +6810,7 @@ if (typeof _firestoreReady !== 'undefined' && _firestoreReady) {
 <div class="modal-overlay" id="modal-invoice">
   <div class="modal">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
-      <h3 style="margin:0">&#128203; Invoice & Pembayaran</h3>
+      <h3 style="margin:0">Invoice & Pembayaran</h3>
       <button onclick="closeModal('modal-invoice')" style="background:none;border:none;font-size:22px;line-height:1;cursor:pointer;color:var(--text3);padding:2px 8px;border-radius:6px;" onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background='none'">&#215;</button>
     </div>
     <div id="modal-invoice-info" style="background:var(--surface2);border-radius:8px;padding:12px 14px;font-size:12px;color:var(--text2);margin-bottom:16px"></div>
@@ -6796,7 +6859,7 @@ if (typeof _firestoreReady !== 'undefined' && _firestoreReady) {
 <div class="modal-overlay" id="modal-add-capex">
   <div class="modal modal-lg">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
-      <h3 style="margin:0">💰 Input Biaya CAPEX</h3>
+      <h3 style="margin:0">Input Biaya CAPEX</h3>
       <button onclick="closeModal('modal-add-capex')" style="background:none;border:none;font-size:22px;line-height:1;cursor:pointer;color:var(--text3);padding:2px 8px;border-radius:6px;">×</button>
     </div>
     <div id="capex-modal-info" style="font-size:12px;color:var(--text2);margin-bottom:14px;padding:10px 12px;background:var(--surface2);border-radius:8px;"></div>
@@ -6874,7 +6937,7 @@ if (typeof _firestoreReady !== 'undefined' && _firestoreReady) {
 <div class="modal-overlay" id="modal-add-trip">
   <div class="modal" style="max-width:680px;width:95vw">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
-      <h3 style="margin:0">&#128665; Input Trip SPBG</h3>
+      <h3 style="margin:0">Input Trip SPBG</h3>
       <button onclick="closeModal('modal-add-trip')" style="background:none;border:none;font-size:22px;line-height:1;cursor:pointer;color:var(--text3);padding:2px 8px;border-radius:6px;">&#215;</button>
     </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
