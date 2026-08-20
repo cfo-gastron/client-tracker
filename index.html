@@ -1212,6 +1212,7 @@ function renderDashboard() {
     var totalVolAll = 0, totalRevAll = 0;
     var todayStr = new Date().toISOString().slice(0,10);
     state.clients.forEach(function(cl) {
+      if (cl.inactive) return; // client inactive: jangan ikut ditampilin/dihitung ke rata-rata
       var kandangPrices = [];
       var lastChangedDate = null;
       var stuckFlag = false;
