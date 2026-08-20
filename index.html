@@ -1087,6 +1087,7 @@ function findKandang(id) {
 // ============= DASHBOARD =============
 var _dashChart = null;
 var _dashChart2 = null;
+var _dashChart3 = null;
 
 function renderDashboard() {
   let totVol=0, totRev=0, totCogs=0, totOpex=0, totIncome=0;
@@ -1206,8 +1207,102 @@ function renderDashboard() {
         '<div class="chart-container chart-container-md"><canvas id="dashboard-chart2"></canvas></div>' +
       '</div>';
 
+    // ---- HARGA JUAL PER KLIEN (current price analysis) ----
+    var priceRows = [];
+    var totalVolAll = 0, totalRevAll = 0;
+    var todayStr = new Date().toISOString().slice(0,10);
+    state.clients.forEach(function(cl) {
+      var kandangPrices = [];
+      var lastChangedDate = null;
+      var stuckFlag = false;
+      (cl.kandangs||[]).forEach(function(k) {
+        var periodesH = (k.periodes||[]).filter(function(p){ return p.startDate && p.hargaJual; });
+        if (!periodesH.length) return;
+        var sortedP = periodesH.slice().sort(function(a,b){ return a.startDate.localeCompare(b.startDate); });
+        var lastP = sortedP[sortedP.length-1];
+        var plH = calcPeriodePL(lastP, k);
+        var volH = plH.totalVolume || 0;
+        kandangPrices.push({ vol: volH, price: lastP.hargaJual });
+        totalVolAll += volH; totalRevAll += volH*lastP.hargaJual;
+        for (var ip = sortedP.length-1; ip >= 1; ip--) {
+          if (sortedP[ip].hargaJual !== sortedP[ip-1].hargaJual) {
+            var chDate = sortedP[ip].startDate;
+            if (!lastChangedDate || chDate > lastChangedDate) lastChangedDate = chDate;
+            break;
+          }
+        }
+        if (sortedP.length >= 2) {
+          var daysSinceStart = daysBetween(lastP.startDate, todayStr);
+          if (daysSinceStart >= 0 && daysSinceStart <= 90 && lastP.hargaJual === sortedP[sortedP.length-2].hargaJual) {
+            stuckFlag = true;
+          }
+        }
+      });
+      if (!kandangPrices.length) return;
+      var totVolC = kandangPrices.reduce(function(s,x){return s+x.vol;},0);
+      var avgPriceC = totVolC > 0
+        ? kandangPrices.reduce(function(s,x){return s+x.vol*x.price;},0) / totVolC
+        : kandangPrices.reduce(function(s,x){return s+x.price;},0) / kandangPrices.length;
+      priceRows.push({ client: cl.name, price: Math.round(avgPriceC), lastChanged: lastChangedDate, stuckFlag: stuckFlag });
+    });
+    var overallAvgPrice = totalVolAll > 0 ? totalRevAll/totalVolAll : 0;
+    priceRows.forEach(function(r) {
+      r.belowAvg = overallAvgPrice > 0 && r.price < overallAvgPrice;
+      r.needAdjust = r.belowAvg || r.stuckFlag;
+    });
+    priceRows.sort(function(a,b){ return a.price - b.price; });
+
+    var dataHarga = sorted.map(function(m){ return m.vol > 0 ? Math.round(m.rev/m.vol) : 0; });
+    var lastMonthPrice = dataHarga.length ? dataHarga[dataHarga.length-1] : 0;
+    var prevMonthPrice = dataHarga.length >= 2 ? dataHarga[dataHarga.length-2] : null;
+    var priceDeltaPct = (prevMonthPrice && prevMonthPrice > 0) ? ((lastMonthPrice-prevMonthPrice)/prevMonthPrice*100) : null;
+
+    var priceRowsHTML = priceRows.map(function(r) {
+      var deltaPct = overallAvgPrice > 0 ? (r.price-overallAvgPrice)/overallAvgPrice*100 : 0;
+      var deltaColor = deltaPct >= 0 ? 'var(--green)' : 'var(--red)';
+      var badgeHTML = r.needAdjust
+        ? '<span style="background:#fdf3e0;color:#b8860b;font-size:10px;padding:3px 9px;border-radius:10px;font-weight:600">Perlu adjust</span>'
+        : '';
+      return '<tr>' +
+        '<td style="padding:9px 8px;font-size:12.5px">' + r.client + '</td>' +
+        '<td class="mono" style="padding:9px 8px;text-align:right;font-size:12.5px">Rp' + fmtNum(r.price,0) + '</td>' +
+        '<td class="mono" style="padding:9px 8px;text-align:right;font-size:12.5px;color:' + deltaColor + '">' + (deltaPct>=0?'+':'') + deltaPct.toFixed(1) + '%</td>' +
+        '<td style="padding:9px 8px;text-align:right;font-size:12.5px;color:var(--text3)">' + (r.lastChanged ? fmtDate(r.lastChanged) : '—') + '</td>' +
+        '<td style="padding:9px 8px;text-align:right">' + badgeHTML + '</td>' +
+      '</tr>';
+    }).join('');
+
+    chartWrap.innerHTML += 
+      // CHART 3 — Tren Harga Jual Rata-rata + tabel per klien
+      '<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px 20px;margin-top:16px">' +
+        '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px;flex-wrap:wrap;gap:8px">' +
+          '<div>' +
+            '<div style="font-family:Plus Jakarta Sans,sans-serif;font-weight:700;font-size:15px">Tren Harga Jual Rata-rata</div>' +
+            '<div style="font-size:11px;color:var(--text3);margin-top:2px">Weighted by volume &mdash; total revenue &divide; total volume per bulan</div>' +
+          '</div>' +
+          '<div style="text-align:right">' +
+            '<div style="font-family:Plus Jakarta Sans,sans-serif;font-weight:700;font-size:20px">Rp' + fmtNum(lastMonthPrice,0) + '</div>' +
+            (priceDeltaPct !== null ? '<div style="font-size:11px;color:' + (priceDeltaPct>=0?'var(--green)':'var(--red)') + '">' + (priceDeltaPct>=0?'naik ':'turun ') + Math.abs(priceDeltaPct).toFixed(1) + '% dari bulan lalu</div>' : '') +
+          '</div>' +
+        '</div>' +
+        '<div class="chart-container chart-container-md"><canvas id="dashboard-chart3"></canvas></div>' +
+        '<div style="display:flex;justify-content:space-between;align-items:center;margin:18px 0 8px">' +
+          '<div style="font-family:Plus Jakarta Sans,sans-serif;font-weight:700;font-size:13px">Harga Jual per Klien &mdash; ' + (labels.length?labels[labels.length-1]:'') + '</div>' +
+          '<div style="font-size:11px;color:var(--text3)">rata-rata: Rp' + fmtNum(Math.round(overallAvgPrice),0) + '</div>' +
+        '</div>' +
+        '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;table-layout:fixed"><colgroup><col style="width:30%"><col style="width:20%"><col style="width:18%"><col style="width:20%"><col style="width:12%"></colgroup>' +
+        '<thead><tr style="border-bottom:1px solid var(--border)">' +
+          '<th style="text-align:left;padding:6px 8px;font-size:10px;text-transform:uppercase;color:var(--text3)">Klien</th>' +
+          '<th style="text-align:right;padding:6px 8px;font-size:10px;text-transform:uppercase;color:var(--text3)">Harga/Sm&#179;</th>' +
+          '<th style="text-align:right;padding:6px 8px;font-size:10px;text-transform:uppercase;color:var(--text3)">Selisih</th>' +
+          '<th style="text-align:right;padding:6px 8px;font-size:10px;text-transform:uppercase;color:var(--text3)">Terakhir Naik</th>' +
+          '<th style="text-align:right;padding:6px 8px;font-size:10px;text-transform:uppercase;color:var(--text3)"></th>' +
+        '</tr></thead><tbody>' + priceRowsHTML + '</tbody></table></div>' +
+      '</div>';
+
     if (_dashChart) { _dashChart.destroy(); _dashChart = null; }
     if (_dashChart2) { _dashChart2.destroy(); _dashChart2 = null; }
+    if (_dashChart3) { _dashChart3.destroy(); _dashChart3 = null; }
 
     // CHART 1 — Grouped Bar + Line
     _dashChart = new Chart(document.getElementById('dashboard-chart1'), {
@@ -1349,6 +1444,54 @@ function renderDashboard() {
             },
             grid: { color: gridCol },
             min: 0
+          }
+        }
+      }
+    });
+
+    // CHART 3 — Tren Harga Jual Rata-rata
+    _dashChart3 = new Chart(document.getElementById('dashboard-chart3'), {
+      type: 'line',
+      data: {
+        labels: labels,
+        datasets: [{
+          label: 'Harga Jual Rata-rata',
+          data: dataHarga,
+          borderColor: '#378ADD',
+          backgroundColor: function(ctx) {
+            var chart = ctx.chart;
+            var c = chart.ctx;
+            var area = chart.chartArea;
+            if (!area) return 'rgba(55,138,221,0.12)';
+            var grad = c.createLinearGradient(0, area.top, 0, area.bottom);
+            grad.addColorStop(0, 'rgba(55,138,221,0.20)');
+            grad.addColorStop(1, 'rgba(55,138,221,0.02)');
+            return grad;
+          },
+          fill: true, tension: 0.3,
+          pointRadius: 4, pointHoverRadius: 7,
+          pointBackgroundColor: '#378ADD',
+          pointBorderColor: '#fff',
+          pointBorderWidth: 2,
+          borderWidth: 2.5
+        }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        interaction: { mode: 'index', intersect: false },
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              label: function(ctx) { return ' Rp' + Math.round(ctx.parsed.y).toLocaleString('id-ID') + ' /Sm³'; }
+            }
+          }
+        },
+        scales: {
+          x: { ticks: { color: textCol, font: { size: 11 } }, grid: { display: false } },
+          y: {
+            ticks: { color: textCol, font: { size: 11 }, callback: function(v){ return 'Rp'+(v/1000).toFixed(0)+'rb'; } },
+            grid: { color: gridCol }
           }
         }
       }
