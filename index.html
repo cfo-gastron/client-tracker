@@ -226,10 +226,13 @@ tr:hover td{background:var(--surface2);}
 .app{flex-direction:column;height:100dvh;overflow:hidden;}
 .sidebar{display:none!important;}
 .main{flex:1;overflow-y:auto;overflow-x:hidden;padding-bottom:calc(58px + var(--safe-bottom));}
-.topbar{padding:12px 16px;padding-top:calc(12px + var(--safe-top));min-height:52px;position:sticky;top:0;z-index:50;}
-.topbar-title{font-size:17px!important;font-weight:700;}
-.topbar-left{gap:8px;}.topbar-toggle{display:none!important;}.topbar-actions{gap:6px;}
-.topbar-actions .btn{padding:8px 12px;font-size:12px;min-height:36px;position:relative;}
+.topbar{padding:12px 16px;padding-top:calc(12px + var(--safe-top));min-height:52px;position:sticky;top:0;z-index:50;gap:12px;}
+.topbar-title{font-size:17px!important;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0;}
+.topbar-left{gap:8px;min-width:0;flex-shrink:1;}
+.topbar-toggle{display:none!important;}
+.topbar-actions{gap:6px;overflow-x:auto;-webkit-overflow-scrolling:touch;flex-shrink:0;scrollbar-width:none;-ms-overflow-style:none;}
+.topbar-actions::-webkit-scrollbar{display:none;}
+.topbar-actions .btn{padding:8px 12px;font-size:12px;min-height:36px;position:relative;flex-shrink:0;white-space:nowrap;}
 .topbar-actions .btn::after{content:'';position:absolute;inset:-4px;}
 .btn{min-height:44px;padding:10px 16px;font-size:14px;border-radius:10px;}
 .btn-sm{min-height:36px;padding:8px 12px;font-size:13px;}
@@ -238,7 +241,8 @@ tr:hover td{background:var(--surface2);}
 .content{padding:12px 12px 16px;}
 .stats-grid{grid-template-columns:1fr 1fr!important;gap:10px;margin-bottom:16px;}
 .stat-card{padding:14px;border-radius:12px;}
-.stat-value{font-size:16px!important;}
+.stat-value{font-size:16px!important;white-space:normal;word-break:break-word;line-height:1.25;}
+.stat-label{letter-spacing:0.5px;white-space:normal;}
 .kandang-meta{grid-template-columns:1fr 1fr!important;gap:10px;}
 .meta-card{padding:12px;border-radius:10px;}
 .meta-value{font-size:14px!important;}
@@ -438,6 +442,7 @@ tr:hover td{background:var(--surface2);}
 [style*="grid-template-columns: repeat(4"]{grid-template-columns:1fr 1fr!important;}
 [style*="grid-template-columns:repeat(3"]{grid-template-columns:1fr 1fr!important;}
 [style*="grid-template-columns: repeat(3"]{grid-template-columns:1fr 1fr!important;}
+[style*="grid-template-columns:1fr 1fr"]{grid-template-columns:1fr!important;}
 [style*="grid-template-columns:1fr 1.5fr"]{grid-template-columns:1fr!important;}
 [style*="grid-template-columns:1fr 1fr;gap:20px"]{grid-template-columns:1fr!important;}
 [style*="grid-template-columns:1fr 1fr;gap:20"]{grid-template-columns:1fr!important;}
@@ -458,6 +463,25 @@ tr:hover td{background:var(--surface2);}
 [style*="grid-template-columns:1fr 1fr;gap:20px;align-items:start"]{grid-template-columns:1fr!important;}
 /* Master data grid stack */
 .master-data-grid{grid-template-columns:1fr!important;}
+/* Sembunyiin tabel desktop kalau ada versi mobile card di sebelahnya — biar ga render dua-duanya (tabel squish + card bagus) */
+.table-wrap:has(.mobile-card-list) > table{display:none;}
+/* Client header (list Clients) — nama dapet baris sendiri, meta info (lokasi/kandang/revenue/margin) turun ke baris 2 */
+.nc-header{flex-wrap:wrap;row-gap:6px;}
+.nc-name{flex-basis:70%;}
+.nc-meta{width:100%;order:3;flex-wrap:wrap;padding-left:22px;}
+/* Row kandang di dalam client card — nama dapet baris sendiri, stats+tombol turun ke baris 2 bareng */
+.k-row{flex-wrap:wrap;row-gap:8px;}
+.k-name-block{flex-basis:80%;}
+.k-stats{order:3;margin-left:38px;}
+.k-actions{order:3;}
+/* Row tombol aksi periode (Kandang Detail) — turun ke baris baru biar ga numpuk sama judul */
+.periode-toggle{flex-wrap:wrap;row-gap:10px;}
+.periode-actions{width:100%;flex-wrap:wrap;justify-content:flex-end!important;}
+/* Cegah auto-zoom iOS Safari pas fokus ke select/input (butuh font-size >=16px) */
+select,input[type="text"],input[type="number"],input[type="date"],input[type="url"],textarea{font-size:16px!important;}
+/* Custom overlay modals (P&L detail, Gantt bar detail) - kurangin padding di layar kecil */
+#pnl-detail-modal,#gantt-modal-overlay{padding:8px!important;}
+#pnl-detail-modal>div,#gantt-modal-overlay>div{padding:16px!important;max-width:100%!important;}
 /* Jisdor grid stays 2 col but use 3 col on mobile to be compact */
 .master-data-grid .table-wrap [style*="grid-template-columns:1fr 1fr;gap:10px"]{grid-template-columns:repeat(3,1fr)!important;}
 }</style>
@@ -1273,6 +1297,30 @@ function renderDashboard() {
       '</tr>';
     }).join('');
 
+    var priceRowsMobile = isMobile() ? priceRows.map(function(r, i) {
+      var deltaPct = overallAvgPrice > 0 ? (r.price-overallAvgPrice)/overallAvgPrice*100 : 0;
+      var deltaColor = deltaPct >= 0 ? 'var(--green)' : 'var(--red)';
+      var cid = 'mc-harga-'+i;
+      return '<div class="m-card" id="'+cid+'">'
+        +'<div class="m-card-header" onclick="toggleMobileCard(\''+cid+'\')">'
+          +'<div class="m-status-dot '+(r.needAdjust?'overdue':'done')+'"></div>'
+          +'<div class="m-card-title">'+r.client
+            +'<div class="m-card-sub">Terakhir naik: '+(r.lastChanged?fmtDate(r.lastChanged):'—')+'</div>'
+          +'</div>'
+          +'<div class="m-card-right"><div class="m-card-value">Rp'+fmtNum(r.price,0)+'</div>'
+            +'<span style="font-size:10px;color:'+deltaColor+'">'+(deltaPct>=0?'+':'')+deltaPct.toFixed(1)+'%</span>'
+          +'</div>'
+          +'<span class="m-chevron">&#9662;</span>'
+        +'</div>'
+        +'<div class="m-card-body">'
+          +'<div class="m-kpi"><div class="m-kpi-label">Harga/Sm&#179;</div><div class="m-kpi-value">Rp'+fmtNum(r.price,0)+'</div></div>'
+          +'<div class="m-kpi"><div class="m-kpi-label">Selisih dari Rata-rata</div><div class="m-kpi-value" style="color:'+deltaColor+'">'+(deltaPct>=0?'+':'')+deltaPct.toFixed(1)+'%</div></div>'
+          +(r.needAdjust?'<div class="m-kpi" style="grid-column:span 2"><span style="background:#fdf3e0;color:#b8860b;font-size:11px;padding:4px 10px;border-radius:10px;font-weight:600">Perlu adjust</span></div>':'')
+        +'</div>'
+      +'</div>';
+    }).join('') : '';
+    var priceMobileHTML = isMobile() ? '<div class="mobile-card-list">'+(priceRowsMobile || '<div style="padding:24px;text-align:center;color:var(--text3)">Belum ada data harga</div>')+'</div>' : '';
+
     chartWrap.innerHTML += 
       // CHART 3 — Tren Harga Jual Rata-rata + tabel per klien
       '<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px 20px;margin-top:16px">' +
@@ -1291,14 +1339,14 @@ function renderDashboard() {
           '<div style="font-family:Plus Jakarta Sans,sans-serif;font-weight:700;font-size:13px">Harga Jual per Klien &mdash; ' + (labels.length?labels[labels.length-1]:'') + '</div>' +
           '<div style="font-size:11px;color:var(--text3)">rata-rata: Rp' + fmtNum(Math.round(overallAvgPrice),0) + '</div>' +
         '</div>' +
-        '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;table-layout:fixed"><colgroup><col style="width:30%"><col style="width:20%"><col style="width:18%"><col style="width:20%"><col style="width:12%"></colgroup>' +
+        (isMobile() ? '' : '<div style="overflow-x:auto"><table style="width:100%;min-width:520px;border-collapse:collapse;table-layout:fixed"><colgroup><col style="width:30%"><col style="width:20%"><col style="width:18%"><col style="width:20%"><col style="width:12%"></colgroup>' +
         '<thead><tr style="border-bottom:1px solid var(--border)">' +
           '<th style="text-align:left;padding:6px 8px;font-size:10px;text-transform:uppercase;color:var(--text3)">Klien</th>' +
           '<th style="text-align:right;padding:6px 8px;font-size:10px;text-transform:uppercase;color:var(--text3)">Harga/Sm&#179;</th>' +
           '<th style="text-align:right;padding:6px 8px;font-size:10px;text-transform:uppercase;color:var(--text3)">Selisih</th>' +
           '<th style="text-align:right;padding:6px 8px;font-size:10px;text-transform:uppercase;color:var(--text3)">Terakhir Naik</th>' +
           '<th style="text-align:right;padding:6px 8px;font-size:10px;text-transform:uppercase;color:var(--text3)"></th>' +
-        '</tr></thead><tbody>' + priceRowsHTML + '</tbody></table></div>' +
+        '</tr></thead><tbody>' + priceRowsHTML + '</tbody></table></div>') + priceMobileHTML +
       '</div>';
 
     if (_dashChart) { _dashChart.destroy(); _dashChart = null; }
@@ -1577,33 +1625,37 @@ function renderClients() {
         +'<button style="margin-left:auto;padding:1px 8px;border-radius:5px;border:0.5px solid var(--border);background:none;font-size:10px;color:var(--text3);cursor:pointer" data-kid="'+k.id+'" onclick="event.stopPropagation();openCapexModal(this.dataset.kid)">+ Input</button>'
         +'</div>';
       kandangRows +=
-        '<div style="display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:0.5px solid var(--border);cursor:pointer" onmouseover="this.style.background=\'var(--surface2)\'" onmouseout="this.style.background=\'\'" data-kid="'+k.id+'" onclick="navigate(\'kandang\',this.dataset.kid)">'
+        '<div class="k-row" style="display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:0.5px solid var(--border);cursor:pointer" onmouseover="this.style.background=\'var(--surface2)\'" onmouseout="this.style.background=\'\'" data-kid="'+k.id+'" onclick="navigate(\'kandang\',this.dataset.kid)">'
         +'<div style="width:28px;height:28px;border-radius:7px;background:rgba(42,125,225,0.12);color:var(--accent2);font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0">'+((k.name||'?').charAt(0).toUpperCase())+'</div>'
-        +'<div style="flex:1;min-width:0">'
-          +'<div style="font-size:13px;font-weight:600;color:var(--text);display:flex;align-items:center;gap:6px">'+k.name+' '+statusBadge+'</div>'
+        +'<div class="k-name-block" style="flex:1;min-width:0">'
+          +'<div style="font-size:13px;font-weight:600;color:var(--text);display:flex;align-items:center;gap:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+k.name+' '+statusBadge+'</div>'
           +'<div style="font-size:11px;color:var(--text3);margin-top:1px">'+((k.periodes||[]).length)+' periode</div>'
         +'</div>'
-        +'<div style="display:flex;gap:18px;align-items:center;flex-shrink:0">'
+        +'<div class="k-stats" style="display:flex;gap:18px;align-items:center;flex-shrink:0">'
           +'<div style="text-align:right"><div style="font-size:12px;font-weight:600;color:var(--text)">'+fmtNum(tv,0)+' Sm&#179;</div><div style="font-size:10px;color:var(--text3)">volume</div></div>'
           +'<div style="text-align:right"><div style="font-size:12px;font-weight:600;color:var(--green)">'+(tr>=1e6?(tr/1e6).toFixed(1)+'M':fmt(tr))+'</div><div style="font-size:10px;color:var(--text3)">revenue</div></div>'
           +mgPill(mg)
         +'</div>'
+        +'<div class="k-actions" style="display:flex;align-items:center;gap:4px;flex-shrink:0">'
         +'<button style="padding:4px 10px;border-radius:6px;border:0.5px solid var(--border);background:none;font-size:11px;color:var(--text2);cursor:pointer;flex-shrink:0" data-kid="'+k.id+'" onclick="event.stopPropagation();navigate(\'kandang\',this.dataset.kid)">Detail &#8594;</button>'
         +'<button style="padding:4px 8px;border-radius:6px;border:none;background:none;font-size:15px;color:var(--text3);cursor:pointer;flex-shrink:0" data-kid="'+k.id+'" data-cid="'+cl.id+'" data-name="'+k.name+'" onclick="event.stopPropagation();confirmDeleteKandang(this)">&#215;</button>'
+        +'</div>'
         +'</div>'+capexRow;
     });
     kandangRows += '<div style="display:flex;align-items:center;gap:6px;padding:9px 14px 9px 52px;color:var(--text3);font-size:12px;cursor:pointer" onmouseover="this.style.color=\'var(--accent2)\'" onmouseout="this.style.color=\'var(--text3)\'" data-cid="'+cl.id+'" onclick="openAddKandangModal(this.dataset.cid)">+ Tambah kandang</div>';
     html +=
       '<div class="nc-block" id="'+blockId+'" style="border:1px solid var(--border);border-radius:12px;margin-bottom:8px;overflow:hidden;background:var(--surface)">'
-      +'<div style="display:flex;align-items:center;gap:10px;padding:12px 14px;cursor:pointer" onmouseover="this.style.background=\'var(--surface2)\'" onmouseout="this.style.background=\'\'" onclick="ncToggle(\''+blockId+'\')">'
+      +'<div class="nc-header" style="display:flex;align-items:center;gap:10px;padding:12px 14px;cursor:pointer" onmouseover="this.style.background=\'var(--surface2)\'" onmouseout="this.style.background=\'\'" onclick="ncToggle(\''+blockId+'\')">'
         +'<span class="nc-chevron" style="font-size:10px;color:var(--text3);flex-shrink:0;display:inline-block;transition:transform 0.15s">&#9656;</span>'
-        +'<span style="font-size:14px;font-weight:700;color:var(--text);flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+cl.name+'</span>'
+        +'<span class="nc-name" style="font-size:14px;font-weight:700;color:var(--text);flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+cl.name+'</span>'
+        +'<div class="nc-meta" style="display:flex;align-items:center;gap:8px;flex-shrink:0">'
         +(cl.location?'<span style="font-size:11px;color:var(--text3);flex-shrink:0;background:var(--surface2);padding:2px 8px;border-radius:10px">'+cl.location+'</span>':'')
         +(cl.inactive?'<span style="font-size:10px;font-weight:600;background:#fdeaea;color:var(--red);padding:2px 8px;border-radius:10px;flex-shrink:0">Inactive</span>':'')
         +'<span style="font-size:11px;color:var(--text3);flex-shrink:0">'+((cl.kandangs||[]).length)+' kandang</span>'
         +(totR>0?'<span style="font-size:12px;font-weight:600;color:var(--text2)">'+(totR>=1e9?(totR/1e9).toFixed(1)+'B':totR>=1e6?(totR/1e6).toFixed(1)+'M':fmt(totR))+'</span>':'')
         +(totR>0?mgPill(clMg):'')
-        +'<div style="position:relative;display:flex;align-items:center">'
+        +'</div>'
+        +'<div style="position:relative;display:flex;align-items:center;order:2">'
           +'<button style="padding:4px 9px;border:none;background:none;cursor:pointer;color:var(--text3);font-size:20px;line-height:1;border-radius:6px" data-cid="'+cl.id+'" onclick="event.stopPropagation();ncShowMenu(this)">&#8943;</button>'
           +'<div id="dd-'+cl.id+'" style="display:none;position:absolute;right:0;top:calc(100% + 4px);background:var(--surface);border:1px solid var(--border);border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,0.1);z-index:500;min-width:170px;overflow:hidden">'
             +'<div style="padding:10px 16px;font-size:13px;color:var(--text);cursor:pointer" onmouseover="this.style.background=\'var(--surface2)\'" onmouseout="this.style.background=\'\'" data-cid="'+cl.id+'" onclick="viewClientSummary(this.dataset.cid)">P&amp;L Summary</div>'
@@ -1898,7 +1950,7 @@ var _bottomNavMap={'dashboard':'bnav-dashboard','clients':'bnav-clients','summar
 function navigateMobile(page){navigate(page);document.querySelectorAll('.bottom-nav-item').forEach(function(el){el.classList.remove('active');});var el=document.getElementById(_bottomNavMap[page]);if(el)el.classList.add('active');document.querySelectorAll('.drawer-item').forEach(function(el){el.classList.remove('active');});if(_mobileDrawerPages.indexOf(page)>=0){var d=document.getElementById('drawer-'+page);if(d)d.classList.add('active');}}
 function toggleMoreDrawer(){var dr=document.getElementById('more-drawer'),ov=document.getElementById('more-drawer-overlay');if(!dr)return;var o=dr.classList.contains('open');dr.classList.toggle('open',!o);ov.classList.toggle('open',!o);}
 function updateBottomNavBadge(count){var b=document.getElementById('bnav-badge');if(!b)return;b.textContent=count;b.style.display=count>0?'flex':'none';}
-function exportDataJSON(){try{var eo={_meta:{exportedAt:new Date().toISOString(),note:'Paste ke Claude'},clients:(state.clients||[]).map(function(cl){return{id:cl.id,name:cl.name,location:cl.location,kandangs:(cl.kandangs||[]).map(function(k){return{id:k.id,name:k.name,periodes:(k.periodes||[]).map(function(p){var pl=calcPeriodePL(p,k);return{id:p.id,label:p.label,startDate:p.startDate,cutoffDate:p.cutoffDate,isCutoff:p.isCutoff,hargaJual:p.hargaJual,_summary:{totalVolume:pl.totalVolume,revenue:pl.revenue,cogs:pl.cogs,opex:pl.opex,opIncome:pl.opIncome,netMargin:pl.netMargin},cogsEntries:p.cogsEntries||[],opexEntries:p.opexEntries||[],opsEntries:p.opsEntries||[]};})};})};}),master:state.master||{},trips:state.trips||[]};var b=new Blob([JSON.stringify(eo,null,2)],{type:'application/json'});var u=URL.createObjectURL(b);var a=document.createElement('a');var d=new Date();a.href=u;a.download='gastron-data-'+d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')+'.json';document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(u);}catch(e){alert('Export gagal: '+e.message);}}
+function exportDataJSON(){try{var eo={_meta:{exportedAt:new Date().toISOString(),note:'Full backup — semua field apa adanya, plus _summary P&L per periode. Paste ke Claude kalau perlu dianalisis.'},clients:(state.clients||[]).map(function(cl){var clCopy=JSON.parse(JSON.stringify(cl));clCopy.kandangs=(cl.kandangs||[]).map(function(k){var kCopy=JSON.parse(JSON.stringify(k));kCopy.periodes=(k.periodes||[]).map(function(p){var pCopy=JSON.parse(JSON.stringify(p));var pl=calcPeriodePL(p,k);pCopy._summary={totalVolume:pl.totalVolume,revenue:pl.revenue,cogs:pl.cogs,opex:pl.opex,opIncome:pl.opIncome,netMargin:pl.netMargin};return pCopy;});return kCopy;});return clCopy;}),master:state.master||{},trips:state.trips||[]};var b=new Blob([JSON.stringify(eo,null,2)],{type:'application/json'});var u=URL.createObjectURL(b);var a=document.createElement('a');var d=new Date();a.href=u;a.download='gastron-data-'+d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')+'.json';document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(u);}catch(e){alert('Export gagal: '+e.message);}}
 
 // ============= CAPEX =============
 var _capexCtx = {};
@@ -2397,7 +2449,7 @@ function renderKandangDetail(kandangId) {
       '<div><div class="section-title" style="font-size:15px">Periode ' + p.label + statusTag + '</div>' +
       '<div style="font-size:12px;color:var(--text3);margin-top:1px">Mulai: ' + fmtDate(p.startDate) + (p.isCutoff ? ' · Selesai: ' + fmtDate(p.cutoffDate) + daysInfo : '') + ' · ' + fmt(p.hargaJual) + '/Sm³' + collapsedSummary + '</div>' +
       '</div></div>' +
-      '<div style="display:flex;gap:8px" onclick="event.stopPropagation()">' + cutoffBtn +
+      '<div class="periode-actions" style="display:flex;gap:8px" onclick="event.stopPropagation()">' + cutoffBtn +
       '<button class="btn btn-secondary btn-sm" data-kid="' + kandangId + '" data-pid="' + p.id + '" data-label="' + p.label + '" data-start="' + (p.startDate||'') + '" data-harga="' + (p.hargaJual||0) + '" data-budget="' + (p.budget||0) + '" data-buffer="' + (p.buffer||0) + '" onclick="openEditPeriode(this)">&#9998; Edit</button>' +
       '<button class="btn btn-danger btn-sm" data-kid="' + kandangId + '" data-pid="' + p.id + '" onclick="deletePeriodeByData(this)">Hapus</button></div>' +
       '</div>' +
@@ -2635,7 +2687,7 @@ function showPnlDetail(r) {
       '</div></div>';
   }
 
-  var cogsTbl = '<table style="width:100%;border-collapse:collapse"><thead><tr>' +
+  var cogsTbl = '<div style="overflow-x:auto"><table style="width:100%;min-width:400px;border-collapse:collapse"><thead><tr>' +
     '<th style="padding:7px 10px;font-size:10px;text-align:left;color:var(--text3);text-transform:uppercase;border-bottom:1px solid var(--border)">Tanggal</th>' +
     '<th style="padding:7px 10px;font-size:10px;text-align:right;color:var(--text3);text-transform:uppercase;border-bottom:1px solid var(--border)">Volume</th>' +
     '<th style="padding:7px 10px;font-size:10px;text-align:right;color:var(--text3);text-transform:uppercase;border-bottom:1px solid var(--border)">CPS</th>' +
@@ -2643,9 +2695,9 @@ function showPnlDetail(r) {
     '</tr></thead><tbody>'+cogsRows+'</tbody>' +
     '<tfoot><tr style="background:var(--surface2)"><td colspan="2" style="padding:8px 10px;font-size:12px;font-weight:700">Total</td>' +
     '<td></td><td style="padding:8px 10px;text-align:right;font-family:DM Mono,monospace;font-size:12px;font-weight:700;color:var(--text2)">'+fmt(pl.totalCogs)+'</td></tr></tfoot>' +
-    '</table>';
+    '</table></div>';
 
-  var opexTbl = '<table style="width:100%;border-collapse:collapse"><thead><tr>' +
+  var opexTbl = '<div style="overflow-x:auto"><table style="width:100%;min-width:420px;border-collapse:collapse"><thead><tr>' +
     '<th style="padding:7px 10px;font-size:10px;text-align:left;color:var(--text3);text-transform:uppercase;border-bottom:1px solid var(--border)">Tanggal</th>' +
     '<th style="padding:7px 10px;font-size:10px;text-align:left;color:var(--text3);text-transform:uppercase;border-bottom:1px solid var(--border)">Deskripsi</th>' +
     '<th style="padding:7px 10px;font-size:10px;text-align:left;color:var(--text3);text-transform:uppercase;border-bottom:1px solid var(--border)">Divisi</th>' +
@@ -2653,13 +2705,13 @@ function showPnlDetail(r) {
     '</tr></thead><tbody>'+opexRows+'</tbody>' +
     '<tfoot><tr style="background:var(--surface2)"><td colspan="3" style="padding:8px 10px;font-size:12px;font-weight:700">Total</td>' +
     '<td style="padding:8px 10px;text-align:right;font-family:DM Mono,monospace;font-size:12px;font-weight:700;color:var(--text2)">'+fmt(pl.totalOpex)+'</td></tr></tfoot>' +
-    '</table>';
+    '</table></div>';
 
-  var opsTbl = '<table style="width:100%;border-collapse:collapse"><thead><tr>' +
+  var opsTbl = '<div style="overflow-x:auto"><table style="width:100%;min-width:360px;border-collapse:collapse"><thead><tr>' +
     '<th style="padding:7px 10px;font-size:10px;text-align:left;color:var(--text3);text-transform:uppercase;border-bottom:1px solid var(--border)">Tanggal</th>' +
     '<th style="padding:7px 10px;font-size:10px;text-align:left;color:var(--text3);text-transform:uppercase;border-bottom:1px solid var(--border)">Deskripsi</th>' +
     '<th style="padding:7px 10px;font-size:10px;text-align:right;color:var(--text3);text-transform:uppercase;border-bottom:1px solid var(--border)">Nominal</th>' +
-    '</tr></thead><tbody>'+opsRows+'</tbody></table>';
+    '</tr></thead><tbody>'+opsRows+'</tbody></table></div>';
 
   var summaryGrid =
     '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px">' +
@@ -3996,7 +4048,7 @@ function renderGantt() {
   if (!predListItems.length) {
     predListHTML = '<div style="text-align:center;padding:20px;color:var(--text3);font-size:12px">Tidak ada periode aktif di '+MONTHS_FULL2[selectedPredMonth]+' '+yr+'</div>';
   } else {
-    predListHTML = '<table style="width:100%;border-collapse:collapse;table-layout:fixed"><colgroup>' +
+    predListHTML = '<table style="width:100%;min-width:640px;border-collapse:collapse;table-layout:fixed"><colgroup>' +
       '<col style="width:18%"><col style="width:14%"><col style="width:10%"><col style="width:12%">' +
       '<col style="width:15%"><col style="width:14%"><col style="width:12%"><col style="width:15%">' +
       '</colgroup><thead><tr>' +
@@ -5425,6 +5477,40 @@ function setInvoiceCategoryFilter(val) {
   renderInvoiceTracker();
 }
 
+function buildPaymentBehaviorMobileCards(clientRows) {
+  if (!isMobile()) return '';
+  var cards = clientRows.map(function(r, i) {
+    var catMeta = r.category ? PAYMENT_CATEGORY_META[r.category] : null;
+    var cid = 'mc-behavior-'+i;
+    return '<div class="m-card" id="'+cid+'">'
+      +'<div class="m-card-header" onclick="toggleMobileCard(\''+cid+'\')">'
+        +'<div class="m-status-dot '+(r.category==='risk'?'overdue':r.category==='reliable'?'done':'belum')+'"></div>'
+        +'<div class="m-card-title">'+r.client
+          +'<div class="m-card-sub">'+(r.ccc?r.ccc.avgDays+' hari &middot; '+r.ccc.count+' invoice':'Belum ada histori')+'</div>'
+        +'</div>'
+        +'<div class="m-card-right"><div class="m-card-value">'+fmt(r.outstandingVal)+'</div>'
+          +(catMeta?'<span style="font-size:10px;padding:1px 7px;border-radius:8px;background:'+catMeta.bg+';color:'+catMeta.color+';font-weight:600">'+catMeta.icon+' '+catMeta.label+'</span>':'<span style="font-size:10px;color:var(--text3)">Belum ditag</span>')
+        +'</div>'
+        +'<span class="m-chevron">&#9662;</span>'
+      +'</div>'
+      +'<div class="m-card-body">'
+        +'<div class="m-kpi"><div class="m-kpi-label">CCC Rata-rata</div><div class="m-kpi-value">'+(r.ccc?r.ccc.avgDays+' hari':'&mdash;')+'</div></div>'
+        +'<div class="m-kpi"><div class="m-kpi-label">Outstanding</div><div class="m-kpi-value">'+fmt(r.outstandingVal)+'</div></div>'
+        +'<div class="m-kpi"><div class="m-kpi-label">Belum Lunas</div><div class="m-kpi-value">'+r.nBelum+' invoice</div></div>'
+      +'</div>'
+      +'<div class="m-card-actions">'
+        +'<select data-cid="'+r.clientId+'" onchange="setClientPaymentCategory(this.dataset.cid,this.value)" style="flex:1;font-size:12px;padding:8px;border-radius:8px;border:1px solid var(--border);background:var(--surface);color:var(--text)">' +
+          '<option value=""'+(!r.category?' selected':'')+'>Belum ditag</option>' +
+          '<option value="reliable"'+(r.category==='reliable'?' selected':'')+'>&#10003; Reliable</option>' +
+          '<option value="slow"'+(r.category==='slow'?' selected':'')+'>&#8987; Slow Payer</option>' +
+          '<option value="risk"'+(r.category==='risk'?' selected':'')+'>&#9888; Risk</option>' +
+        '</select>' +
+      '</div>'
+    +'</div>';
+  });
+  return '<div class="mobile-card-list">'+(cards.length ? cards.join('') : '<div style="padding:24px;text-align:center;color:var(--text3)">Belum ada data klien</div>')+'</div>';
+}
+
 function renderInvoiceTracker() {
   var cont = document.getElementById('content-invoice');
   var invoices = buildInvoiceList();
@@ -5529,7 +5615,7 @@ function renderInvoiceTracker() {
     '</div>' +
     '<div id="invoice-behavior-body" style="display:'+(_invoiceBehaviorOpen?'block':'none')+'">' +
     '<table><thead><tr><th>Client</th><th style="text-align:center">CCC Rata-rata</th><th style="text-align:center">Histori</th><th>Kategori</th><th style="text-align:right">Outstanding</th><th style="text-align:center">Belum Lunas</th></tr></thead>' +
-    '<tbody>' + behaviorRows + '</tbody></table>' +
+    '<tbody>' + behaviorRows + '</tbody></table>' + buildPaymentBehaviorMobileCards(clientRows) +
     '</div></div>';
 
   // ===== Exposure per kategori =====
@@ -5661,7 +5747,7 @@ function renderInvoiceTracker() {
     '<select onchange="setInvoiceCategoryFilter(this.value)" style="'+dropdownStyle+'min-width:140px">' + categoryOptions + '</select>' +
     '<span style="font-size:11px;color:var(--text3)">' + nFiltered + ' invoice &middot; ' + nFilteredLunas + ' lunas &middot; ' + nFilteredOverdue + ' overdue &middot; ' + nFilteredBelum + ' belum</span>' +
     '</div></div>' +
-    '<table style="table-layout:fixed"><colgroup>' +
+    '<table style="table-layout:fixed;min-width:680px"><colgroup>' +
       '<col style="width:14%"><col style="width:9%"><col style="width:11%"><col style="width:7%">' +
       '<col style="width:10%"><col style="width:10%"><col style="width:9%"><col style="width:9%">' +
       '<col style="width:13%"><col style="width:8%">' +
@@ -5843,7 +5929,7 @@ function renderInvoiceBulanan() {
         '<td class="mono"><strong>' + fmtDate(inv.deadline) + '</strong></td>' +
         '<td>' + statusTag[inv.payStatus] + '</td>' +
         '<td><div style="display:flex;gap:4px;align-items:center">' +
-          (inv.invoiceLink?'<a href="'+inv.invoiceLink+'" target="_blank" class="btn btn-secondary btn-sm" style="text-decoration:none;font-size:11px"></a>':'<span style="font-size:11px;color:var(--text3)">—</span>') +
+          (inv.invoiceLink?'<a href="'+inv.invoiceLink+'" target="_blank" class="btn btn-secondary btn-sm" style="text-decoration:none;font-size:11px">Invoice</a>':'<span style="font-size:11px;color:var(--text3)">—</span>') +
           ' <button class="btn btn-secondary btn-sm btn-icon" data-kid="'+inv.kandangId+'" data-pid="'+inv.periodeId+'" onclick="openInvoiceModal(this.dataset.kid,this.dataset.pid)" style="font-size:11px">&#9998;</button>' +
           '</div></td>' +
         '<td>' + tglBayarCell + '</td>' +
@@ -5865,11 +5951,11 @@ function renderInvoiceBulanan() {
         '<div class="mono" style="font-weight:700;color:var(--green)">'+fmt(totMasuk)+'</div>' +
         (totMasuk < totRev?'<div style="font-size:11px;color:var(--text3)">dari '+fmt(totRev)+'</div>':'') +
       '</div></div>' +
-      '<table style="table-layout:fixed"><colgroup>' +
+      '<table style="table-layout:fixed;min-width:620px"><colgroup>' +
         '<col style="width:16%"><col style="width:12%"><col style="width:8%"><col style="width:11%">' +
         '<col style="width:11%"><col style="width:10%"><col style="width:9%"><col style="width:14%"><col style="width:9%">' +
       '</colgroup><thead><tr><th>Client</th><th>Kandang</th><th>Periode</th><th>Cut-off</th><th>Deadline</th><th>Status</th><th>Invoice</th><th>Tgl Bayar</th><th style="text-align:right">Nilai</th></tr></thead>' +
-      '<tbody>' + rows + '</tbody></table></div>';
+      '<tbody>' + rows + '</tbody></table>' + buildInvoiceTrackerMobileCards(monthInvs) + '</div>';
   });
 
   cont.innerHTML = html;
@@ -6709,6 +6795,151 @@ function calcTripEffectiveVolume(trip) {
   return { effective: trip.volume, carryOver: 0 };
 }
 
+// ============= GTM WORKLOAD HEATMAP (Trip per Minggu) =============
+var _tripHeatmapOpen = false;
+var _tripHeatmapSelected = null; // {gtmId, weekStart}
+
+function toggleTripHeatmap() {
+  _tripHeatmapOpen = !_tripHeatmapOpen;
+  _tripHeatmapSelected = null;
+  renderTripManager();
+}
+
+function getMondayOf(dateStr) {
+  var d = new Date(dateStr + 'T00:00:00');
+  var day = d.getDay(); // 0=Min, 1=Sen, ...
+  var diff = (day === 0 ? -6 : 1 - day); // mundur ke Senin
+  d.setDate(d.getDate() + diff);
+  return d.toISOString().slice(0,10);
+}
+
+function selectTripHeatmapCell(gtmId, weekStart) {
+  if (_tripHeatmapSelected && _tripHeatmapSelected.gtmId === gtmId && _tripHeatmapSelected.weekStart === weekStart) {
+    _tripHeatmapSelected = null; // toggle off kalau klik cell yang sama
+  } else {
+    _tripHeatmapSelected = { gtmId: gtmId, weekStart: weekStart };
+  }
+  renderTripManager();
+}
+
+function buildGtmWorkloadHeatmap() {
+  var gtms = state.master.gtms || [];
+  if (!gtms.length || !state.trips.length) return '';
+
+  var NUM_WEEKS = 8;
+  var todayMonday = getMondayOf(new Date().toISOString().slice(0,10));
+  var weeks = [];
+  for (var i = NUM_WEEKS-1; i >= 0; i--) {
+    weeks.push(addDays(todayMonday, -7*i));
+  }
+
+  // Hitung jumlah trip per GTM per minggu
+  var counts = {}; // key: gtmId|weekStart -> count
+  state.trips.forEach(function(t) {
+    var wk = getMondayOf(t.date);
+    if (weeks.indexOf(wk) === -1) return;
+    var key = t.gtmId + '|' + wk;
+    counts[key] = (counts[key]||0) + 1;
+  });
+
+  var maxCount = 1;
+  Object.keys(counts).forEach(function(k){ if (counts[k] > maxCount) maxCount = counts[k]; });
+
+  var redScale = ['#FCEBEB','#F7C1C1','#F09595','#E24B4A','#A32D2D','#791F1F'];
+  var redTextDark = '#501313';
+  function cellColor(v) {
+    if (!v) return null;
+    var idx = Math.min(Math.floor((v-1) / Math.max(1,(maxCount/redScale.length))), redScale.length-1);
+    return redScale[idx];
+  }
+  function textColorFor(idx) { return idx >= 3 ? '#fff' : redTextDark; }
+
+  var headerCells = weeks.map(function(wk){
+    return '<th style="text-align:center;padding:6px 4px;font-size:10px;color:var(--text3);font-weight:600">' + fmtDate(wk).replace(/ \d{4}/, '') + '</th>';
+  }).join('');
+
+  var bodyRows = gtms.map(function(g) {
+    var total = 0;
+    var cells = weeks.map(function(wk) {
+      var v = counts[g.id + '|' + wk] || 0;
+      total += v;
+      var bg = cellColor(v);
+      var idx = bg ? redScale.indexOf(bg) : -1;
+      var fg = bg ? textColorFor(idx) : 'var(--text3)';
+      var isSelected = _tripHeatmapSelected && _tripHeatmapSelected.gtmId === g.id && _tripHeatmapSelected.weekStart === wk;
+      return '<td style="padding:3px;text-align:center">' +
+        '<div onclick="selectTripHeatmapCell(\'' + g.id + '\',\'' + wk + '\')" style="cursor:pointer;background:' + (bg||'var(--surface2)') + ';color:' + fg + ';border-radius:5px;padding:6px 0;font-weight:600;font-size:12px;' + (isSelected ? 'outline:2px solid var(--accent2);outline-offset:1px' : '') + '">' + v + '</div>' +
+        '</td>';
+    }).join('');
+    return '<tr><td style="padding:6px 8px;font-weight:600;font-size:12px;color:var(--accent2)">' + g.name + '</td>' + cells + '<td style="padding:6px 8px;text-align:right;font-weight:700;font-size:12px">' + total + '</td></tr>';
+  }).join('');
+
+  var legendHTML = '<div style="display:flex;align-items:center;gap:6px;margin-top:10px;font-size:11px;color:var(--text3)">' +
+    '<span>Sepi</span>' +
+    redScale.map(function(c){ return '<span style="width:14px;height:10px;background:' + c + ';border-radius:2px;display:inline-block"></span>'; }).join('') +
+    '<span>Padat</span></div>';
+
+  var drilldownHTML = '';
+  if (_tripHeatmapSelected) {
+    var sel = _tripHeatmapSelected;
+    var gtmObj = gtms.find(function(g){ return g.id === sel.gtmId; });
+    var weekEnd = addDays(sel.weekStart, 6);
+    var matchTrips = state.trips.filter(function(t){ return t.gtmId === sel.gtmId && t.date >= sel.weekStart && t.date <= weekEnd; })
+      .sort(function(a,b){ return a.date.localeCompare(b.date); });
+    var rowsHTML = matchTrips.map(function(t){
+      return '<tr><td class="mono" style="padding:6px 8px;font-size:12px">' + fmtDate(t.date) + '</td>' +
+        '<td class="mono" style="padding:6px 8px;text-align:right;font-size:12px">' + fmtNum(t.volume,2) + ' Sm&#179;</td>' +
+        '<td class="mono" style="padding:6px 8px;text-align:right;font-size:12px">' + fmt(t.biaya) + '</td>' +
+        '<td style="padding:6px 8px;font-size:12px;color:var(--text3)">' + (t.notes||'-') + '</td></tr>';
+    }).join('');
+    drilldownHTML = '<div style="margin-top:14px;padding:12px 14px;background:var(--surface2);border-radius:10px">' +
+      '<div style="font-size:12px;font-weight:700;margin-bottom:8px">' + (gtmObj?gtmObj.name:sel.gtmId) + ' &middot; ' + fmtDate(sel.weekStart) + ' &#8211; ' + fmtDate(weekEnd) + ' (' + matchTrips.length + ' trip)</div>' +
+      (matchTrips.length ? '<table style="width:100%;border-collapse:collapse"><thead><tr><th style="text-align:left;padding:4px 8px;font-size:10px;color:var(--text3)">Tanggal</th><th style="text-align:right;padding:4px 8px;font-size:10px;color:var(--text3)">Volume</th><th style="text-align:right;padding:4px 8px;font-size:10px;color:var(--text3)">Biaya</th><th style="text-align:left;padding:4px 8px;font-size:10px;color:var(--text3)">Catatan</th></tr></thead><tbody>' + rowsHTML + '</tbody></table>'
+        : '<div style="font-size:12px;color:var(--text3)">Ga ada trip di minggu ini.</div>') +
+      '</div>';
+  }
+
+  var mobileCardsHTML = '';
+  if (isMobile()) {
+    mobileCardsHTML = '<div class="mobile-card-list" style="padding:0">' + gtms.map(function(g) {
+      var total = 0;
+      var chips = weeks.map(function(wk) {
+        var v = counts[g.id + '|' + wk] || 0;
+        total += v;
+        var bg = cellColor(v);
+        var idx = bg ? redScale.indexOf(bg) : -1;
+        var fg = bg ? textColorFor(idx) : 'var(--text3)';
+        var isSelected = _tripHeatmapSelected && _tripHeatmapSelected.gtmId === g.id && _tripHeatmapSelected.weekStart === wk;
+        return '<div onclick="selectTripHeatmapCell(\'' + g.id + '\',\'' + wk + '\')" style="cursor:pointer;flex:1;min-width:40px;text-align:center;background:' + (bg||'var(--surface2)') + ';color:' + fg + ';border-radius:8px;padding:8px 2px;' + (isSelected ? 'outline:2px solid var(--accent2);outline-offset:1px' : '') + '">' +
+          '<div style="font-size:9px;opacity:0.8;margin-bottom:2px">' + fmtDate(wk).replace(/ \d{4}/, '') + '</div>' +
+          '<div style="font-weight:700;font-size:13px">' + v + '</div>' +
+        '</div>';
+      }).join('');
+      return '<div class="m-card"><div style="padding:12px 14px 8px;display:flex;justify-content:space-between;align-items:center">' +
+        '<div style="font-weight:700;font-size:13px;color:var(--accent2)">' + g.name + '</div>' +
+        '<div style="font-size:12px;color:var(--text3)">Total: <strong style="color:var(--text)">' + total + '</strong></div>' +
+        '</div>' +
+        '<div style="display:flex;gap:4px;padding:4px 14px 12px;overflow-x:auto">' + chips + '</div>' +
+      '</div>';
+    }).join('') + '</div>';
+  }
+
+  return '<div class="table-wrap" style="margin-bottom:16px">' +
+    '<div class="table-header" style="cursor:pointer" onclick="toggleTripHeatmap()">' +
+      '<div class="table-title" style="display:flex;align-items:center;gap:8px">' +
+        '<span id="trip-heatmap-chevron" style="display:inline-block;transition:transform 0.15s;transform:rotate(' + (_tripHeatmapOpen?'90deg':'0deg') + ')">&#9656;</span>' +
+        'Beban Kerja GTM (Trip per Minggu)' +
+      '</div>' +
+      '<span style="font-size:11px;color:var(--text3)">Senin&#8211;Minggu, ' + NUM_WEEKS + ' minggu terakhir</span>' +
+    '</div>' +
+    '<div id="trip-heatmap-body" style="display:' + (_tripHeatmapOpen?'block':'none') + ';padding:14px 16px">' +
+      (isMobile() ? mobileCardsHTML : '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse"><thead><tr><th style="text-align:left;padding:6px 8px;font-size:10px;color:var(--text3)">GTM</th>' + headerCells + '<th style="text-align:right;padding:6px 8px;font-size:10px;color:var(--text3)">Total</th></tr></thead><tbody>' + bodyRows + '</tbody></table></div>') +
+      legendHTML +
+      drilldownHTML +
+    '</div>' +
+  '</div>';
+}
+
 function renderTripManager() {
   var cont = document.getElementById('content-trips');
   ensureTrips();
@@ -6753,6 +6984,7 @@ function renderTripManager() {
   }).join('');
 
   cont.innerHTML =
+    buildGtmWorkloadHeatmap() +
     '<div class="stats-grid" style="grid-template-columns:repeat(4,1fr);margin-bottom:20px">' +
     '<div class="stat-card blue"><div class="stat-label">Total Trip</div><div class="stat-value">' + totalTrips + '</div><div class="stat-sub">trip ke SPBG</div></div>' +
     '<div class="stat-card green"><div class="stat-label">Total Volume Ambil</div><div class="stat-value">' + fmtNum(totalVol,0) + '</div><div class="stat-sub">Sm&#179; dari SPBG</div></div>' +
@@ -6760,7 +6992,7 @@ function renderTripManager() {
     '<div class="stat-card ' + (totalSisa > 0 ? 'yellow' : 'green') + '"><div class="stat-label">Gas Belum Dialokasi</div><div class="stat-value">' + fmtNum(totalSisa,0) + '</div><div class="stat-sub">Sm&#179; nganggur</div></div>' +
     '</div>' +
     '<div class="table-wrap"><div class="table-header"><div class="table-title">Daftar Trip SPBG</div><div style="font-size:12px;color:var(--text2)">' + totalTrips + ' trip</div></div>' +
-    '<table style="table-layout:fixed"><colgroup>' +
+    '<table style="table-layout:fixed;min-width:720px"><colgroup>' +
       '<col style="width:9%"><col style="width:7%"><col style="width:9%"><col style="width:8%">' +
       '<col style="width:9%"><col style="width:21%"><col style="width:7%"><col style="width:6%">' +
       '<col style="width:14%"><col style="width:10%">' +
